@@ -1,14 +1,297 @@
-/* AkkoFlac access gate — loaded by index.html */
-(function(){
-  const style=document.createElement('style');
-  style.textContent=`
-  #akkoflacAccess{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 18% 12%,color-mix(in srgb,var(--accent) 25%,transparent),transparent 42%),radial-gradient(circle at 82% 88%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 40%),var(--bg);transition:opacity .45s ease,visibility .45s ease}
-  #akkoflacAccess.gone{opacity:0;visibility:hidden;pointer-events:none}.ak-access-card{width:min(440px,100%);padding:42px 36px 36px;text-align:center;border-radius:28px;background:rgba(255,255,255,.09);backdrop-filter:blur(40px) saturate(1.4);-webkit-backdrop-filter:blur(40px) saturate(1.4);border:1px solid var(--glass-border-strong);box-shadow:0 24px 60px rgba(0,0,0,.5),inset 0 1px rgba(255,255,255,.1);animation:akAccessIn .55s cubic-bezier(.2,.8,.2,1)}
-  @keyframes akAccessIn{from{opacity:0;transform:translateY(15px) scale(.97)}to{opacity:1;transform:none}}.ak-access-kicker{margin-bottom:12px;color:var(--accent);font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase}.ak-access-title{margin-bottom:12px;color:var(--text);font-size:clamp(28px,5vw,36px);font-weight:700;letter-spacing:-1px}.ak-access-title span{color:var(--accent)}.ak-access-text{margin:0 auto 25px;max-width:320px;color:var(--text-soft);font-size:14px;line-height:1.65}.ak-access-input{width:100%;height:58px;margin-bottom:11px;border:1px solid var(--glass-border);border-radius:16px;outline:0;background:rgba(255,255,255,.07);color:var(--text);text-align:center;font-size:25px;font-weight:700;letter-spacing:7px;text-transform:uppercase}.ak-access-input:focus{border-color:color-mix(in srgb,var(--accent) 65%,transparent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}.ak-access-btn{width:100%;height:52px;border:0;border-radius:16px;background:var(--accent);color:#0a0a0a;font-size:15px;font-weight:700;box-shadow:0 6px 22px var(--accent-glow);cursor:pointer}.ak-access-btn:hover{background:var(--accent-bright);transform:translateY(-2px)}.ak-access-btn:disabled{opacity:.55;cursor:wait;transform:none}.ak-access-error{min-height:20px;margin:8px 0 2px;color:#ff929f;font-size:12px}.ak-access-input.bad{animation:akShake .35s ease;border-color:#ff6f7b}@keyframes akShake{25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}}@media(max-width:760px){.ak-access-card{padding:34px 22px 28px;border-radius:22px}.ak-access-input{height:54px}}
-  `;document.head.appendChild(style);
-  let mounted=false;
-  async function hasAccess(){try{const r=await fetch('/.netlify/functions/access-status',{cache:'no-store'});const d=await r.json();return d.unlocked===true}catch{return false}}
-  async function mount(){if(mounted||await hasAccess())return;mounted=true;const gate=document.createElement('div');gate.id='akkoflacAccess';gate.innerHTML=`<div class="ak-access-card"><div class="ak-access-kicker">Access Required</div><h2 class="ak-access-title">Enter your <span>code</span></h2><p class="ak-access-text">Enter the 5-character access code you received. Each code can only be used once.</p><input id="akAccessInput" class="ak-access-input" maxlength="5" minlength="5" autocomplete="one-time-code" spellcheck="false" placeholder="•••••"><div id="akAccessError" class="ak-access-error"></div><button id="akAccessSubmit" class="ak-access-btn">Unlock AkkoFlac</button></div>`;document.body.appendChild(gate);const input=gate.querySelector('#akAccessInput'),btn=gate.querySelector('#akAccessSubmit'),err=gate.querySelector('#akAccessError');const submit=async()=>{const code=input.value.trim().toUpperCase();if(code.length!==5){err.textContent='Enter all 5 characters.';input.classList.add('bad');return}btn.disabled=true;btn.textContent='Checking…';err.textContent='';try{const r=await fetch('/.netlify/functions/verify-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})});const d=await r.json();if(!r.ok||!d.valid)throw new Error(d.error||'That code is invalid or already used.');gate.classList.add('gone');setTimeout(()=>gate.remove(),500)}catch(e){err.textContent=e.message;input.classList.remove('bad');void input.offsetWidth;input.classList.add('bad');btn.disabled=false;btn.textContent='Unlock AkkoFlac'}};btn.onclick=submit;input.addEventListener('input',()=>{input.value=input.value.replace(/[^a-z0-9]/gi,'').toUpperCase();err.textContent=''});input.addEventListener('keydown',e=>{if(e.key==='Enter')submit()});setTimeout(()=>input.focus(),80)}
-  function waitForOnboarding(){const onboarding=document.getElementById('onboarding');if(!onboarding){mount();return}if(localStorage.getItem('akkoflac-onboarded')==='1'){mount();return}const observer=new MutationObserver(()=>{if(localStorage.getItem('akkoflac-onboarded')==='1'&&onboarding.classList.contains('hidden')){observer.disconnect();mount()}});observer.observe(onboarding,{attributes:true,attributeFilter:['class']})}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',waitForOnboarding);else waitForOnboarding();
+(() => {
+  "use strict";
+
+  const STYLE = `
+    #akkoflac-access-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: var(--bg, #121212);
+      transition: opacity .45s ease, visibility .45s ease;
+    }
+
+    #akkoflac-access-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .akkoflac-access-box {
+      width: min(430px, 100%);
+      padding: 34px;
+      text-align: center;
+      border: 1px solid var(--glass-border-strong, rgba(255,255,255,.14));
+      border-radius: 28px;
+      background: rgba(255,255,255,.055);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      box-shadow:
+        0 25px 80px rgba(0,0,0,.45),
+        0 0 45px var(--accent-glow, rgba(255,255,255,.08));
+    }
+
+    .akkoflac-access-title {
+      margin: 0 0 9px;
+      color: var(--text, #fff);
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .akkoflac-access-subtitle {
+      margin: 0 0 25px;
+      color: var(--text-soft, rgba(255,255,255,.62));
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .akkoflac-access-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 16px;
+      border: 1px solid var(--glass-border, rgba(255,255,255,.1));
+      border-radius: 16px;
+      outline: none;
+      background: rgba(255,255,255,.06);
+      color: var(--text, #fff);
+      text-align: center;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 7px;
+      text-transform: uppercase;
+      transition: .2s ease;
+    }
+
+    .akkoflac-access-input:focus {
+      border-color: var(--accent, #fff);
+      box-shadow: 0 0 0 3px var(--accent-glow, rgba(255,255,255,.12));
+    }
+
+    .akkoflac-access-button {
+      width: 100%;
+      margin-top: 14px;
+      padding: 15px;
+      border: 0;
+      border-radius: 16px;
+      cursor: pointer;
+      background: var(--accent, #fff);
+      color: var(--bg, #121212);
+      font-size: 15px;
+      font-weight: 800;
+      transition: transform .18s ease, filter .18s ease;
+    }
+
+    .akkoflac-access-button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+    }
+
+    .akkoflac-access-button:active {
+      transform: translateY(0);
+    }
+
+    .akkoflac-access-error {
+      min-height: 20px;
+      margin-top: 12px;
+      color: #ff6b6b;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .akkoflac-access-shake {
+      animation: akkoAccessShake .35s ease;
+    }
+
+    @keyframes akkoAccessShake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+  `;
+
+  const style = document.createElement("style");
+  style.textContent = STYLE;
+  document.head.appendChild(style);
+
+  function createGate() {
+    if (document.getElementById("akkoflac-access-overlay")) return;
+
+    const overlay = document.createElement("div");
+    overlay.id = "akkoflac-access-overlay";
+
+    overlay.innerHTML = `
+      <div class="akkoflac-access-box" id="akkoflac-access-box">
+        <h1 class="akkoflac-access-title">Enter Access Code</h1>
+
+        <p class="akkoflac-access-subtitle">
+          Enter your 5-character AkkoFlac access code to continue.
+        </p>
+
+        <input
+          id="akkoflac-access-input"
+          class="akkoflac-access-input"
+          type="text"
+          maxlength="5"
+          minlength="5"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          placeholder="•••••"
+        />
+
+        <button
+          id="akkoflac-access-button"
+          class="akkoflac-access-button"
+          type="button"
+        >
+          Continue
+        </button>
+
+        <div
+          id="akkoflac-access-error"
+          class="akkoflac-access-error"
+        ></div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const input = document.getElementById("akkoflac-access-input");
+    const button = document.getElementById("akkoflac-access-button");
+    const error = document.getElementById("akkoflac-access-error");
+    const box = document.getElementById("akkoflac-access-box");
+
+    input.addEventListener("input", () => {
+      input.value = input.value
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .slice(0, 5)
+        .toUpperCase();
+
+      error.textContent = "";
+    });
+
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") redeem();
+    });
+
+    button.addEventListener("click", redeem);
+
+    async function redeem() {
+      const code = input.value.trim().toUpperCase();
+
+      if (code.length !== 5) {
+        showError("Enter a 5-character code.");
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = "Checking...";
+
+      try {
+        const response = await fetch(
+          "/.netlify/functions/verify-code",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ code })
+          }
+        );
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.success) {
+          showError(data.error || "Invalid or already-used code.");
+          return;
+        }
+
+        overlay.classList.add("hidden");
+
+        setTimeout(() => {
+          overlay.remove();
+        }, 500);
+
+      } catch {
+        showError("Couldn't connect. Try again.");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Continue";
+      }
+    }
+
+    function showError(message) {
+      error.textContent = message;
+
+      box.classList.remove("akkoflac-access-shake");
+      void box.offsetWidth;
+      box.classList.add("akkoflac-access-shake");
+
+      button.disabled = false;
+      button.textContent = "Continue";
+    }
+
+    setTimeout(() => input.focus(), 150);
+  }
+
+  async function checkAccess() {
+    try {
+      const response = await fetch(
+        "/.netlify/functions/access-status",
+        {
+          credentials: "include"
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.valid) return true;
+    } catch {}
+
+    return false;
+  }
+
+  async function start() {
+    const hasAccess = await checkAccess();
+
+    if (hasAccess) return;
+
+    const waitForOnboarding = setInterval(() => {
+      const onboarding =
+        document.getElementById("onboarding");
+
+      const onboardingDone =
+        localStorage.getItem("akkoflac-onboarded") === "1";
+
+      if (
+        onboardingDone &&
+        (!onboarding || onboarding.classList.contains("hidden"))
+      ) {
+        clearInterval(waitForOnboarding);
+        createGate();
+      }
+    }, 200);
+
+    setTimeout(() => {
+      clearInterval(waitForOnboarding);
+
+      if (
+        localStorage.getItem("akkoflac-onboarded") === "1" &&
+        !document.getElementById("akkoflac-access-overlay")
+      ) {
+        createGate();
+      }
+    }, 10000);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
 })();
