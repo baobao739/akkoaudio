@@ -5167,9 +5167,11 @@ body::after {
 
     .bottom-player:has(.progress-area:hover) .mini-song,
     .bottom-player:has(.progress-area:focus-within) .mini-song {
-        opacity: 0;
-        transform: translate3d(0, -5px, 0) scale(.975);
-        filter: blur(4px);
+        /* visual only — keep clickable for touch / sticky hover on iPad */
+        opacity: 0.35;
+        transform: none;
+        filter: none;
+        pointer-events: auto;
     }
 
     .bottom-player:has(.progress-area:hover) .progress-area,
@@ -5564,13 +5566,14 @@ body::after {
         transition: none;
     }
 
-    /* Neutralize the previous timeline hover/focus expansion. */
+    /* Neutralize the previous timeline hover/focus expansion.
+       Never disable pointer-events on mini-song — breaks iPad/Safari after sticky :hover. */
     .bottom-player:has(.progress-area:hover) .mini-song,
     .bottom-player:has(.progress-area:focus-within) .mini-song {
         opacity: 1;
         transform: none;
         filter: none;
-        pointer-events: none;
+        pointer-events: auto;
     }
 
     .bottom-player:has(.progress-area:hover) .progress-area,
@@ -6011,22 +6014,125 @@ body {
 }
 
 
-/* -------------------- DESKTOP SIDEBAR SCROLL BEHAVIOR -------------------- */
-@media (min-width: 761px) {
-    /* Home / Songs / Liked should scroll away with the page.
-       The topbar/search remains sticky separately. */
-    .sidebar {
-        position: absolute;
-        top: var(--shell-inset);
-        bottom: auto;
-        height: calc(100vh - (var(--shell-inset) * 2));
-    }
-}
+
 
 /* Empty dock on first visit */
 .mini-song.is-empty {
     display: none;
 }
+
+
+
+
+/* Desktop sidebar: fixed full height — stays aligned while page scrolls */
+@media (min-width: 761px) {
+    .sidebar {
+        position: fixed !important;
+        height: auto !important;
+        max-height: none !important;
+        /* top/left/bottom come from the existing shell/edge-inset rules */
+    }
+}
+
+
+/* =========================================================
+   IPAD / TOUCH DOCK FIXES (Safari)
+   ========================================================= */
+.bottom-player {
+    z-index: 120 !important;
+    pointer-events: auto !important;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.bottom-player * {
+    touch-action: manipulation;
+}
+
+.bottom-player .control,
+.bottom-player .mini-song,
+.bottom-player .mini-cover-wrap,
+.bottom-player .mini-info,
+.bottom-player input[type="range"] {
+    pointer-events: auto !important;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Bigger hit target for opening Focus Mode on touch */
+.mini-song:not(.is-empty) {
+    position: relative;
+    z-index: 2;
+    min-height: 48px;
+    padding: 4px 6px;
+    margin: -4px -6px;
+    border-radius: 12px;
+    cursor: pointer;
+    pointer-events: auto !important;
+}
+
+.mini-cover-wrap {
+    pointer-events: auto !important;
+    z-index: 3;
+}
+
+/* Only apply hover-collapse effects on real hover devices */
+@media (hover: none), (pointer: coarse) {
+    .bottom-player:has(.progress-area:hover) .mini-song,
+    .bottom-player:has(.progress-area:focus-within) .mini-song,
+    .bottom-player:has(.progress-area:hover) .progress-area,
+    .bottom-player:has(.progress-area:focus-within) .progress-area {
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+        pointer-events: auto !important;
+    }
+
+    .mini-song:not(.is-empty):hover .mini-cover-wrap,
+    .mini-cover-wrap:hover {
+        transform: none !important;
+    }
+
+    /* Keep title visible on iPad for easier Focus Mode tap */
+    .mini-info {
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+        min-width: 0;
+        pointer-events: auto !important;
+    }
+
+    .mini-title {
+        font-size: 13px;
+    }
+
+    .mini-artist {
+        font-size: 11px;
+    }
+
+    .bottom-player {
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+}
+
+/* iPad width often lands in "desktop" media queries — force dock above everything */
+@media (min-width: 761px) and (pointer: coarse) {
+    .bottom-player {
+        z-index: 120 !important;
+        pointer-events: auto !important;
+    }
+
+    .mini-song {
+        pointer-events: auto !important;
+        max-width: 42vw;
+    }
+
+    .mini-info {
+        display: block !important;
+        pointer-events: auto !important;
+    }
+}
+
 </style>
 </head>
 
@@ -8570,24 +8676,36 @@ document.getElementById("fullShuffle")
 document.getElementById("fullBack")
     .addEventListener("click", closeFullPlayer);
 
+let _focusDockLock = 0;
 function openFocusFromDock(e) {
-    if (e && e.target && e.target.closest("button, input, a")) return;
+    if (e && e.target && e.target.closest("button, input, a, .control, .progress, .progress-area")) return;
     if (!getCurrentSong()) return;
+    const now = Date.now();
+    if (now - _focusDockLock < 450) return; // debounce click+touchend on iOS
+    _focusDockLock = now;
     openFullPlayer();
 }
 
-document.getElementById("miniSong")
-    ?.addEventListener("click", openFocusFromDock);
+function bindDockFocusOpen(el) {
+    if (!el || el.dataset.focusBound === "1") return;
+    el.dataset.focusBound = "1";
+    const handler = (e) => openFocusFromDock(e);
+    el.addEventListener("click", handler);
+    // iPad Safari: touchend is more reliable than delayed click after sticky :hover
+    el.addEventListener("touchend", (e) => {
+        if (e.changedTouches && e.changedTouches.length !== 1) return;
+        handler(e);
+    }, { passive: true });
+}
 
-document.getElementById("miniCover")
-    ?.closest(".mini-cover-wrap")
-    ?.addEventListener("click", (e) => {
-        e.stopPropagation();
-        openFocusFromDock(e);
-    });
+bindDockFocusOpen(document.getElementById("miniSong"));
+bindDockFocusOpen(document.querySelector("#miniSong .mini-cover-wrap"));
+bindDockFocusOpen(document.getElementById("miniInfo"));
 
-document.getElementById("miniInfo")
-    ?.addEventListener("click", openFocusFromDock);
+document.querySelectorAll(".bottom-player .control, .bottom-player input[type='range']").forEach((el) => {
+    el.style.pointerEvents = "auto";
+    el.style.touchAction = "manipulation";
+});
 
 document.getElementById("progressBar")
     .addEventListener("input", event => {
