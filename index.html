@@ -6719,6 +6719,14 @@ body {
 
 
 /* Final marquee overrides */
+.mini-title,
+.full-title {
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: clip !important;
+    display: block !important;
+}
+
 .mini-title.marquee,
 .full-title.marquee {
     overflow: hidden !important;
@@ -6726,9 +6734,21 @@ body {
     text-overflow: clip !important;
 }
 
-.full-title.marquee .marquee-track {
+.mini-title .marquee-track,
+.full-title .marquee-track {
     display: inline-flex !important;
     width: max-content !important;
+    max-width: none !important;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+    vertical-align: top;
+}
+
+.mini-title .marquee-copy,
+.full-title .marquee-copy {
+    display: inline-block !important;
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
 }
 </style>
 
