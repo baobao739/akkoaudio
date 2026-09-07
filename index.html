@@ -8394,29 +8394,49 @@ function initCoverLayers() {
 function crossfadePair(pair, newSrc, useBgHiddenClass = false) {
     if (!pair || !pair.a || !pair.b || !newSrc) return;
 
+    pair.fadeToken = (pair.fadeToken || 0) + 1;
+    const token = pair.fadeToken;
+
     const current = pair.active === "a" ? pair.a : pair.b;
     const next = pair.active === "a" ? pair.b : pair.a;
 
-    // Already showing this art
+    // Ignore duplicate requests for the currently visible layer.
     if (current.dataset.currentSrc === newSrc) return;
 
     const apply = () => {
+        // A newer song change won the race; never let this stale preload swap layers.
+        if (token !== pair.fadeToken) return;
+
+        // Put the decoded image into the hidden layer first.
         next.src = newSrc;
         next.dataset.currentSrc = newSrc;
 
-        if (useBgHiddenClass) {
-            next.classList.remove("bg-hidden");
-            current.classList.add("bg-hidden");
-        } else {
-            next.classList.add("is-active");
-            current.classList.remove("is-active");
-        }
+        // Keep the incoming layer hidden until its frame is decoded/paint-ready.
+        const reveal = () => {
+            if (token !== pair.fadeToken) return;
 
-        pair.active = pair.active === "a" ? "b" : "a";
+            if (useBgHiddenClass) {
+                next.classList.remove("bg-hidden");
+                // Fade the old layer out only after the new frame is visible.
+                requestAnimationFrame(() => current.classList.add("bg-hidden"));
+            } else {
+                next.classList.add("is-active");
+                requestAnimationFrame(() => current.classList.remove("is-active"));
+            }
+
+            pair.active = pair.active === "a" ? "b" : "a";
+        };
+
+        if (next.decode) {
+            next.decode().then(reveal).catch(reveal);
+        } else {
+            requestAnimationFrame(reveal);
+        }
     };
 
-    // Preload so the fade starts with the image ready
+    // Decode before revealing to prevent a one-frame blank/flash during Next.
     const preload = new Image();
+    preload.decoding = "async";
     preload.onload = apply;
     preload.onerror = apply;
     preload.src = newSrc;
