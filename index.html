@@ -1433,8 +1433,8 @@ img {
     height: calc(100% + 80px);
     object-fit: cover;
     object-position: center;
-    filter: blur(48px) saturate(1.55) brightness(0.72);
-    transform: scale(1.15);
+    filter: blur(92px) saturate(1.55) brightness(0.87);
+    transform: scale(1.24) translate3d(0%, 0%, 0);
     pointer-events: none;
     user-select: none;
     transition: opacity .7s var(--ease);
@@ -1513,12 +1513,12 @@ img {
 }
 
 .full-player.open .full-bg {
-    animation: bgKenBurns 22s ease-in-out infinite alternate;
+    animation: none;
 }
 
 @keyframes bgKenBurns {
-    0%   { transform: scale(1.15) translate(0, 0); }
-    100% { transform: scale(1.22) translate(-1.5%, 1%); }
+    from { transform: scale(1.24) translate3d(0%, 0%, 0); }
+    to { transform: scale(1.24) translate3d(0%, 0%, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -4072,7 +4072,7 @@ body::after {
 }
 
 .full-bg {
-    filter: blur(62px) saturate(1.7) brightness(.78);
+    filter: blur(92px) saturate(1.55) brightness(.87);
 }
 
 .full-bg-overlay {
@@ -6033,6 +6033,110 @@ body {
     }
 }
 
+
+/* =========================================================
+   FOCUS MODE — PAN + SHIFT + MORPH
+   Album-cover background stays dominant; ambient layers behave
+   like fluid light rather than a repeating screensaver.
+   ========================================================= */
+.full-bg {
+    inset: -110px;
+    width: calc(100% + 220px);
+    height: calc(100% + 220px);
+    object-fit: cover;
+    filter: blur(94px) saturate(1.5) brightness(.87) contrast(1.01);
+    transform: scale(1.27) translate3d(0,0,0) rotate(0deg);
+    opacity: 1;
+    will-change: transform;
+}
+.full-player.open .full-bg { animation: none !important; }
+
+.full-bg-overlay {
+    background:
+        linear-gradient(112deg, rgba(5,6,12,.07), rgba(5,6,12,0) 48%, rgba(5,6,12,.09)),
+        radial-gradient(circle at 50% 44%, transparent 0 42%, rgba(2,3,8,.09) 100%);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.focus-palette {
+    inset: -19%;
+    filter: saturate(1.22) contrast(1.015);
+    overflow: hidden;
+}
+
+.focus-palette::before,
+.focus-palette::after {
+    border-radius: 48% 52% 58% 42% / 44% 46% 54% 56%;
+    filter: blur(78px) saturate(1.2);
+    mix-blend-mode: screen;
+    will-change: transform, opacity, border-radius;
+}
+
+.focus-palette::before {
+    width: 72%;
+    top: -4%;
+    left: -3%;
+    background: radial-gradient(circle, var(--palette-1, rgba(120,120,130,.52)), transparent 70%);
+    opacity: .34;
+    animation: fluidAuraOne 19s ease-in-out infinite alternate;
+}
+
+.focus-palette::after {
+    width: 66%;
+    right: -4%;
+    bottom: -8%;
+    background: radial-gradient(circle, var(--palette-2, rgba(90,90,105,.44)), transparent 72%);
+    opacity: .28;
+    animation: fluidAuraTwo 23s ease-in-out infinite alternate;
+}
+
+@keyframes fluidAuraOne {
+    0% { transform: translate3d(-5%,5%,0) scale(.90) rotate(-4deg); border-radius: 48% 52% 58% 42% / 44% 46% 54% 56%; opacity: .26; }
+    36% { transform: translate3d(3%,-2%,0) scale(1.03) rotate(2deg); border-radius: 58% 42% 46% 54% / 53% 39% 61% 47%; opacity: .36; }
+    71% { transform: translate3d(11%,-8%,0) scale(1.10) rotate(7deg); border-radius: 43% 57% 62% 38% / 61% 43% 57% 39%; opacity: .31; }
+    100% { transform: translate3d(5%,1%,0) scale(.98) rotate(1deg); border-radius: 55% 45% 41% 59% / 47% 60% 40% 53%; opacity: .34; }
+}
+
+@keyframes fluidAuraTwo {
+    0% { transform: translate3d(6%,3%,0) scale(.88) rotate(3deg); border-radius: 51% 49% 43% 57% / 57% 42% 58% 43%; opacity: .22; }
+    31% { transform: translate3d(-4%,-4%,0) scale(1.04) rotate(-3deg); border-radius: 42% 58% 61% 39% / 46% 59% 41% 54%; opacity: .30; }
+    68% { transform: translate3d(-13%,-9%,0) scale(1.13) rotate(-8deg); border-radius: 63% 37% 47% 53% / 58% 44% 56% 42%; opacity: .27; }
+    100% { transform: translate3d(-7%,-2%,0) scale(.98) rotate(-1deg); border-radius: 46% 54% 57% 43% / 41% 63% 37% 59%; opacity: .29; }
+}
+
+.focus-blob {
+    filter: blur(86px) saturate(1.17);
+    mix-blend-mode: screen;
+    will-change: transform, border-radius, opacity;
+    opacity: .23;
+    animation: none !important;
+}
+.focus-blob.b1 { width: 61%; height: 61%; top: -12%; left: -9%; background: var(--palette-1, rgba(110,110,120,.5)); opacity: .26; }
+.focus-blob.b2 { width: 57%; height: 57%; top: -7%; right: -11%; background: var(--palette-2, rgba(90,90,105,.44)); opacity: .23; }
+.focus-blob.b3 { width: 68%; height: 68%; bottom: -23%; left: 13%; background: var(--palette-3, rgba(120,120,130,.40)); opacity: .21; }
+.focus-blob.b4 { width: 49%; height: 49%; bottom: 1%; right: -6%; background: var(--palette-1, rgba(105,105,120,.36)); opacity: .16; }
+
+.full-player.open .full-cover-wrap {
+    animation: focusArtworkFluid 7.5s ease-in-out infinite alternate;
+}
+
+@keyframes focusArtworkFluid {
+    0% { transform: translate3d(-1px, 2px, 0) scale(1) rotate(-.12deg); }
+    47% { transform: translate3d(1px, -5px, 0) scale(1.006, 1.004) rotate(.08deg); }
+    100% { transform: translate3d(-1px, -9px, 0) scale(1.01, 1.007) rotate(.12deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .full-player.open .full-bg,
+    .focus-palette::before,
+    .focus-palette::after,
+    .focus-blob,
+    .full-player.open .full-cover-wrap {
+        animation: none !important;
+    }
+}
+
 </style>
 
 <style id="akko-mobile-dock-fix">
@@ -6126,13 +6230,12 @@ body {
 }
 
 .full-player.open .full-bg {
-    animation: bgKenBurnsApple 24s cubic-bezier(.22,.72,.2,1) infinite alternate;
+    animation: none;
 }
 
 @keyframes bgKenBurnsApple {
-    0%   { transform: scale(1.13) translate3d(0, 0, 0); }
-    50%  { transform: scale(1.17) translate3d(-.65%, .45%, 0); }
-    100% { transform: scale(1.205) translate3d(-1.2%, .9%, 0); }
+    from { transform: scale(1.24) translate3d(0%, 0%, 0); }
+    to { transform: scale(1.24) translate3d(0%, 0%, 0); }
 }
 
 .full-bg-overlay {
@@ -8100,132 +8203,178 @@ async function updateFocusPalette(song) {
 }
 
 /* =========================================================
-   APPLE-INSPIRED FOCUS MOTION — NON-REPEATING ORGANIC MOTION
-   Each cycle is regenerated with new waypoints, duration and
-   easing so the atmosphere does not follow a visible loop.
+   FOCUS MODE — FLUID LIVING ARTWORK MOTION
+   Coordinated pan + drift + morph. Motion is regenerated so
+   the background feels alive instead of like a fixed loop.
    ========================================================= */
 
-const blobMotionRaf = null;
-
-function initBlobMotion() {
-    const palette = document.getElementById("focusPalette");
-    if (!palette) return;
-    palette.style.setProperty("--focus-motion-ready", "1");
-}
-
-function startBlobMotion() {
-    initBlobMotion();
-    setupOrganicFocusMotion();
-}
-
-function stopBlobMotion() {
-    document.querySelectorAll(".focus-blob, .focus-palette::before, .focus-palette::after").forEach(() => {});
-    document.querySelectorAll(".focus-blob").forEach(el => {
-        if (el._organicAnimation) {
-            el._organicAnimation.cancel();
-            el._organicAnimation = null;
-        }
-    });
-}
+let focusMotionAnimations = [];
+let focusMotionTimer = null;
 
 function organicRand(min, max) {
     return min + Math.random() * (max - min);
 }
 
-function organicEase(t) {
-    // Smoothstep with a little asymmetry so each generated path feels less mechanical.
-    return t * t * (3 - 2 * t);
+function cancelFocusMotion() {
+    focusMotionAnimations.forEach(anim => {
+        try { anim.cancel(); } catch (_) {}
+    });
+    focusMotionAnimations = [];
+    if (focusMotionTimer) {
+        clearTimeout(focusMotionTimer);
+        focusMotionTimer = null;
+    }
 }
 
-function makeBlobKeyframes(state) {
+function buildFluidPath(initial = {}) {
     const points = [];
-    const count = Math.floor(5 + Math.random() * 3); // 5–7 waypoints
-
-    let x = state.x;
-    let y = state.y;
-    let scale = state.scale;
-    let rotate = state.rotate;
+    const count = Math.floor(7 + Math.random() * 4); // 7–10 points
+    let x = initial.x ?? organicRand(-3, 3);
+    let y = initial.y ?? organicRand(-3, 3);
+    let scale = initial.scale ?? organicRand(.99, 1.015);
+    let rotate = initial.rotate ?? organicRand(-.25, .25);
 
     for (let i = 0; i < count; i++) {
-        x = Math.max(-18, Math.min(18, x + organicRand(-13, 13)));
-        y = Math.max(-18, Math.min(18, y + organicRand(-13, 13)));
-        scale = Math.max(.82, Math.min(1.20, scale + organicRand(-.10, .10)));
-        rotate = Math.max(-7, Math.min(7, rotate + organicRand(-3.5, 3.5)));
+        const centerBias = Math.sin((i / (count - 1)) * Math.PI) * 1.4;
+        x = Math.max(-6.5, Math.min(6.5, x + organicRand(-3.8, 3.8) + centerBias * organicRand(-1, 1)));
+        y = Math.max(-5.5, Math.min(5.5, y + organicRand(-3.2, 3.2)));
+        scale = Math.max(.985, Math.min(1.045, scale + organicRand(-.012, .016)));
+        rotate = Math.max(-.45, Math.min(.45, rotate + organicRand(-.20, .20)));
 
         points.push({
-            transform: `translate3d(${x.toFixed(2)}%, ${y.toFixed(2)}%, 0) scale(${scale.toFixed(3)}) rotate(${rotate.toFixed(2)}deg)`,
-            offset: i / (count - 1),
-            easing: i < count - 1 ? `cubic-bezier(${organicRand(.16,.34).toFixed(3)},${organicRand(.58,.88).toFixed(3)},${organicRand(.16,.34).toFixed(3)},${organicRand(.86,1).toFixed(3)})` : undefined
+            transform: `translate3d(${x.toFixed(2)}%, ${y.toFixed(2)}%, 0) scale(${scale.toFixed(4)}) rotate(${rotate.toFixed(3)}deg)`,
+            borderRadius: `${Math.round(45 + Math.random()*20)}% ${Math.round(45 + Math.random()*20)}% ${Math.round(45 + Math.random()*20)}% ${Math.round(45 + Math.random()*20)}% / ${Math.round(43 + Math.random()*18)}% ${Math.round(43 + Math.random()*18)}% ${Math.round(43 + Math.random()*18)}% ${Math.round(43 + Math.random()*18)}%`,
+            offset: i / (count - 1)
         });
     }
+    return { points, end: { x, y, scale, rotate } };
+}
 
-    state.x = x;
-    state.y = y;
-    state.scale = scale;
-    state.rotate = rotate;
+function animateFluidElement(el, initial = {}, minDuration = 11000, maxDuration = 21000) {
+    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
+
+    const { points, end } = buildFluidPath(initial);
+    const animation = el.animate(points, {
+        duration: Math.round(organicRand(minDuration, maxDuration)),
+        delay: Math.round(organicRand(-1800, 0)),
+        fill: 'forwards',
+        easing: 'ease-in-out'
+    });
+    focusMotionAnimations.push(animation);
+
+    animation.finished.then(() => {
+        if (!document.hidden && el.isConnected) {
+            const nextDelay = organicRand(30, 1200);
+            setTimeout(() => {
+                animateFluidElement(el, end, minDuration, maxDuration);
+            }, nextDelay);
+        }
+    }).catch(() => {});
+
+    return animation;
+}
+
+function startBlobMotion() {
+    cancelFocusMotion();
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const blobs = [...document.querySelectorAll('.focus-blob')];
+    blobs.forEach((el, i) => {
+        setTimeout(() => animateFluidElement(
+            el,
+            {},
+            9500 + i * 500,
+            18500 + i * 900
+        ), organicRand(100, 1300));
+    });
+
+    // The two broad aura fields move on their own slower cadence.
+    const palette = document.getElementById('focusPalette');
+    if (palette) {
+        const before = getComputedStyle(palette, '::before');
+        const after = getComputedStyle(palette, '::after');
+        void before; void after;
+    }
+
+    startFocusBackgroundMotion();
+}
+
+function stopBlobMotion() {
+    cancelFocusMotion();
+    stopFocusBackgroundMotion();
+}
+
+let focusBgAnimation = null;
+let focusBgTimer = null;
+let focusBgActive = false;
+
+function makeBackgroundPath() {
+    const points = [];
+    const count = Math.floor(8 + Math.random() * 4);
+    let x = organicRand(-1.8, 1.8);
+    let y = organicRand(-1.5, 1.5);
+    let scale = organicRand(1.265, 1.30);
+    let rotate = organicRand(-.10, .10);
+
+    for (let i = 0; i < count; i++) {
+        x = Math.max(-2.8, Math.min(2.8, x + organicRand(-1.4, 1.4)));
+        y = Math.max(-2.5, Math.min(2.5, y + organicRand(-1.2, 1.2)));
+        scale = Math.max(1.245, Math.min(1.31, scale + organicRand(-.012, .014)));
+        rotate = Math.max(-.20, Math.min(.20, rotate + organicRand(-.07, .07)));
+        points.push({
+            transform: `scale(${scale.toFixed(3)}) translate3d(${x.toFixed(2)}%, ${y.toFixed(2)}%, 0) rotate(${rotate.toFixed(3)}deg)`,
+            offset: i / (count - 1)
+        });
+    }
     return points;
 }
 
-function animateBlobOrganically(el, state) {
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+function queueBackgroundMotion() {
+    if (!focusBgActive) return;
+    const bg = document.getElementById('fullBg');
+    if (!bg || document.hidden) return;
 
-    const keyframes = makeBlobKeyframes(state);
-    const duration = Math.round(8500 + Math.random() * 9500); // 8.5–18s, different every cycle
-
-    const animation = el.animate(keyframes, {
-        duration,
-        fill: "forwards",
-        easing: "linear"
+    const animation = bg.animate(makeBackgroundPath(), {
+        duration: Math.round(15000 + Math.random() * 13000),
+        fill: 'forwards',
+        easing: 'ease-in-out'
     });
-
-    state.animation = animation;
-    el._organicAnimation = animation;
+    focusBgAnimation = animation;
 
     animation.finished.then(() => {
-        if (el._organicAnimation !== animation) return;
-        // Pause for a tiny randomized amount occasionally, like natural drift.
-        const pause = Math.random() < .28 ? organicRand(250, 900) : organicRand(20, 220);
-        setTimeout(() => {
-            if (el._organicAnimation === animation && !document.hidden) {
-                animateBlobOrganically(el, state);
-            }
-        }, pause);
+        if (!focusBgActive || !bg.isConnected) return;
+        focusBgTimer = setTimeout(queueBackgroundMotion, Math.round(200 + Math.random() * 1800));
     }).catch(() => {});
 }
 
-function setupOrganicFocusMotion() {
-    const blobs = document.querySelectorAll(".focus-blob");
-    if (!blobs.length) return;
-
-    blobs.forEach((el, index) => {
-        if (el._organicAnimation) el._organicAnimation.cancel();
-
-        const state = {
-            x: organicRand(-6, 6),
-            y: organicRand(-6, 6),
-            scale: organicRand(.94, 1.06),
-            rotate: organicRand(-2, 2),
-            animation: null
-        };
-
-        // Stagger starts so all four lights never change direction together.
-        setTimeout(() => {
-            if (!document.hidden) animateBlobOrganically(el, state);
-        }, 300 + index * organicRand(500, 1300));
-    });
-
-    // Pause/restart cleanly when the tab loses visibility.
-    document.addEventListener("visibilitychange", () => {
-        if (document.hidden) {
-            blobs.forEach(el => el._organicAnimation?.pause());
-        } else {
-            blobs.forEach(el => {
-                const anim = el._organicAnimation;
-                if (anim && anim.playState === "paused") anim.play().catch(() => {});
-            });
-        }
-    }, { once: true });
+function startFocusBackgroundMotion() {
+    stopFocusBackgroundMotion();
+    focusBgActive = true;
+    const bg = document.getElementById('fullBg');
+    if (bg) {
+        bg.style.transform = 'scale(1.27) translate3d(0%, 0%, 0) rotate(0deg)';
+        setTimeout(queueBackgroundMotion, 150);
+    }
 }
+
+function stopFocusBackgroundMotion() {
+    focusBgActive = false;
+    if (focusBgTimer) clearTimeout(focusBgTimer);
+    focusBgTimer = null;
+    try { focusBgAnimation?.cancel(); } catch (_) {}
+    focusBgAnimation = null;
+}
+
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        focusMotionAnimations.forEach(anim => { try { anim.pause(); } catch (_) {} });
+        try { focusBgAnimation?.pause(); } catch (_) {}
+    } else {
+        focusMotionAnimations.forEach(anim => { try { anim.play(); } catch (_) {} });
+        try { focusBgAnimation?.play(); } catch (_) {}
+        if (focusBgActive && !focusBgAnimation) queueBackgroundMotion();
+    }
+});
 
 const coverLayers = {
     mini: { active: "a", a: null, b: null },
