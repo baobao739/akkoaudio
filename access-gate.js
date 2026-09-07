@@ -206,7 +206,7 @@
 
         const data = await response.json().catch(() => ({}));
 
-        if (!response.ok || !data.success) {
+        if (!response.ok || !data.valid) {
           showError(data.error || "Invalid or already-used code.");
           return;
         }
