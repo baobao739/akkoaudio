@@ -6315,466 +6315,6 @@ body::after,
     }
 }
 
-
-@media (hover: none), (pointer: coarse) {
-    .bottom-player {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-    }
-
-    .bottom-player .progress-area {
-        display: flex !important;
-        pointer-events: auto !important;
-    }
-
-    .bottom-player .mini-info {
-        display: flex !important;
-    }
-
-    .bottom-player .player-controls {
-        display: flex !important;
-        flex: 0 0 auto !important;
-    }
-
-    .bottom-player .mini-song {
-        flex: 0 1 auto !important;
-        max-width: none !important;
-    }
-}
-
-
-/* =========================================================
-   APPLE MUSIC COMPACT PLAYER (final override)
-   Single clean bar. Kills prior grid / overlap bugs.
-   ========================================================= */
-
-.bottom-player {
-    position: fixed !important;
-    z-index: 300 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    justify-content: center !important;
-    gap: 0 !important;
-    left: calc(var(--sidebar-width, 240px) + 16px) !important;
-    right: 16px !important;
-    bottom: 14px !important;
-    width: auto !important;
-    max-width: none !important;
-    height: 64px !important;
-    min-height: 64px !important;
-    max-height: 64px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: 1px solid rgba(255,255,255,.14) !important;
-    border-radius: 14px !important;
-    overflow: hidden !important;
-    background: rgba(40, 40, 44, 0.82) !important;
-    backdrop-filter: blur(40px) saturate(1.6) !important;
-    -webkit-backdrop-filter: blur(40px) saturate(1.6) !important;
-    box-shadow:
-        0 12px 40px rgba(0,0,0,.35),
-        inset 0 1px 0 rgba(255,255,255,.12) !important;
-    grid-template-columns: none !important;
-    grid-template-rows: none !important;
-    pointer-events: auto !important;
-    transform: none !important;
-}
-
-.bottom-player::before {
-    display: none !important;
-}
-
-/* Thin seek line along the top edge — Apple Music style */
-.dock-progress-line {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    height: 12px !important;
-    display: flex !important;
-    align-items: flex-start !important;
-    z-index: 8 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    pointer-events: auto !important;
-}
-
-.dock-progress-line .progress {
-    width: 100% !important;
-    height: 3px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: rgba(255,255,255,.18) !important;
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    cursor: pointer !important;
-    outline: none !important;
-}
-
-.dock-progress-line .progress::-webkit-slider-thumb {
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    width: 10px !important;
-    height: 10px !important;
-    border-radius: 50% !important;
-    background: #fff !important;
-    border: 0 !important;
-    box-shadow: 0 0 6px rgba(0,0,0,.35) !important;
-    margin-top: -3.5px !important;
-    opacity: 0 !important;
-    transition: opacity .15s ease !important;
-}
-
-.dock-progress-line:hover .progress::-webkit-slider-thumb,
-.dock-progress-line:active .progress::-webkit-slider-thumb {
-    opacity: 1 !important;
-}
-
-.dock-progress-line .progress::-moz-range-thumb {
-    width: 10px !important;
-    height: 10px !important;
-    border-radius: 50% !important;
-    background: #fff !important;
-    border: 0 !important;
-    opacity: 0;
-}
-
-.dock-body {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 12px !important;
-    height: 100% !important;
-    padding: 8px 12px 8px 10px !important;
-    box-sizing: border-box !important;
-    position: relative !important;
-    z-index: 2 !important;
-}
-
-/* LEFT — artwork + title */
-.bottom-player .mini-song {
-    display: flex !important;
-    flex: 1 1 0 !important;
-    align-items: center !important;
-    gap: 10px !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    width: auto !important;
-    height: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    opacity: 1 !important;
-    filter: none !important;
-    transform: none !important;
-    pointer-events: auto !important;
-    grid-column: auto !important;
-    grid-row: auto !important;
-    cursor: pointer !important;
-}
-
-.bottom-player .mini-cover-wrap {
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-    border-radius: 8px !important;
-    overflow: hidden !important;
-    flex-shrink: 0 !important;
-    border: 0 !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,.3) !important;
-}
-
-.bottom-player .mini-info {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    min-width: 0 !important;
-    padding: 0 !important;
-    gap: 1px !important;
-}
-
-.bottom-player .mini-title {
-    margin: 0 !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    line-height: 1.2 !important;
-    letter-spacing: -0.2px !important;
-    color: #fff !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-
-.bottom-player .mini-artist {
-    margin: 0 !important;
-    font-size: 11px !important;
-    font-weight: 500 !important;
-    line-height: 1.2 !important;
-    color: rgba(255,255,255,.55) !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-
-/* CENTER — transport */
-.bottom-player .player-controls {
-    display: flex !important;
-    flex: 0 0 auto !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 2px !important;
-    position: relative !important;
-    z-index: 5 !important;
-    transform: none !important;
-    grid-column: auto !important;
-    grid-row: auto !important;
-}
-
-.bottom-player .player-controls > .control {
-    grid-column: auto !important;
-    grid-row: auto !important;
-    width: 34px !important;
-    height: 34px !important;
-    min-width: 34px !important;
-    min-height: 34px !important;
-    border-radius: 50% !important;
-    background: transparent !important;
-    color: rgba(255,255,255,.92) !important;
-    box-shadow: none !important;
-    border: 0 !important;
-}
-
-.bottom-player .player-controls > .control:hover {
-    background: rgba(255,255,255,.12) !important;
-    color: #fff !important;
-    transform: none !important;
-    box-shadow: none !important;
-}
-
-.bottom-player .player-controls > .control.main-play {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-    background: #fff !important;
-    color: #111 !important;
-    box-shadow: none !important;
-}
-
-.bottom-player .player-controls > .control.main-play:hover {
-    background: rgba(255,255,255,.9) !important;
-    color: #111 !important;
-    transform: scale(1.04) !important;
-    box-shadow: none !important;
-}
-
-.bottom-player .player-controls > .control.shuffle,
-.bottom-player .player-controls > .control.repeat {
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
-    min-height: 30px !important;
-    color: rgba(255,255,255,.55) !important;
-}
-
-.bottom-player .player-controls > .control.shuffle.active,
-.bottom-player .player-controls > .control.repeat.active {
-    color: var(--accent, #7b8cff) !important;
-    background: transparent !important;
-}
-
-.bottom-player .player-controls > .control.shuffle.active::after,
-.bottom-player .player-controls > .control.repeat.active::after {
-    width: 4px !important;
-    height: 4px !important;
-    right: 4px !important;
-    top: 4px !important;
-    background: var(--accent, #7b8cff) !important;
-}
-
-/* RIGHT — time + queue */
-.dock-end {
-    display: flex !important;
-    flex: 1 1 0 !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    gap: 10px !important;
-    min-width: 0 !important;
-}
-
-.dock-times {
-    display: flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    font-size: 11px !important;
-    font-variant-numeric: tabular-nums !important;
-    color: rgba(255,255,255,.45) !important;
-    white-space: nowrap !important;
-}
-
-.dock-times-sep {
-    opacity: .5;
-}
-
-.bottom-player #queueButton,
-.bottom-player .queue-btn {
-    width: 34px !important;
-    height: 34px !important;
-    min-width: 34px !important;
-    min-height: 34px !important;
-    border-radius: 50% !important;
-    background: transparent !important;
-    color: rgba(255,255,255,.85) !important;
-    box-shadow: none !important;
-    border: 0 !important;
-    flex-shrink: 0 !important;
-    grid-column: auto !important;
-    grid-row: auto !important;
-}
-
-.bottom-player #queueButton:hover {
-    background: rgba(255,255,255,.12) !important;
-    color: #fff !important;
-    transform: none !important;
-}
-
-.bottom-player #queueButton.active {
-    background: rgba(255,255,255,.16) !important;
-    color: #fff !important;
-}
-
-/* Hide legacy progress-area if any residual markup */
-.bottom-player .progress-area,
-.bottom-player .dock-center {
-    display: none !important;
-}
-
-/* Kill sticky-hover overlap hacks from older layers */
-.bottom-player:has(.progress-area:hover) .mini-song,
-.bottom-player:has(.progress-area:focus-within) .mini-song,
-.bottom-player:has(.dock-progress-line:hover) .mini-song {
-    opacity: 1 !important;
-    transform: none !important;
-    filter: none !important;
-    pointer-events: auto !important;
-}
-
-.mini-song.is-empty {
-    visibility: hidden !important;
-    pointer-events: none !important;
-}
-
-.mini-song.is-empty ~ .player-controls,
-.dock-body:has(.mini-song.is-empty) .dock-times {
-    opacity: .45;
-}
-
-/* ----- Mobile / iPad ----- */
-@media (max-width: 760px) {
-    .bottom-player {
-        left: 8px !important;
-        right: 8px !important;
-        bottom: calc(var(--mobile-nav-height, 62px) + 8px + env(safe-area-inset-bottom, 0px)) !important;
-        height: 58px !important;
-        min-height: 58px !important;
-        max-height: 58px !important;
-        border-radius: 12px !important;
-    }
-
-    .dock-body {
-        padding: 6px 8px 6px 8px !important;
-        gap: 8px !important;
-    }
-
-    .bottom-player .mini-cover-wrap {
-        width: 40px !important;
-        height: 40px !important;
-        min-width: 40px !important;
-    }
-
-    .bottom-player .mini-title { font-size: 12px !important; }
-    .bottom-player .mini-artist { font-size: 10px !important; }
-
-    .bottom-player .player-controls > .control.shuffle,
-    .bottom-player .player-controls > .control.repeat {
-        display: none !important;
-    }
-
-    .bottom-player .player-controls > .control {
-        width: 36px !important;
-        height: 36px !important;
-        min-width: 36px !important;
-        min-height: 36px !important;
-    }
-
-    .bottom-player .player-controls > .control.main-play {
-        width: 38px !important;
-        height: 38px !important;
-        min-width: 38px !important;
-        min-height: 38px !important;
-    }
-
-    .dock-times { display: none !important; }
-
-    .bottom-player #queueButton {
-        width: 36px !important;
-        height: 36px !important;
-        min-width: 36px !important;
-        min-height: 36px !important;
-    }
-
-    .main {
-        padding-bottom: calc(var(--player-height, 58px) + var(--mobile-nav-height, 62px) + env(safe-area-inset-bottom, 0px) + 28px) !important;
-    }
-}
-
-@media (min-width: 761px) and (max-width: 1100px) {
-    .bottom-player .player-controls > .control.shuffle,
-    .bottom-player .player-controls > .control.repeat {
-        display: none !important;
-    }
-
-    .dock-times { font-size: 10px !important; }
-}
-
-@media (hover: none), (pointer: coarse) {
-    .bottom-player {
-        z-index: 300 !important;
-        pointer-events: auto !important;
-    }
-
-    .bottom-player .control,
-    .bottom-player .mini-song,
-    .dock-progress-line .progress {
-        pointer-events: auto !important;
-        touch-action: manipulation !important;
-    }
-
-    .dock-progress-line .progress {
-        touch-action: none !important;
-        height: 4px !important;
-    }
-
-    .dock-progress-line .progress::-webkit-slider-thumb {
-        opacity: 1 !important;
-        width: 12px !important;
-        height: 12px !important;
-    }
-}
-
-/* Keep desktop sidebar offset */
-@media (min-width: 761px) {
-    .bottom-player {
-        left: calc(var(--sidebar-width, 240px) + 20px) !important;
-        right: 16px !important;
-        bottom: 14px !important;
-    }
-}
-
 </style>
 </head>
 
@@ -7110,58 +6650,79 @@ body::after,
      BOTTOM PLAYER
      ========================================================= -->
 
-<div class="bottom-player" id="bottomPlayer">
+<div class="bottom-player">
 
-    <div class="dock-progress-line">
-        <input class="progress" id="progressBar" type="range" min="0" max="100" value="0" step=".1" aria-label="Seek">
-    </div>
+    <div class="mini-song is-empty" id="miniSong" title="Open Focus Mode">
 
-    <div class="dock-body">
-
-        <div class="mini-song is-empty" id="miniSong" title="Open Focus Mode">
-            <div class="mini-cover-wrap" title="Open Focus Mode">
-                <img id="miniCover" class="cover-layer is-active" src="" alt="">
-                <img id="miniCoverB" class="cover-layer" src="" alt="">
-            </div>
-            <div class="mini-info" id="miniInfo">
-                <div class="mini-title" id="miniTitle"></div>
-                <div class="mini-artist" id="miniArtist"></div>
-            </div>
+        <div class="mini-cover-wrap" title="Open Focus Mode">
+            <img id="miniCover" class="cover-layer is-active" src="" alt="">
+            <img id="miniCoverB" class="cover-layer" src="" alt="">
         </div>
 
-        <div class="player-controls" id="playerControls">
-            <button class="control shuffle" id="shuffleButton" title="Shuffle" type="button">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
-            </button>
-            <button class="control" id="previousButton" title="Previous" type="button">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 6h2v12H6V6zm3.5 6l8.5 6V6l-8.5 6z"/></svg>
-            </button>
-            <button class="control main-play" id="playButton" title="Play" type="button">
-                <svg class="icon-play" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                <svg class="icon-pause hidden" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-            </button>
-            <button class="control" id="nextButton" title="Next" type="button">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-            </button>
-            <button class="control repeat" id="repeatButton" title="Repeat" type="button">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
-            </button>
-        </div>
+        <div class="mini-info" id="miniInfo">
 
-        <div class="dock-end">
-            <div class="dock-times" aria-hidden="true">
-                <span id="currentTime">0:00</span>
-                <span class="dock-times-sep">/</span>
-                <span id="duration">0:00</span>
-            </div>
-            <button class="control queue-btn" id="queueButton" title="Up Next" type="button">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h12v2H3v-2z"/></svg>
-            </button>
+            <div class="mini-title" id="miniTitle"></div>
+
+            <div class="mini-artist" id="miniArtist"></div>
+
         </div>
 
     </div>
 
-    <div class="repeat-label" id="repeatLabel">Repeat On</div>
+    <div class="player-controls">
+
+        <button class="control shuffle" id="shuffleButton" title="Shuffle">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+        </button>
+
+        <button class="control" id="previousButton" title="Previous">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 6h2v12H6V6zm3.5 6l8.5 6V6l-8.5 6z"/></svg>
+        </button>
+
+        <button class="control main-play" id="playButton" title="Play">
+            <svg class="icon-play" viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <svg class="icon-pause hidden" viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+
+        <button class="control" id="nextButton" title="Next">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+        </button>
+
+        <button class="control repeat" id="repeatButton" title="Repeat">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+        </button>
+
+        <button class="control queue-btn" id="queueButton" title="Up Next">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h12v2H3v-2z"/></svg>
+        </button>
+
+    </div>
+
+    <div class="repeat-label" id="repeatLabel">
+        Repeat On
+    </div>
+
+    <div class="progress-area">
+
+        <div class="time" id="currentTime">
+            0:00
+        </div>
+
+        <input
+            class="progress"
+            id="progressBar"
+            type="range"
+            min="0"
+            max="100"
+            value="0"
+            step=".1"
+        >
+
+        <div class="time" id="duration">
+            0:00
+        </div>
+
+    </div>
 
 </div>
 
