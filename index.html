@@ -5910,6 +5910,23 @@ body {
     transform: none;
 }
 
+
+/* -------------------- DESKTOP SIDEBAR SCROLL BEHAVIOR -------------------- */
+@media (min-width: 761px) {
+    /* Home / Songs / Liked should scroll away with the page.
+       The topbar/search remains sticky separately. */
+    .sidebar {
+        position: absolute;
+        top: var(--shell-inset);
+        bottom: auto;
+        height: calc(100vh - (var(--shell-inset) * 2));
+    }
+}
+
+/* Empty dock on first visit */
+.mini-song.is-empty {
+    display: none;
+}
 </style>
 </head>
 
@@ -6247,22 +6264,18 @@ body {
 
 <div class="bottom-player">
 
-    <div class="mini-song" id="miniSong">
+    <div class="mini-song is-empty" id="miniSong">
 
-        <div class="mini-cover-wrap" title="Open Up Next">
-            <img id="miniCover" class="cover-layer is-active" src="covers/here.jfif" alt="">
-            <img id="miniCoverB" class="cover-layer" src="covers/here.jfif" alt="">
+        <div class="mini-cover-wrap" title="Open Focus Mode">
+            <img id="miniCover" class="cover-layer is-active" src="" alt="">
+            <img id="miniCoverB" class="cover-layer" src="" alt="">
         </div>
 
         <div class="mini-info" id="miniInfo">
 
-            <div class="mini-title" id="miniTitle">
-                Here (Lucian Remix)
-            </div>
+            <div class="mini-title" id="miniTitle"></div>
 
-            <div class="mini-artist" id="miniArtist">
-                Alessia Cara
-            </div>
+            <div class="mini-artist" id="miniArtist"></div>
 
         </div>
 
@@ -6351,8 +6364,8 @@ body {
 
 <div class="full-player" id="fullPlayer">
 
-    <img class="full-bg" id="fullBg" src="covers/here.jfif" alt="">
-    <img class="full-bg bg-hidden" id="fullBgB" src="covers/here.jfif" alt="">
+    <img class="full-bg" id="fullBg" src="" alt="">
+    <img class="full-bg bg-hidden" id="fullBgB" src="" alt="">
     <div class="focus-palette" id="focusPalette">
         <div class="focus-blob b1"></div>
         <div class="focus-blob b2"></div>
@@ -6842,6 +6855,9 @@ const likedEmpty =
 
 const fullPlayer =
     document.getElementById("fullPlayer");
+
+const miniSong =
+    document.getElementById("miniSong");
 
 const lyricsPanel =
     document.getElementById("lyricsPanel");
@@ -7643,24 +7659,23 @@ function crossfadeAllCovers(newSrc) {
 
 function updateSongUI() {
     const song = getCurrentSong();
-    if (!song) return;
 
+    // Keep the dock completely empty until a real song is selected.
+    if (!song) {
+        miniSong?.classList.add("is-empty");
+        return;
+    }
+
+    miniSong?.classList.remove("is-empty");
     crossfadeAllCovers(song.cover);
 
-    document.getElementById("miniTitle").textContent =
-        song.title;
+    document.getElementById("miniTitle").textContent = song.title;
+    document.getElementById("miniArtist").textContent = song.artist;
 
-    document.getElementById("miniArtist").textContent =
-        song.artist;
-
-    document.getElementById("fullTitle").textContent =
-        song.title;
-
-    document.getElementById("fullArtist").textContent =
-        song.artist;
+    document.getElementById("fullTitle").textContent = song.title;
+    document.getElementById("fullArtist").textContent = song.artist;
 
     updateFocusPalette(song);
-
     updateFullLikeButton();
 }
 
@@ -8226,6 +8241,8 @@ function updateLyrics(time) {
    ========================================================= */
 
 function openFullPlayer() {
+    // Focus Mode only opens when there is an actual song playing/selected.
+    if (!getCurrentSong()) return;
     fullPlayer.classList.add("open");
     document.body.style.overflow = "hidden";
     startBlobMotion();
@@ -8454,7 +8471,10 @@ document.getElementById("fullBack")
     .addEventListener("click", closeFullPlayer);
 
 document.getElementById("miniSong")
-    ?.addEventListener("click", openFullPlayer);
+    ?.addEventListener("click", () => {
+        if (!getCurrentSong()) return;
+        openFullPlayer();
+    });
 
 document.getElementById("progressBar")
     .addEventListener("input", event => {
@@ -8928,42 +8948,12 @@ function initialize() {
     queueIndex = 0;
     currentIndex = 0;
 
+    miniSong?.classList.add("is-empty");
+    document.getElementById("miniTitle").textContent = "";
+    document.getElementById("miniArtist").textContent = "";
+
     renderFeatured();
     renderAll();
-
-    // Show first song in the mini player as a preview (doesn't start playback)
-    if (songs.length) {
-        const preview = songs[0];
-        const src = preview.cover;
-
-        // Seed both layers so first real crossfade is seamless
-        ["mini", "full"].forEach(key => {
-            const pair = coverLayers[key];
-            if (!pair.a || !pair.b) return;
-            pair.a.src = src;
-            pair.a.dataset.currentSrc = src;
-            pair.a.classList.add("is-active");
-            pair.b.src = src;
-            pair.b.dataset.currentSrc = src;
-            pair.b.classList.remove("is-active");
-            pair.active = "a";
-        });
-
-        if (coverLayers.bg.a && coverLayers.bg.b) {
-            coverLayers.bg.a.src = src;
-            coverLayers.bg.a.dataset.currentSrc = src;
-            coverLayers.bg.a.classList.remove("bg-hidden");
-            coverLayers.bg.b.src = src;
-            coverLayers.bg.b.dataset.currentSrc = src;
-            coverLayers.bg.b.classList.add("bg-hidden");
-            coverLayers.bg.active = "a";
-        }
-
-        document.getElementById("miniTitle").textContent = preview.title;
-        document.getElementById("miniArtist").textContent = preview.artist;
-        document.getElementById("fullTitle").textContent = preview.title;
-        document.getElementById("fullArtist").textContent = preview.artist;
-    }
 
     updatePlayButtons();
     updateRepeatButtons();
