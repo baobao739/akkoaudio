@@ -86,7 +86,7 @@ html {
 }
 
 html * {
-    transition-property: background-color, color, border-color, box-shadow, fill, stroke, text-shadow, backdrop-filter, transform, opacity;
+    transition-property: background-color, color, border-color, box-shadow, fill, stroke, text-shadow, transform, opacity;
     transition-duration: .4s;
     transition-timing-function: var(--ease);
 }
@@ -97,7 +97,7 @@ html .control,
 html .full-control,
 html .nav-button,
 html input[type="range"] {
-    transition-property: background-color, color, border-color, box-shadow, transform, opacity, backdrop-filter;
+    transition-property: background-color, color, border-color, box-shadow, transform, opacity;
 }
 
 .control,
@@ -6105,6 +6105,25 @@ body {
 }
 </style>
 
+<style id="akko-desktop-performance-fix">
+/* Performance-only fixes: keep the same UI, avoid unnecessary paint/animation work. */
+@media (min-width: 761px) {
+    .song-card, .track-row, .featured, .credits-card, .queue-item {
+        contain: layout paint;
+    }
+}
+
+/* Never animate expensive backdrop-filter changes globally. */
+html * {
+    will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html * {
+        scroll-behavior: auto !important;
+    }
+}
+</style>
 </head>
 
 <body>
@@ -7751,8 +7770,13 @@ function tickBlobMotion(now) {
 
     const open = document.getElementById("fullPlayer")?.classList.contains("open");
 
-    if (open) {
-        blobStates.forEach((state) => {
+    // Do not keep a 60fps animation loop running while Focus Mode is closed.
+    if (!open) {
+        blobMotionRaf = null;
+        return;
+    }
+
+    blobStates.forEach((state) => {
             if (now >= state.nextAt) {
                 pickNewBlobTarget(state, now);
             }
@@ -7763,10 +7787,9 @@ function tickBlobMotion(now) {
             state.scale += (state.tscale - state.scale) * ease;
             state.rot += (state.trot - state.rot) * ease;
 
-            state.el.style.transform =
-                `translate(${state.x.toFixed(2)}%, ${state.y.toFixed(2)}%) scale(${state.scale.toFixed(3)}) rotate(${state.rot.toFixed(2)}deg)`;
-        });
-    }
+        state.el.style.transform =
+            `translate(${state.x.toFixed(2)}%, ${state.y.toFixed(2)}%) scale(${state.scale.toFixed(3)}) rotate(${state.rot.toFixed(2)}deg)`;
+    });
 
     blobMotionRaf = requestAnimationFrame(tickBlobMotion);
 }
@@ -8650,15 +8673,14 @@ document.getElementById("fullBack")
 function openFocusFromDock(e) {
     if (!getCurrentSong()) return;
 
-    // The dock song area is one large Focus Mode button.
-    // Do not allow player controls inside the dock to trigger Focus Mode.
+    // The song area of the dock is the Focus Mode button.
+    // Player controls remain independent.
     if (e && e.target && e.target.closest(".player-controls, button, input, a")) return;
 
     openFullPlayer();
 }
 
-// One reliable click handler for the entire dock song area.
-// Works for the cover, title, artist, and empty space inside miniSong.
+// One dock handler for cover, title, artist, and the song area.
 if (miniSong) {
     miniSong.addEventListener("click", openFocusFromDock);
     miniSong.addEventListener("touchend", function(e) {
@@ -8668,19 +8690,6 @@ if (miniSong) {
         openFullPlayer();
     }, { passive: false });
 }
-
-document.getElementById("miniSong")
-    ?.addEventListener("click", openFocusFromDock);
-
-document.getElementById("miniCover")
-    ?.closest(".mini-cover-wrap")
-    ?.addEventListener("click", (e) => {
-        e.stopPropagation();
-        openFocusFromDock(e);
-    });
-
-document.getElementById("miniInfo")
-    ?.addEventListener("click", openFocusFromDock);
 
 document.getElementById("progressBar")
     .addEventListener("input", event => {
@@ -9267,5 +9276,108 @@ if ("ResizeObserver" in window) {
 
 </script>
    
+
+<style id="akko-click-hit-fix">
+/* CLICK / CURSOR SAFETY FIX
+   Keep decorative/text layers from becoming accidental hit targets.
+   Interactive controls always own their full visible area. */
+
+/* Text should never unexpectedly turn into the I-beam over the app. */
+body * {
+    cursor: default;
+}
+
+/* Anything that is actually clickable gets a pointer cursor. */
+button,
+a,
+[role="button"],
+.nav-button,
+.song-card,
+.track-row,
+.featured,
+.mini-song,
+.mini-cover-wrap,
+.like-btn,
+.play-overlay,
+.control,
+.full-control,
+.full-back,
+.full-like,
+.shuffle-btn,
+.accent-swatch,
+.theme-option,
+.progress,
+.progress-area,
+.queue-item,
+.close-btn,
+.settings-btn {
+    cursor: pointer !important;
+}
+
+/* Text/icons inside real buttons cannot steal the mouse hit. */
+button *,
+a *,
+[role="button"] * {
+    pointer-events: none;
+    cursor: inherit !important;
+}
+
+/* Restore the controls that contain actual form elements. */
+button input,
+button textarea,
+button select,
+[role="button"] input,
+[role="button"] textarea,
+[role="button"] select {
+    pointer-events: auto;
+}
+
+/* Text fields intentionally keep the text-selection cursor. */
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+textarea,
+[contenteditable="true"] {
+    cursor: text !important;
+}
+
+input[type="range"] {
+    cursor: pointer !important;
+}
+
+button::before,
+button::after,
+a::before,
+a::after,
+[role="button"]::before,
+[role="button"]::after {
+    pointer-events: none !important;
+}
+
+/* These surfaces have decorative children, not separate hit targets. */
+.song-card .song-cover,
+.song-card .song-cover img,
+.song-card .song-title,
+.song-card .song-artist,
+.track-row img,
+.track-row .track-row-title,
+.track-row .track-row-artist,
+.featured img,
+.featured .featured-info,
+.featured .featured-title,
+.featured .featured-artist {
+    cursor: pointer !important;
+}
+
+/* Disabled controls should not look clickable. */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+[aria-disabled="true"] {
+    cursor: not-allowed !important;
+}
+</style>
 </body>
 </html>
