@@ -5224,6 +5224,277 @@ body::after {
     }
 }
 
+
+/* =========================================================
+   COMPACT NOW-PLAYING PILL REFINEMENT
+   A smaller dock with a timeline that expands over the now-playing tile.
+   ========================================================= */
+
+@media (min-width: 761px) {
+    .bottom-player {
+        left: calc(var(--sidebar-width) + 22px);
+        right: auto;
+        width: min(820px, calc(100vw - var(--sidebar-width) - 40px));
+        height: 74px;
+        min-height: 74px;
+        grid-template-columns: 38px 42px 58px 42px 38px minmax(225px, 1fr) 42px;
+        gap: 3px;
+        padding: 8px 12px;
+        border-radius: 999px;
+    }
+
+    .player-controls {
+        display: contents;
+    }
+
+    .control.shuffle {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    #previousButton {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    #playButton {
+        grid-column: 3;
+        grid-row: 1;
+    }
+
+    #nextButton {
+        grid-column: 4;
+        grid-row: 1;
+    }
+
+    .control.repeat {
+        grid-column: 5;
+        grid-row: 1;
+    }
+
+    #queueButton {
+        grid-column: 7;
+        grid-row: 1;
+        justify-self: end;
+    }
+
+    .control {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        min-height: 38px;
+    }
+
+    .control.main-play {
+        width: 54px;
+        height: 54px;
+        min-width: 54px;
+        min-height: 54px;
+        margin: 0;
+    }
+
+    .mini-song,
+    .progress-area {
+        grid-column: 6;
+        grid-row: 1;
+        justify-self: stretch;
+    }
+
+    .mini-song {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 54px;
+        padding: 0 5px;
+        gap: 10px;
+        transition:
+            opacity .34s var(--motion-smooth),
+            transform .48s var(--motion-smooth),
+            filter .34s var(--motion-smooth);
+    }
+
+    .mini-cover-wrap {
+        width: 48px;
+        height: 48px;
+        border-radius: 11px;
+        transition: opacity .34s var(--motion-smooth), transform .48s var(--motion-smooth);
+    }
+
+    .mini-info {
+        padding-bottom: 8px;
+    }
+
+    .mini-title {
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .mini-artist {
+        color: rgba(255,255,255,.60);
+        font-size: 11px;
+    }
+
+    .progress-area {
+        position: relative;
+        z-index: 3;
+        align-self: end;
+        width: 100%;
+        height: 13px;
+        padding: 0 3px;
+        gap: 0;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+        transition:
+            height .42s var(--motion-smooth),
+            padding .42s var(--motion-smooth),
+            background-color .34s var(--motion-smooth),
+            border-color .34s var(--motion-smooth),
+            box-shadow .34s var(--motion-smooth);
+        cursor: pointer;
+    }
+
+    .progress-area .time {
+        width: 0;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(4px);
+        transition:
+            width .42s var(--motion-smooth),
+            opacity .25s var(--motion-smooth),
+            transform .42s var(--motion-smooth);
+    }
+
+    .progress {
+        height: 3px;
+        border-color: rgba(255,255,255,.14);
+        background: rgba(255,255,255,.26);
+        box-shadow: none;
+        transition: height .42s var(--motion-smooth), background-color .34s var(--motion-smooth);
+    }
+
+    .progress::-webkit-slider-thumb {
+        width: 8px;
+        height: 8px;
+        opacity: .7;
+        transition: transform .34s var(--motion-smooth), opacity .34s var(--motion-smooth);
+    }
+
+    .bottom-player:has(.progress-area:hover) .mini-song,
+    .bottom-player:has(.progress-area:focus-within) .mini-song {
+        opacity: 0;
+        transform: translate3d(0, -2px, 0) scale(.975);
+        filter: blur(4px);
+        pointer-events: none;
+    }
+
+    .bottom-player:has(.progress-area:hover) .progress-area,
+    .bottom-player:has(.progress-area:focus-within) .progress-area {
+        align-self: center;
+        height: 54px;
+        padding: 0 12px;
+        gap: 9px;
+        border: 1px solid rgba(255,255,255,.13);
+        background: rgba(255,255,255,.07);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.11);
+    }
+
+    .bottom-player:has(.progress-area:hover) .progress-area .time,
+    .bottom-player:has(.progress-area:focus-within) .progress-area .time {
+        width: 36px;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .bottom-player:has(.progress-area:hover) .progress,
+    .bottom-player:has(.progress-area:focus-within) .progress {
+        height: 6px;
+        background: rgba(255,255,255,.34);
+    }
+
+    .bottom-player:has(.progress-area:hover) .progress::-webkit-slider-thumb,
+    .bottom-player:has(.progress-area:focus-within) .progress::-webkit-slider-thumb {
+        transform: scale(1.28);
+        opacity: 1;
+    }
+
+    .bottom-player.is-idle .mini-cover-wrap {
+        opacity: 0;
+        transform: scale(.76);
+    }
+
+    .bottom-player.is-idle .mini-info {
+        padding-bottom: 0;
+    }
+
+    .bottom-player.is-idle .progress-area {
+        pointer-events: none;
+        opacity: .30;
+    }
+
+    .featured.featured-idle {
+        min-height: 245px;
+        cursor: default;
+        background:
+            radial-gradient(circle at 78% 28%, color-mix(in srgb, var(--accent) 28%, transparent), transparent 30%),
+            linear-gradient(120deg, rgba(255,255,255,.11), rgba(255,255,255,.035)),
+            var(--chrome-strong);
+    }
+
+    .featured.featured-idle .featured-info {
+        max-width: 500px;
+    }
+
+    .featured.featured-idle .featured-title {
+        max-width: 17ch;
+    }
+}
+
+@media (max-width: 1120px) and (min-width: 761px) {
+    .bottom-player {
+        width: min(680px, calc(100vw - var(--sidebar-width) - 32px));
+        grid-template-columns: 40px 54px 40px minmax(185px, 1fr) 40px;
+    }
+
+    .control.shuffle,
+    .control.repeat {
+        display: none;
+    }
+
+    #previousButton {
+        grid-column: 1;
+    }
+
+    #playButton {
+        grid-column: 2;
+    }
+
+    #nextButton {
+        grid-column: 3;
+    }
+
+    .mini-song,
+    .progress-area {
+        grid-column: 4;
+    }
+
+    #queueButton {
+        grid-column: 5;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mini-song,
+    .mini-cover-wrap,
+    .progress-area,
+    .progress-area .time,
+    .progress {
+        transition-duration: .01ms !important;
+    }
+}
+
 </style>
 </head>
 
@@ -6414,43 +6685,47 @@ function renderGrid(container, list, emptyElement = null, autoShuffle = false) {
    FEATURED
    ========================================================= */
 
+/* =========================================================
+   DYNAMIC FEATURED NOW PLAYING
+   ========================================================= */
+
 function renderFeatured() {
     featuredContainer.innerHTML = "";
 
-    if (!songs.length) {
+    const song = audio.src ? getCurrentSong() : null;
+
+    if (!song) {
+        const idle = document.createElement("div");
+        idle.className = "featured featured-idle";
+        idle.innerHTML = `
+            <div class="featured-info">
+                <div class="featured-label">Ready to play</div>
+                <div class="featured-title">Choose something you love.</div>
+                <div class="featured-artist">Your next song will appear here.</div>
+            </div>
+        `;
+        featuredContainer.appendChild(idle);
         return;
     }
 
-    const song = songs[0];
-
     const featured = document.createElement("div");
-
     featured.className = "featured";
 
     featured.innerHTML = `
         <img src="${escapeHTML(song.cover)}" alt="">
 
         <div class="featured-info">
-
-            <div class="featured-label">
-                Featured
-            </div>
-
-            <div class="featured-title">
-                ${escapeHTML(song.title)}
-            </div>
-
+            <div class="featured-label">Now Playing</div>
+            <div class="featured-title">${escapeHTML(song.title)}</div>
             <div class="featured-artist">
                 ${escapeHTML(song.artist)}
                 ·
                 ${escapeHTML(song.album)}
             </div>
-
         </div>
     `;
 
     featured.addEventListener("click", () => {
-        startPlayback(songs, song.id, true);
         openFullPlayer();
     });
 
@@ -6976,6 +7251,8 @@ function updateSongUI() {
 
     updateFocusPalette(song);
 
+    document.querySelector(".bottom-player")?.classList.remove("is-idle");
+    renderFeatured();
     updateFullLikeButton();
 }
 
@@ -8245,6 +8522,11 @@ function initialize() {
 
     renderFeatured();
     renderAll();
+
+    // Keep the player visually idle until a track is actually selected.
+    document.querySelector(".bottom-player")?.classList.add("is-idle");
+    document.getElementById("miniTitle").textContent = "Nothing playing";
+    document.getElementById("miniArtist").textContent = "Choose a song to begin";
 
     // Show first song in the mini player as a preview (doesn't start playback)
     if (songs.length) {
