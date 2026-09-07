@@ -5848,6 +5848,17 @@ body {
     padding-inline: 2px;
 }
 
+/* Keep the first lyric crisp and make the active line follow the app accent. */
+.full-player #lyricsContainer {
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 82%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 82%, transparent 100%);
+}
+
+.full-player .lyric-line.active {
+    color: var(--accent);
+    text-shadow: 0 8px 28px var(--accent-glow);
+}
+
 </style>
 </head>
 
