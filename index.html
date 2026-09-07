@@ -5420,20 +5420,6 @@ body::after {
         opacity: 1;
     }
 
-    .bottom-player.is-idle .mini-cover-wrap {
-        opacity: 0;
-        transform: scale(.76);
-    }
-
-    .bottom-player.is-idle .mini-info {
-        padding-bottom: 0;
-    }
-
-    .bottom-player.is-idle .progress-area {
-        pointer-events: none;
-        opacity: .30;
-    }
-
     .featured.featured-idle {
         min-height: 245px;
         cursor: default;
@@ -6685,47 +6671,43 @@ function renderGrid(container, list, emptyElement = null, autoShuffle = false) {
    FEATURED
    ========================================================= */
 
-/* =========================================================
-   DYNAMIC FEATURED NOW PLAYING
-   ========================================================= */
-
 function renderFeatured() {
     featuredContainer.innerHTML = "";
 
-    const song = audio.src ? getCurrentSong() : null;
-
-    if (!song) {
-        const idle = document.createElement("div");
-        idle.className = "featured featured-idle";
-        idle.innerHTML = `
-            <div class="featured-info">
-                <div class="featured-label">Ready to play</div>
-                <div class="featured-title">Choose something you love.</div>
-                <div class="featured-artist">Your next song will appear here.</div>
-            </div>
-        `;
-        featuredContainer.appendChild(idle);
+    if (!songs.length) {
         return;
     }
 
+    const song = songs[0];
+
     const featured = document.createElement("div");
+
     featured.className = "featured";
 
     featured.innerHTML = `
         <img src="${escapeHTML(song.cover)}" alt="">
 
         <div class="featured-info">
-            <div class="featured-label">Now Playing</div>
-            <div class="featured-title">${escapeHTML(song.title)}</div>
+
+            <div class="featured-label">
+                Featured
+            </div>
+
+            <div class="featured-title">
+                ${escapeHTML(song.title)}
+            </div>
+
             <div class="featured-artist">
                 ${escapeHTML(song.artist)}
                 ·
                 ${escapeHTML(song.album)}
             </div>
+
         </div>
     `;
 
     featured.addEventListener("click", () => {
+        startPlayback(songs, song.id, true);
         openFullPlayer();
     });
 
@@ -7251,8 +7233,6 @@ function updateSongUI() {
 
     updateFocusPalette(song);
 
-    document.querySelector(".bottom-player")?.classList.remove("is-idle");
-    renderFeatured();
     updateFullLikeButton();
 }
 
@@ -8522,11 +8502,6 @@ function initialize() {
 
     renderFeatured();
     renderAll();
-
-    // Keep the player visually idle until a track is actually selected.
-    document.querySelector(".bottom-player")?.classList.add("is-idle");
-    document.getElementById("miniTitle").textContent = "Nothing playing";
-    document.getElementById("miniArtist").textContent = "Choose a song to begin";
 
     // Show first song in the mini player as a preview (doesn't start playback)
     if (songs.length) {
