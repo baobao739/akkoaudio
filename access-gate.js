@@ -1,6 +1,53 @@
 (() => {
   "use strict";
 
+  // Performance pass: the main UI had a global transition on every element,
+  // including backdrop-filter. That makes scrolling and interactions very expensive.
+  // Keep the spatial/glass look, but remove the expensive always-on transitions.
+  const PERF_STYLE = document.createElement("style");
+  PERF_STYLE.id = "akkoflac-performance-fix";
+  PERF_STYLE.textContent = `
+    html * {
+      transition-property: none !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
+    }
+
+    html button,
+    html .song-card,
+    html .control,
+    html .full-control,
+    html .nav-button,
+    html input[type="range"] {
+      transition-property: transform, opacity, background-color, color, border-color, box-shadow !important;
+      transition-duration: .16s !important;
+      transition-timing-function: ease-out !important;
+    }
+
+    /* Backdrop blur is one of the heaviest effects on large/fixed surfaces. */
+    .sidebar,
+    .glass,
+    .glass-strong,
+    .featured,
+    .search-box input,
+    .shuffle-btn {
+      -webkit-backdrop-filter: blur(16px) saturate(1.2) !important;
+      backdrop-filter: blur(16px) saturate(1.2) !important;
+    }
+
+    /* Don't animate decorative effects continuously. */
+    .logo span {
+      animation: none !important;
+    }
+
+    /* Let the browser skip off-screen rendering work where safe. */
+    .song-card,
+    .section {
+      contain: layout paint;
+    }
+  `;
+  document.head.appendChild(PERF_STYLE);
+
   const STYLE = `
     #akkoflac-access-overlay {
       position: fixed;
