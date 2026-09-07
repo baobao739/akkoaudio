@@ -370,9 +370,10 @@ img {
 .page-title {
     color: var(--text);
     font-size: 28px;
-    line-height: 1;
+    line-height: 1.25;
     font-weight: 700;
     letter-spacing: -.8px;
+    overflow: visible;
 }
 
 .search-box {
@@ -5882,21 +5883,120 @@ body {
     pointer-events: auto;
 }
 
-/* Leave the Home title and search field unframed. */
+/* Keep descenders (g, y, p, q) visible in headers */
+.page-title,
+.section-heading h2,
+.logo,
+.featured-title,
+.full-title,
+.onboard-title {
+    line-height: 1.25 !important;
+    overflow: visible !important;
+}
+
+.section-heading {
+    overflow: visible;
+    align-items: flex-end;
+}
+
+.section-heading h2 {
+    padding-bottom: 2px;
+}
+
+/* Header bar: same material language as the bottom dock */
 .topbar {
-    min-height: 0;
-    margin-inline: 0;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    box-shadow: none;
+    position: sticky;
+    top: 14px;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 64px;
+    margin: 0 0 28px;
+    padding: 12px 16px;
+    border: 1px solid rgba(255,255,255,.23);
+    border-radius: 20px;
+    background:
+        radial-gradient(ellipse 44% 160% at 8% 0%, rgba(255,255,255,.18), transparent 65%),
+        linear-gradient(105deg, color-mix(in srgb, var(--accent) 17%, rgba(255,255,255,.14)), rgba(255,255,255,.045) 44%, rgba(255,255,255,.11)),
+        color-mix(in srgb, var(--theme-panel) 82%, rgba(13,14,25,.34));
+    backdrop-filter: blur(34px) saturate(1.45);
+    -webkit-backdrop-filter: blur(34px) saturate(1.45);
+    box-shadow:
+        0 28px 68px rgba(0,0,0,.34),
+        0 0 42px color-mix(in srgb, var(--accent) 16%, transparent),
+        inset 0 1px 0 rgba(255,255,255,.25);
+}
+
+.topbar {
+    overflow: visible;
 }
 
 .topbar .page-title {
-    padding-left: 0;
+    margin: 0;
+    padding: 2px 4px 4px;
+    font-size: clamp(22px, 2.4vw, 28px);
+    line-height: 1.3;
+    letter-spacing: -0.8px;
+    white-space: nowrap;
+    overflow: visible;
+}
+
+.topbar .search-box {
+    width: min(390px, 48vw);
+    flex-shrink: 1;
+}
+
+.topbar .search-box input {
+    height: 42px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.14);
+    background: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 6px 16px rgba(0,0,0,.12);
+}
+
+.topbar .search-box input:focus {
+    border-color: color-mix(in srgb, var(--accent) 50%, rgba(255,255,255,.2));
+    box-shadow:
+        0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent),
+        inset 0 1px 0 rgba(255,255,255,.14);
+}
+
+/* Dock: open Focus Mode from the now-playing area */
+.mini-song:not(.is-empty) {
+    cursor: pointer;
+}
+
+.mini-song:not(.is-empty) .mini-cover-wrap,
+.mini-song:not(.is-empty) .mini-info {
+    cursor: pointer;
+}
+
+.mini-song:not(.is-empty):hover .mini-cover-wrap {
+    transform: scale(1.05);
+    box-shadow: 0 0 16px var(--accent-soft), 0 6px 16px rgba(0,0,0,.35);
+}
+
+@media (max-width: 760px) {
+    .topbar {
+        top: 8px;
+        min-height: 56px;
+        margin-bottom: 20px;
+        padding: 10px 12px;
+        border-radius: 16px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .topbar .page-title {
+        font-size: 22px;
+        width: 100%;
+    }
+
+    .topbar .search-box {
+        width: 100%;
+    }
 }
 
 /* Keep the dock visually steady on hover. */
@@ -6264,7 +6364,7 @@ body {
 
 <div class="bottom-player">
 
-    <div class="mini-song is-empty" id="miniSong">
+    <div class="mini-song is-empty" id="miniSong" title="Open Focus Mode">
 
         <div class="mini-cover-wrap" title="Open Focus Mode">
             <img id="miniCover" class="cover-layer is-active" src="" alt="">
@@ -8470,11 +8570,24 @@ document.getElementById("fullShuffle")
 document.getElementById("fullBack")
     .addEventListener("click", closeFullPlayer);
 
+function openFocusFromDock(e) {
+    if (e && e.target && e.target.closest("button, input, a")) return;
+    if (!getCurrentSong()) return;
+    openFullPlayer();
+}
+
 document.getElementById("miniSong")
-    ?.addEventListener("click", () => {
-        if (!getCurrentSong()) return;
-        openFullPlayer();
+    ?.addEventListener("click", openFocusFromDock);
+
+document.getElementById("miniCover")
+    ?.closest(".mini-cover-wrap")
+    ?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openFocusFromDock(e);
     });
+
+document.getElementById("miniInfo")
+    ?.addEventListener("click", openFocusFromDock);
 
 document.getElementById("progressBar")
     .addEventListener("input", event => {
