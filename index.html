@@ -937,10 +937,120 @@ img {
 }
 
 .mini-title {
+    position: relative;
     margin-bottom: 4px;
     color: var(--text);
     font-size: 13px;
     font-weight: 600;
+}
+
+/* Long titles stay on one line and gently revolve only when needed. */
+.mini-title.marquee {
+    text-overflow: clip;
+    mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+}
+
+.mini-title.marquee .marquee-track {
+    display: inline-flex;
+    width: max-content;
+    will-change: transform;
+    animation: miniTitleMarquee var(--marquee-duration, 10s) linear infinite;
+}
+
+.mini-title.marquee .marquee-copy {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.mini-title.marquee .marquee-copy + .marquee-copy {
+    margin-left: 46px;
+}
+
+@keyframes miniTitleMarquee {
+    0%, 14% { transform: translate3d(0, 0, 0); }
+    86%, 100% { transform: translate3d(calc(-1 * var(--marquee-shift, 0px)), 0, 0); }
+}
+
+.full-title {
+    position: relative;
+    overflow: hidden;
+}
+
+.full-title.marquee {
+    text-overflow: clip;
+    mask-image: linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%);
+}
+
+.full-title.marquee .marquee-track {
+    display: inline-flex;
+    width: max-content;
+    will-change: transform;
+    animation: fullTitleMarquee var(--marquee-duration, 12s) linear infinite;
+}
+
+.full-title.marquee .marquee-copy {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.full-title.marquee .marquee-copy + .marquee-copy {
+    margin-left: 60px;
+}
+
+@keyframes fullTitleMarquee {
+    0%, 14% { transform: translate3d(0, 0, 0); }
+    86%, 100% { transform: translate3d(calc(-1 * var(--marquee-shift, 0px)), 0, 0); }
+}
+
+/* Song-title-only marquee: every song title crawls when it overflows. */
+.song-title,
+.track-row-title,
+.queue-item-title,
+.featured-title {
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: clip;
+}
+
+.song-title.marquee,
+.track-row-title.marquee,
+.queue-item-title.marquee,
+.featured-title.marquee {
+    mask-image: linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%);
+}
+
+.song-title.marquee .marquee-track,
+.track-row-title.marquee .marquee-track,
+.queue-item-title.marquee .marquee-track,
+.featured-title.marquee .marquee-track {
+    display: inline-flex;
+    width: max-content;
+    will-change: transform;
+    animation: songTitleMarquee var(--marquee-duration, 10s) linear infinite;
+}
+
+.song-title.marquee .marquee-copy,
+.track-row-title.marquee .marquee-copy,
+.queue-item-title.marquee .marquee-copy,
+.featured-title.marquee .marquee-copy {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.song-title.marquee .marquee-copy + .marquee-copy,
+.track-row-title.marquee .marquee-copy + .marquee-copy,
+.queue-item-title.marquee .marquee-copy + .marquee-copy,
+.featured-title.marquee .marquee-copy + .marquee-copy {
+    margin-left: 48px;
+}
+
+@keyframes songTitleMarquee {
+    0%, 14% { transform: translate3d(0, 0, 0); }
+    86%, 100% { transform: translate3d(calc(-1 * var(--marquee-shift, 0px)), 0, 0); }
 }
 
 .mini-artist {
@@ -6607,6 +6717,19 @@ body {
     }
 }
 
+
+/* Final marquee overrides */
+.mini-title.marquee,
+.full-title.marquee {
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: clip !important;
+}
+
+.full-title.marquee .marquee-track {
+    display: inline-flex !important;
+    width: max-content !important;
+}
 </style>
 
 </head>
@@ -7666,8 +7789,8 @@ function createSongCard(song, list, autoShuffle = false) {
             </button>
         </div>
 
-        <div class="song-title">
-            ${escapeHTML(song.title)}
+        <div class="song-title" data-song-title>
+            <span class="marquee-copy">${escapeHTML(song.title)}</span>
         </div>
 
         <div class="song-artist">
@@ -7686,6 +7809,7 @@ function createSongCard(song, list, autoShuffle = false) {
         toggleLike(song.id);
     });
 
+    requestAnimationFrame(() => initSongTitleMarquee(card));
     return card;
 }
 
@@ -7698,7 +7822,7 @@ function createTrackRow(song, list) {
     row.innerHTML = `
         <img src="${escapeHTML(song.cover)}" alt="">
         <div class="track-row-info">
-            <div class="track-row-title">${escapeHTML(song.title)}</div>
+            <div class="track-row-title" data-song-title><span class="marquee-copy">${escapeHTML(song.title)}</span></div>
             <div class="track-row-artist">${escapeHTML(song.artist)}</div>
         </div>
         <button class="track-row-like ${liked ? "liked" : ""}" title="Like" type="button">
@@ -7717,6 +7841,7 @@ function createTrackRow(song, list) {
         toggleLike(song.id);
     });
 
+    requestAnimationFrame(() => initSongTitleMarquee(row));
     return row;
 }
 
@@ -7818,8 +7943,8 @@ function renderFeatured() {
                 Featured
             </div>
 
-            <div class="featured-title">
-                ${escapeHTML(song.title)}
+            <div class="featured-title" data-song-title>
+                <span class="marquee-copy">${escapeHTML(song.title)}</span>
             </div>
 
             <div class="featured-artist">
@@ -7837,6 +7962,7 @@ function renderFeatured() {
     });
 
     featuredContainer.appendChild(featured);
+    requestAnimationFrame(() => initSongTitleMarquee(featured));
 }
 
 /* =========================================================
@@ -8448,6 +8574,77 @@ function crossfadeAllCovers(newSrc) {
     crossfadePair(coverLayers.bg, newSrc, true);
 }
 
+function setMarqueeTitle(el, text, mode = "mini") {
+    if (!el) return;
+
+    el.classList.remove("marquee");
+    el.style.removeProperty("--marquee-shift");
+    el.style.removeProperty("--marquee-duration");
+    el.replaceChildren();
+
+    const single = document.createElement("span");
+    single.className = "marquee-copy";
+    single.textContent = text || "";
+    el.appendChild(single);
+
+    // Let layout settle, then only animate when the title actually overflows.
+    requestAnimationFrame(() => {
+        if (el.scrollWidth <= el.clientWidth + 2) return;
+
+        const gap = mode === "full" ? 60 : 46;
+        const copyWidth = single.getBoundingClientRect().width;
+        const shift = Math.ceil(copyWidth + gap);
+
+        const copy = single.cloneNode(true);
+        el.querySelector(".marquee-track")?.remove();
+
+        const track = document.createElement("span");
+        track.className = "marquee-track";
+        track.append(single, copy);
+        el.replaceChildren(track);
+        el.classList.add("marquee");
+        el.style.setProperty("--marquee-shift", `${shift}px`);
+
+        const speed = mode === "full" ? 42 : 34;
+        const duration = Math.max(mode === "full" ? 9 : 8, shift / speed + 2.4);
+        el.style.setProperty("--marquee-duration", `${duration.toFixed(2)}s`);
+    });
+}
+
+function initSongTitleMarquee(root = document) {
+    const titles = root.querySelectorAll?.('[data-song-title]') || [];
+    titles.forEach((el) => {
+        const source = el.querySelector('.marquee-copy');
+        if (!source) return;
+
+        // Reset any previous marquee state before measuring.
+        el.classList.remove('marquee');
+        el.style.removeProperty('--marquee-shift');
+        el.style.removeProperty('--marquee-duration');
+        const text = source.textContent || '';
+        el.replaceChildren(source);
+
+        requestAnimationFrame(() => {
+            if (el.scrollWidth <= el.clientWidth + 2) return;
+
+            const gap = 48;
+            const copyWidth = source.getBoundingClientRect().width;
+            const shift = Math.ceil(copyWidth + gap);
+            const copy = source.cloneNode(true);
+            const track = document.createElement('span');
+            track.className = 'marquee-track';
+            track.append(source, copy);
+            el.replaceChildren(track);
+            el.classList.add('marquee');
+            el.style.setProperty('--marquee-shift', `${shift}px`);
+
+            const speed = 38;
+            const duration = Math.max(8, shift / speed + 2.4);
+            el.style.setProperty('--marquee-duration', `${duration.toFixed(2)}s`);
+        });
+    });
+}
+
 function updateSongUI() {
     const song = getCurrentSong();
 
@@ -8460,10 +8657,10 @@ function updateSongUI() {
     miniSong?.classList.remove("is-empty");
     crossfadeAllCovers(song.cover);
 
-    document.getElementById("miniTitle").textContent = song.title;
+    setMarqueeTitle(document.getElementById("miniTitle"), song.title, "mini");
     document.getElementById("miniArtist").textContent = song.artist;
 
-    document.getElementById("fullTitle").textContent = song.title;
+    setMarqueeTitle(document.getElementById("fullTitle"), song.title, "full");
     document.getElementById("fullArtist").textContent = song.artist;
 
     updateFocusPalette(song);
@@ -9084,7 +9281,7 @@ function renderQueuePanel() {
             row.innerHTML = `
                 <img src="${escapeHTML(song.cover)}" alt="">
                 <div class="queue-item-info">
-                    <div class="queue-item-title">${escapeHTML(song.title)}</div>
+                    <div class="queue-item-title" data-song-title><span class="marquee-copy">${escapeHTML(song.title)}</span></div>
                     <div class="queue-item-artist">${escapeHTML(song.artist)}</div>
                 </div>
                 <button class="queue-item-add" title="Add to Up Next" type="button">+</button>
@@ -9111,6 +9308,7 @@ function renderQueuePanel() {
             });
 
             list.appendChild(row);
+            requestAnimationFrame(() => initSongTitleMarquee(row));
         });
         return;
     }
@@ -9135,7 +9333,7 @@ function renderQueuePanel() {
         row.innerHTML = `
             <img src="${escapeHTML(song.cover)}" alt="">
             <div class="queue-item-info">
-                <div class="queue-item-title">${escapeHTML(song.title)}</div>
+                <div class="queue-item-title" data-song-title><span class="marquee-copy">${escapeHTML(song.title)}</span></div>
                 <div class="queue-item-artist">${escapeHTML(song.artist)}</div>
             </div>
             <button class="queue-item-remove" title="Remove" data-index="${index}" type="button">×</button>
@@ -9154,6 +9352,7 @@ function renderQueuePanel() {
         });
 
         list.appendChild(row);
+        requestAnimationFrame(() => initSongTitleMarquee(row));
     });
 }
 
