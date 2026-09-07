@@ -245,6 +245,7 @@ img {
 /* -------------------- SIDEBAR -------------------- */
 
 .sidebar {
+    pointer-events: auto;
     position: fixed;
     z-index: 80;
     left: 0;
@@ -859,6 +860,7 @@ img {
 /* -------------------- BOTTOM PLAYER -------------------- */
 
 .bottom-player {
+    pointer-events: auto;
     position: fixed;
     z-index: 90;
     left: var(--sidebar-width);
@@ -6032,6 +6034,77 @@ body {
 }
 
 </style>
+
+<style id="akko-mobile-dock-fix">
+/* AKKOAUDIO MOBILE DOCK FIX — hit testing only */
+.sidebar,
+.bottom-player {
+    pointer-events: auto;
+}
+
+/* Never let decorative layers steal a tap. */
+.sidebar::before,
+.sidebar::after,
+.bottom-player::before,
+.bottom-player::after,
+.bottom-player *::before,
+.bottom-player *::after {
+    pointer-events: none !important;
+}
+
+/* Keep actual interactive elements above the dock's decorative layers. */
+.sidebar > *,
+.bottom-player > * {
+    position: relative;
+    z-index: 2;
+}
+
+.bottom-player .control,
+.bottom-player button,
+.bottom-player input,
+.bottom-player .mini-song {
+    pointer-events: auto;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* One large Focus Mode hit area in the dock. */
+.bottom-player .mini-song {
+    cursor: pointer;
+}
+
+.bottom-player .mini-song.is-empty {
+    cursor: default;
+}
+
+@media (max-width: 760px) {
+    .sidebar {
+        z-index: 1000 !important;
+        pointer-events: auto !important;
+    }
+
+    .bottom-player {
+        z-index: 1100 !important;
+        pointer-events: auto !important;
+    }
+
+    .bottom-player .mini-song {
+        position: relative;
+        z-index: 3;
+        flex: 1 1 auto;
+        min-width: 0;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .bottom-player .player-controls,
+    .bottom-player .player-controls * {
+        position: relative;
+        z-index: 4;
+    }
+}
+</style>
+
 </head>
 
 <body>
@@ -8575,9 +8648,26 @@ document.getElementById("fullBack")
     .addEventListener("click", closeFullPlayer);
 
 function openFocusFromDock(e) {
-    if (e && e.target && e.target.closest("button, input, a")) return;
     if (!getCurrentSong()) return;
+
+    // The dock song area is one large Focus Mode button.
+    // Do not allow player controls inside the dock to trigger Focus Mode.
+    if (e && e.target && e.target.closest(".player-controls, button, input, a")) return;
+
     openFullPlayer();
+}
+
+// One reliable click handler for the entire dock song area.
+// Works for the cover, title, artist, and empty space inside miniSong.
+const miniSong = document.getElementById("miniSong");
+if (miniSong) {
+    miniSong.addEventListener("click", openFocusFromDock);
+    miniSong.addEventListener("touchend", function(e) {
+        if (e.target && e.target.closest(".player-controls, button, input, a")) return;
+        if (!getCurrentSong()) return;
+        e.preventDefault();
+        openFullPlayer();
+    }, { passive: false });
 }
 
 document.getElementById("miniSong")
