@@ -8659,7 +8659,6 @@ function openFocusFromDock(e) {
 
 // One reliable click handler for the entire dock song area.
 // Works for the cover, title, artist, and empty space inside miniSong.
-const miniSong = document.getElementById("miniSong");
 if (miniSong) {
     miniSong.addEventListener("click", openFocusFromDock);
     miniSong.addEventListener("touchend", function(e) {
