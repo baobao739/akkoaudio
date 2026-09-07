@@ -6296,6 +6296,150 @@ body {
         animation: none !important;
     }
 }
+
+/* =========================================================
+   AKKOAUDIO — BRIGHTER, MORE DYNAMIC APPLE-INSPIRED FOCUS
+   Final override: keeps the same structure, but makes the
+   atmosphere noticeably brighter and the motion more alive.
+   ========================================================= */
+.full-bg {
+    filter: blur(62px) saturate(1.95) brightness(.98) contrast(1.02);
+    transform: scale(1.17);
+}
+
+.full-player.open .full-bg {
+    animation: focusBgFlow 16s cubic-bezier(.35,.05,.2,1) infinite alternate;
+}
+
+.full-bg-overlay {
+    background:
+        linear-gradient(112deg, rgba(5,6,12,.22), rgba(5,6,12,.02) 46%, rgba(5,6,12,.26)),
+        radial-gradient(circle at 50% 42%, transparent 0 33%, rgba(2,3,8,.12) 86%, rgba(2,3,8,.20) 100%);
+    backdrop-filter: saturate(1.08);
+    -webkit-backdrop-filter: saturate(1.08);
+}
+
+.focus-palette {
+    inset: -20%;
+    filter: saturate(1.55) contrast(1.02);
+}
+
+.focus-palette::before,
+.focus-palette::after {
+    filter: blur(58px) saturate(1.45);
+}
+
+.focus-palette::before {
+    width: 74%;
+    top: -3%;
+    left: 0%;
+    opacity: .46;
+    animation: focusBloomBrightOne 14s cubic-bezier(.25,.7,.2,1) infinite alternate;
+}
+
+.focus-palette::after {
+    width: 64%;
+    right: -2%;
+    bottom: -8%;
+    opacity: .38;
+    animation: focusBloomBrightTwo 17s cubic-bezier(.25,.7,.2,1) infinite alternate;
+}
+
+.focus-blob {
+    filter: blur(60px) saturate(1.42);
+    mix-blend-mode: screen;
+    will-change: transform, opacity;
+}
+.focus-blob {
+    animation: none !important;
+}
+
+.focus-blob.b1 {
+    opacity: .40;
+    animation: focusBlobBrightOne 12s cubic-bezier(.28,.68,.2,1) infinite alternate;
+}
+
+.focus-blob.b2 {
+    opacity: .34;
+    animation: focusBlobBrightTwo 15s cubic-bezier(.28,.68,.2,1) infinite alternate;
+}
+
+.focus-blob.b3 {
+    opacity: .32;
+    animation: focusBlobBrightThree 18s cubic-bezier(.28,.68,.2,1) infinite alternate;
+}
+
+.focus-blob.b4 {
+    opacity: .24;
+    animation: focusBlobBrightFour 13s cubic-bezier(.28,.68,.2,1) infinite alternate;
+}
+
+@keyframes focusBgFlow {
+    0%   { transform: scale(1.16) translate3d(-1.2%, 1.0%, 0) rotate(-.25deg); }
+    35%  { transform: scale(1.19) translate3d(1.0%, -1.6%, 0) rotate(.15deg); }
+    70%  { transform: scale(1.22) translate3d(-.8%, -2.2%, 0) rotate(.30deg); }
+    100% { transform: scale(1.25) translate3d(1.8%, .7%, 0) rotate(-.18deg); }
+}
+
+@keyframes focusBloomBrightOne {
+    0%   { transform: translate3d(-7%, 7%, 0) scale(.86); opacity: .34; }
+    50%  { transform: translate3d(5%, -5%, 0) scale(1.05); opacity: .50; }
+    100% { transform: translate3d(15%, -12%, 0) scale(1.18); opacity: .40; }
+}
+
+@keyframes focusBloomBrightTwo {
+    0%   { transform: translate3d(9%, 5%, 0) scale(.86); opacity: .28; }
+    50%  { transform: translate3d(-6%, -6%, 0) scale(1.07); opacity: .42; }
+    100% { transform: translate3d(-17%, -10%, 0) scale(1.20); opacity: .33; }
+}
+
+@keyframes focusBlobBrightOne {
+    0%   { transform: translate3d(-7%, 5%, 0) scale(.88) rotate(-3deg); }
+    35%  { transform: translate3d(2%, -3%, 0) scale(1.05) rotate(2deg); }
+    70%  { transform: translate3d(11%, -8%, 0) scale(1.16) rotate(6deg); }
+    100% { transform: translate3d(17%, 2%, 0) scale(1.05) rotate(1deg); }
+}
+
+@keyframes focusBlobBrightTwo {
+    0%   { transform: translate3d(8%, -5%, 0) scale(.90) rotate(3deg); }
+    40%  { transform: translate3d(-2%, 2%, 0) scale(1.04) rotate(-2deg); }
+    75%  { transform: translate3d(-12%, 10%, 0) scale(1.18) rotate(-7deg); }
+    100% { transform: translate3d(-4%, 15%, 0) scale(1.08) rotate(-1deg); }
+}
+
+@keyframes focusBlobBrightThree {
+    0%   { transform: translate3d(-6%, 9%, 0) scale(.87) rotate(-2deg); }
+    40%  { transform: translate3d(4%, -2%, 0) scale(1.06) rotate(2deg); }
+    72%  { transform: translate3d(10%, -12%, 0) scale(1.17) rotate(5deg); }
+    100% { transform: translate3d(-2%, -4%, 0) scale(1.08) rotate(-2deg); }
+}
+
+@keyframes focusBlobBrightFour {
+    0%   { transform: translate3d(6%, 2%, 0) scale(.85) rotate(2deg); }
+    45%  { transform: translate3d(-5%, -5%, 0) scale(1.05) rotate(-3deg); }
+    100% { transform: translate3d(-15%, -12%, 0) scale(1.18) rotate(-6deg); }
+}
+
+.full-player.open .full-cover-wrap {
+    animation: focusArtworkBright 6.5s cubic-bezier(.35,.05,.2,1) infinite alternate;
+}
+
+@keyframes focusArtworkBright {
+    0%   { transform: translate3d(0, 3px, 0) scale(1.000) rotate(-.18deg); }
+    50%  { transform: translate3d(0, -6px, 0) scale(1.009) rotate(.12deg); }
+    100% { transform: translate3d(0, -12px, 0) scale(1.016) rotate(.18deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .full-player.open .full-bg,
+    .focus-palette::before,
+    .focus-palette::after,
+    .focus-blob,
+    .full-player.open .full-cover-wrap {
+        animation: none !important;
+    }
+}
+
 </style>
 
 </head>
@@ -7892,27 +8036,133 @@ async function updateFocusPalette(song) {
 }
 
 /* =========================================================
-   APPLE-INSPIRED FOCUS MOTION
-   Slow, coordinated artwork atmosphere driven entirely by CSS.
-   Album-art colors still come from extractFocusPalette().
+   APPLE-INSPIRED FOCUS MOTION — NON-REPEATING ORGANIC MOTION
+   Each cycle is regenerated with new waypoints, duration and
+   easing so the atmosphere does not follow a visible loop.
    ========================================================= */
 
-/* Kept as compatibility hooks for the existing player lifecycle.
-   The old per-frame JS blob loop is intentionally gone. */
+const blobMotionRaf = null;
+
 function initBlobMotion() {
     const palette = document.getElementById("focusPalette");
-    if (palette) palette.style.setProperty("--focus-motion-ready", "1");
+    if (!palette) return;
+    palette.style.setProperty("--focus-motion-ready", "1");
 }
 
 function startBlobMotion() {
     initBlobMotion();
+    setupOrganicFocusMotion();
 }
 
-/* Smooth cover crossfade — fade out, swap src once loaded, fade in */
-/*
- * Dual-layer crossfade — new cover fades IN over the old one.
- * No blank frame. Works for mini cover, full cover, and focus bg.
- */
+function stopBlobMotion() {
+    document.querySelectorAll(".focus-blob, .focus-palette::before, .focus-palette::after").forEach(() => {});
+    document.querySelectorAll(".focus-blob").forEach(el => {
+        if (el._organicAnimation) {
+            el._organicAnimation.cancel();
+            el._organicAnimation = null;
+        }
+    });
+}
+
+function organicRand(min, max) {
+    return min + Math.random() * (max - min);
+}
+
+function organicEase(t) {
+    // Smoothstep with a little asymmetry so each generated path feels less mechanical.
+    return t * t * (3 - 2 * t);
+}
+
+function makeBlobKeyframes(state) {
+    const points = [];
+    const count = Math.floor(5 + Math.random() * 3); // 5–7 waypoints
+
+    let x = state.x;
+    let y = state.y;
+    let scale = state.scale;
+    let rotate = state.rotate;
+
+    for (let i = 0; i < count; i++) {
+        x = Math.max(-18, Math.min(18, x + organicRand(-13, 13)));
+        y = Math.max(-18, Math.min(18, y + organicRand(-13, 13)));
+        scale = Math.max(.82, Math.min(1.20, scale + organicRand(-.10, .10)));
+        rotate = Math.max(-7, Math.min(7, rotate + organicRand(-3.5, 3.5)));
+
+        points.push({
+            transform: `translate3d(${x.toFixed(2)}%, ${y.toFixed(2)}%, 0) scale(${scale.toFixed(3)}) rotate(${rotate.toFixed(2)}deg)`,
+            offset: i / (count - 1),
+            easing: i < count - 1 ? `cubic-bezier(${organicRand(.16,.34).toFixed(3)},${organicRand(.58,.88).toFixed(3)},${organicRand(.16,.34).toFixed(3)},${organicRand(.86,1).toFixed(3)})` : undefined
+        });
+    }
+
+    state.x = x;
+    state.y = y;
+    state.scale = scale;
+    state.rotate = rotate;
+    return points;
+}
+
+function animateBlobOrganically(el, state) {
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const keyframes = makeBlobKeyframes(state);
+    const duration = Math.round(8500 + Math.random() * 9500); // 8.5–18s, different every cycle
+
+    const animation = el.animate(keyframes, {
+        duration,
+        fill: "forwards",
+        easing: "linear"
+    });
+
+    state.animation = animation;
+    el._organicAnimation = animation;
+
+    animation.finished.then(() => {
+        if (el._organicAnimation !== animation) return;
+        // Pause for a tiny randomized amount occasionally, like natural drift.
+        const pause = Math.random() < .28 ? organicRand(250, 900) : organicRand(20, 220);
+        setTimeout(() => {
+            if (el._organicAnimation === animation && !document.hidden) {
+                animateBlobOrganically(el, state);
+            }
+        }, pause);
+    }).catch(() => {});
+}
+
+function setupOrganicFocusMotion() {
+    const blobs = document.querySelectorAll(".focus-blob");
+    if (!blobs.length) return;
+
+    blobs.forEach((el, index) => {
+        if (el._organicAnimation) el._organicAnimation.cancel();
+
+        const state = {
+            x: organicRand(-6, 6),
+            y: organicRand(-6, 6),
+            scale: organicRand(.94, 1.06),
+            rotate: organicRand(-2, 2),
+            animation: null
+        };
+
+        // Stagger starts so all four lights never change direction together.
+        setTimeout(() => {
+            if (!document.hidden) animateBlobOrganically(el, state);
+        }, 300 + index * organicRand(500, 1300));
+    });
+
+    // Pause/restart cleanly when the tab loses visibility.
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            blobs.forEach(el => el._organicAnimation?.pause());
+        } else {
+            blobs.forEach(el => {
+                const anim = el._organicAnimation;
+                if (anim && anim.playState === "paused") anim.play().catch(() => {});
+            });
+        }
+    }, { once: true });
+}
+
 const coverLayers = {
     mini: { active: "a", a: null, b: null },
     full: { active: "a", a: null, b: null },
