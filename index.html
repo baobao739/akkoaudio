@@ -3126,6 +3126,45 @@ html[data-theme="light"] .play-overlay {
 }
 </style>
 
+
+<style id="akko-focus-controls-fix">
+/* FOCUS MODE — keep the visual layers from ever stealing clicks/taps. */
+.full-player.open {
+    pointer-events: auto !important;
+}
+
+.full-player.open .full-content,
+.full-player.open .full-left,
+.full-player.open .full-controls,
+.full-player.open .full-info,
+.full-player.open .full-progress,
+.full-player.open .lyrics-panel {
+    pointer-events: auto !important;
+}
+
+.full-player.open .full-back,
+.full-player.open .full-like,
+.full-player.open .full-control,
+.full-player.open .full-progress-bar {
+    position: relative;
+    z-index: 60 !important;
+    pointer-events: auto !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.full-player.open .full-back {
+    position: absolute;
+}
+
+.full-player.open .full-bg,
+.full-player.open .full-bg-overlay,
+.full-player.open .focus-palette,
+.full-player.open .focus-palette *,
+.full-player.open .full-cover-wrap .cover-layer {
+    pointer-events: none !important;
+}
+</style>
 </head>
 
 <body>
@@ -5088,11 +5127,7 @@ function startPlayback(list, startId, autoShuffle = false) {
     const picked = available.find(song => song.id === startId) || available[0];
     if (!picked) return;
 
-    // Starting a song directly does NOT fill Up Next.
-    // This keeps the queue empty until the user explicitly adds songs to it.
-    playQueue = [];
-    queueIndex = 0;
-
+    // Playing a song directly must NEVER erase the user's explicit Up Next list.
     currentIndex = songs.findIndex(s => s.id === picked.id);
     if (currentIndex < 0) currentIndex = 0;
 
@@ -5192,6 +5227,13 @@ function togglePlay() {
     }
 
     if (audio.paused) {
+        // If the track already ended, start it from the beginning instead of
+        // calling play() at the end and immediately firing another ended event.
+        if (audio.ended || (Number.isFinite(audio.duration) && audio.currentTime >= audio.duration - 0.05)) {
+            audio.currentTime = 0;
+            lastActiveIndex = null;
+            updateLyrics(0);
+        }
         audio.play().catch(() => {});
     } else {
         audio.pause();
@@ -5203,24 +5245,45 @@ function togglePlay() {
    ========================================================= */
 
 function nextSong() {
-    // Skip the current song and play the first explicit Up Next item.
+    // Explicit Up Next always wins.
     if (playQueue.length) {
         playCurrentFromQueue();
         return;
     }
 
-    // No Up Next item: keep the current song stopped rather than
-    // silently creating a new queue.
-    audio.pause();
-    updatePlayButtons();
+    // If Up Next is empty, Next still behaves like a normal music player:
+    // move through the library without filling Up Next.
+    if (!songs.length) return;
+
+    let nextIndex;
+    if (shuffleEnabled && songs.length > 1) {
+        const choices = songs.map((_, i) => i).filter(i => i !== currentIndex);
+        nextIndex = choices[Math.floor(Math.random() * choices.length)];
+    } else {
+        nextIndex = (currentIndex + 1) % songs.length;
+    }
+
+    currentIndex = nextIndex;
+    playSongNow(songs[currentIndex]);
 }
 
 function previousSong() {
-    // Previous remains a simple restart of the currently selected song.
     if (!getCurrentSong()) return;
 
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
+    // Normal player behavior: restart if we're a few seconds in; otherwise
+    // move to the previous library song. Up Next remains untouched.
+    if (audio.currentTime > 3 || !Number.isFinite(audio.duration)) {
+        audio.currentTime = 0;
+        return;
+    }
+
+    if (songs.length > 1) {
+        currentIndex = (currentIndex - 1 + songs.length) % songs.length;
+        playSongNow(songs[currentIndex]);
+    } else {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+    }
 }
 
 /* =========================================================
@@ -5957,9 +6020,23 @@ audio.addEventListener("ended", () => {
         return;
     }
 
-    // Nothing is waiting, so playback simply stops.
-    audio.pause();
-    updatePlayButtons();
+    // Nothing is explicitly queued: continue through the library normally.
+    // This does not add anything to Up Next.
+    if (songs.length > 1) {
+        let nextIndex;
+        if (shuffleEnabled) {
+            const choices = songs.map((_, i) => i).filter(i => i !== currentIndex);
+            nextIndex = choices[Math.floor(Math.random() * choices.length)];
+        } else {
+            nextIndex = (currentIndex + 1) % songs.length;
+        }
+
+        currentIndex = nextIndex;
+        playSongNow(songs[currentIndex]);
+    } else {
+        audio.pause();
+        updatePlayButtons();
+    }
 
     if (document.getElementById("queuePanel")?.classList.contains("open")) {
         renderQueuePanel();
