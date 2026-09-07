@@ -5167,11 +5167,9 @@ body::after {
 
     .bottom-player:has(.progress-area:hover) .mini-song,
     .bottom-player:has(.progress-area:focus-within) .mini-song {
-        /* visual only — keep clickable for touch / sticky hover on iPad */
-        opacity: 0.35;
-        transform: none;
-        filter: none;
-        pointer-events: auto;
+        opacity: 0;
+        transform: translate3d(0, -5px, 0) scale(.975);
+        filter: blur(4px);
     }
 
     .bottom-player:has(.progress-area:hover) .progress-area,
@@ -5390,7 +5388,7 @@ body::after {
         opacity: 0;
         transform: translate3d(0, -2px, 0) scale(.975);
         filter: blur(4px);
-        pointer-events: auto;
+        pointer-events: none;
     }
 
     .bottom-player:has(.progress-area:hover) .progress-area,
@@ -5566,14 +5564,13 @@ body::after {
         transition: none;
     }
 
-    /* Neutralize the previous timeline hover/focus expansion.
-       Never disable pointer-events on mini-song — breaks iPad/Safari after sticky :hover. */
+    /* Neutralize the previous timeline hover/focus expansion. */
     .bottom-player:has(.progress-area:hover) .mini-song,
     .bottom-player:has(.progress-area:focus-within) .mini-song {
         opacity: 1;
         transform: none;
         filter: none;
-        pointer-events: auto;
+        pointer-events: none;
     }
 
     .bottom-player:has(.progress-area:hover) .progress-area,
@@ -6031,287 +6028,6 @@ body {
         height: auto !important;
         max-height: none !important;
         /* top/left/bottom come from the existing shell/edge-inset rules */
-    }
-}
-
-
-
-/* =========================================================
-   MOBILE / IPAD TOUCH — RELIABLE CONTROLS
-   Non-overlapping hit targets. No sticky-hover traps.
-   ========================================================= */
-
-/* Kill decorative layers from eating taps */
-.app-atmosphere,
-.app-atmosphere *,
-.ambient-orb,
-body::before,
-body::after,
-.focus-palette,
-.focus-blob,
-.full-bg,
-.full-bg-overlay {
-    pointer-events: none !important;
-}
-
-.bottom-player {
-    position: fixed !important;
-    z-index: 300 !important;
-    pointer-events: auto !important;
-    touch-action: manipulation !important;
-    -webkit-user-select: none !important;
-    user-select: none !important;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.bottom-player,
-.bottom-player * {
-    -webkit-touch-callout: none;
-}
-
-/* Controls always tappable, min 44px Apple HIG */
-.bottom-player .control,
-.bottom-player .full-control,
-.bottom-player button {
-    position: relative;
-    z-index: 5;
-    pointer-events: auto !important;
-    touch-action: manipulation !important;
-    min-width: 44px !important;
-    min-height: 44px !important;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.bottom-player .control.main-play {
-    min-width: 52px !important;
-    min-height: 52px !important;
-}
-
-.bottom-player input[type="range"] {
-    pointer-events: auto !important;
-    touch-action: none; /* allow precise scrub without page scroll */
-    min-height: 28px;
-}
-
-.bottom-player .mini-song,
-.bottom-player .mini-cover-wrap,
-.bottom-player .mini-info {
-    position: relative;
-    z-index: 5;
-    pointer-events: auto !important;
-    touch-action: manipulation !important;
-}
-
-/* SVGs inside buttons must never intercept */
-.bottom-player .control svg,
-.bottom-player button svg {
-    pointer-events: none !important;
-}
-
-/* Never disable mini-song under progress states */
-.bottom-player:has(.progress-area:hover) .mini-song,
-.bottom-player:has(.progress-area:focus-within) .mini-song,
-.bottom-player .mini-song {
-    pointer-events: auto !important;
-    opacity: 1 !important;
-    filter: none !important;
-    transform: none !important;
-}
-
-/* ----- Coarse pointer / touch phones & tablets ----- */
-@media (hover: none), (pointer: coarse) {
-    /* Simple flex dock — no overlapping grid cells */
-    .bottom-player {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        gap: 8px !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        width: 100% !important;
-        max-width: none !important;
-        height: auto !important;
-        min-height: 64px !important;
-        padding: 8px 12px max(10px, env(safe-area-inset-bottom)) !important;
-        border-radius: 18px 18px 0 0 !important;
-        grid-template-columns: none !important;
-        grid-template-rows: none !important;
-    }
-
-    .bottom-player .player-controls {
-        display: flex !important;
-        flex: 1 1 auto !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 4px !important;
-        position: relative !important;
-        z-index: 6 !important;
-        pointer-events: auto !important;
-    }
-
-    /* Undo display:contents from desktop pill layout */
-    .bottom-player .player-controls > .control {
-        grid-column: auto !important;
-        grid-row: auto !important;
-    }
-
-    .bottom-player .mini-song {
-        flex: 0 1 34% !important;
-        width: auto !important;
-        max-width: 40% !important;
-        height: auto !important;
-        min-height: 48px !important;
-        margin: 0 !important;
-        padding: 4px !important;
-        gap: 8px !important;
-        display: flex !important;
-        align-items: center !important;
-        grid-column: auto !important;
-        grid-row: auto !important;
-    }
-
-    .bottom-player .mini-info {
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-        min-width: 0 !important;
-        overflow: hidden !important;
-    }
-
-    .bottom-player .mini-title,
-    .bottom-player .mini-artist {
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-    }
-
-    .bottom-player .mini-cover-wrap {
-        width: 48px !important;
-        height: 48px !important;
-        flex-shrink: 0 !important;
-    }
-
-    /* Progress sits on its own — does not cover mini-song */
-    .bottom-player .progress-area {
-        display: none !important; /* hide on phone/tablet dock; full player has scrubber */
-        grid-column: auto !important;
-        grid-row: auto !important;
-        position: static !important;
-        width: auto !important;
-        height: auto !important;
-        opacity: 1 !important;
-        transform: none !important;
-        pointer-events: none !important;
-    }
-
-    .bottom-player .repeat-label {
-        display: none !important;
-    }
-
-    /* Larger nav tabs on mobile bottom bar */
-    .sidebar .nav-button {
-        min-height: 48px !important;
-        pointer-events: auto !important;
-        touch-action: manipulation !important;
-    }
-
-    .sidebar {
-        z-index: 280 !important;
-        pointer-events: auto !important;
-    }
-
-    /* Song cards / likes */
-    .like-btn,
-    .queue-add-btn,
-    .track-row-like,
-    .shuffle-btn,
-    .nav-button,
-    .theme-btn,
-    .theme-option,
-    .accent-swatch,
-    .onboard-btn {
-        pointer-events: auto !important;
-        touch-action: manipulation !important;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .song-card,
-    .track-row,
-    .featured {
-        touch-action: manipulation;
-    }
-}
-
-/* Phones: keep bottom nav + dock stacked cleanly */
-@media (max-width: 760px) {
-    .bottom-player {
-        z-index: 300 !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-    }
-
-    .sidebar {
-        z-index: 280 !important;
-        bottom: calc(var(--player-height, 72px) + env(safe-area-inset-bottom, 0px)) !important;
-        pointer-events: auto !important;
-    }
-
-    .sidebar .nav-button {
-        pointer-events: auto !important;
-    }
-
-    .control.repeat,
-    .control.shuffle {
-        display: none !important;
-    }
-
-    .main {
-        padding-bottom: calc(var(--player-height, 72px) + var(--mobile-nav-height, 62px) + env(safe-area-inset-bottom, 0px) + 20px) !important;
-    }
-}
-
-/* Full player controls on mobile */
-.full-player .full-control,
-.full-player .full-back,
-.full-player .full-like {
-    pointer-events: auto !important;
-    touch-action: manipulation !important;
-    min-width: 48px !important;
-    min-height: 48px !important;
-}
-
-.full-player .full-control.big {
-    min-width: 60px !important;
-    min-height: 60px !important;
-}
-
-
-
-/* Reduce paint lag on mobile controls */
-@media (hover: none), (pointer: coarse) {
-    .bottom-player .control,
-    .bottom-player .control *,
-    .sidebar .nav-button,
-    .like-btn,
-    .shuffle-btn {
-        transition-duration: .12s !important;
-    }
-
-    /* Prevent invisible full-player when closed from intercepting */
-    .full-player:not(.open) {
-        pointer-events: none !important;
-        visibility: hidden !important;
-    }
-
-    .queue-panel:not(.open) {
-        pointer-events: none !important;
-    }
-
-    .onboarding.hidden {
-        pointer-events: none !important;
     }
 }
 
@@ -8817,81 +8533,65 @@ function closeQueuePanel() {
    CONTROLS
    ========================================================= */
 
+document.getElementById("playButton")
+    .addEventListener("click", togglePlay);
 
-/* Instant, reliable taps on mobile (iOS Safari) */
-function bindTap(el, fn) {
-    if (!el || el.dataset.tapBound === "1") return;
-    el.dataset.tapBound = "1";
-    let last = 0;
-    const run = (e) => {
-        const t = Date.now();
-        if (t - last < 320) return;
-        last = t;
-        fn(e);
-    };
-    el.addEventListener("pointerup", (e) => {
-        if (e.button != null && e.button !== 0) return;
-        // ignore pointerup that is a drag off the button
-        if (e.target !== el && !el.contains(e.target)) return;
-        run(e);
+document.getElementById("fullPlay")
+    .addEventListener("click", togglePlay);
+
+document.getElementById("nextButton")
+    .addEventListener("click", nextSong);
+
+document.getElementById("fullNext")
+    .addEventListener("click", nextSong);
+
+document.getElementById("previousButton")
+    .addEventListener("click", previousSong);
+
+document.getElementById("fullPrevious")
+    .addEventListener("click", previousSong);
+
+document.getElementById("repeatButton")
+    .addEventListener("click", () => {
+        toggleRepeat(true);
     });
-    el.addEventListener("click", (e) => {
-        run(e);
+
+document.getElementById("fullRepeat")
+    .addEventListener("click", () => {
+        toggleRepeat(true);
     });
-}
 
-bindTap(document.getElementById("playButton"), togglePlay);
+document.getElementById("shuffleButton")
+    ?.addEventListener("click", () => {
+        toggleShuffle(true);
+    });
 
-bindTap(document.getElementById("fullPlay"), togglePlay);
+document.getElementById("fullShuffle")
+    ?.addEventListener("click", () => {
+        toggleShuffle(true);
+    });
 
-bindTap(document.getElementById("nextButton"), nextSong);
+document.getElementById("fullBack")
+    .addEventListener("click", closeFullPlayer);
 
-bindTap(document.getElementById("fullNext"), nextSong);
-
-bindTap(document.getElementById("previousButton"), previousSong);
-
-bindTap(document.getElementById("fullPrevious"), previousSong);
-
-bindTap(document.getElementById("repeatButton"), () => toggleRepeat(true));
-
-bindTap(document.getElementById("fullRepeat"), () => toggleRepeat(true));
-
-bindTap(document.getElementById("shuffleButton"), () => toggleShuffle(true));
-
-bindTap(document.getElementById("fullShuffle"), () => toggleShuffle(true));
-
-bindTap(document.getElementById("fullBack"), closeFullPlayer);
-
-let _focusDockLock = 0;
 function openFocusFromDock(e) {
-    if (e && e.target && e.target.closest("button, input, a, .control, .progress, .progress-area")) return;
+    if (e && e.target && e.target.closest("button, input, a")) return;
     if (!getCurrentSong()) return;
-    const now = Date.now();
-    if (now - _focusDockLock < 450) return; // debounce click+touchend on iOS
-    _focusDockLock = now;
     openFullPlayer();
 }
 
-function bindDockFocusOpen(el) {
-    if (!el || el.dataset.focusBound === "1") return;
-    el.dataset.focusBound = "1";
-    const handler = (e) => openFocusFromDock(e);
-    el.addEventListener("click", handler);
-    // iPad Safari: touchend is more reliable than delayed click after sticky :hover
-    el.addEventListener("touchend", (e) => {
-        if (e.changedTouches && e.changedTouches.length !== 1) return;
-        handler(e);
-    }, { passive: true });
-}
+document.getElementById("miniSong")
+    ?.addEventListener("click", openFocusFromDock);
 
-bindDockFocusOpen(document.getElementById("miniSong"));
-bindDockFocusOpen(document.querySelector("#miniSong .mini-cover-wrap"));
-bindDockFocusOpen(document.getElementById("miniInfo"));
+document.getElementById("miniCover")
+    ?.closest(".mini-cover-wrap")
+    ?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openFocusFromDock(e);
+    });
 
-document.querySelectorAll(".bottom-player .control, .bottom-player input[type='range']").forEach((el) => {
-    el.style.pointerEvents = "auto";
-    el.style.touchAction = "manipulation";
-});
+document.getElementById("miniInfo")
+    ?.addEventListener("click", openFocusFromDock);
 
 document.getElementById("progressBar")
     .addEventListener("input", event => {
