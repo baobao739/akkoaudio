@@ -6103,6 +6103,199 @@ body {
         z-index: 4;
     }
 }
+
+
+/* =========================================================
+   FOCUS MODE — APPLE-INSPIRED LIVING ARTWORK
+   Visual direction: soft, slow, layered light instead of obvious bubbles.
+   ========================================================= */
+
+.full-player {
+    isolation: isolate;
+    background: var(--theme-focus, #08090f);
+}
+
+.full-bg {
+    inset: -54px;
+    width: calc(100% + 108px);
+    height: calc(100% + 108px);
+    filter: blur(54px) saturate(1.38) brightness(.72);
+    transform: scale(1.13);
+    opacity: .94;
+    will-change: transform, opacity;
+}
+
+.full-player.open .full-bg {
+    animation: bgKenBurnsApple 24s cubic-bezier(.22,.72,.2,1) infinite alternate;
+}
+
+@keyframes bgKenBurnsApple {
+    0%   { transform: scale(1.13) translate3d(0, 0, 0); }
+    50%  { transform: scale(1.17) translate3d(-.65%, .45%, 0); }
+    100% { transform: scale(1.205) translate3d(-1.2%, .9%, 0); }
+}
+
+.full-bg-overlay {
+    z-index: 3;
+    background:
+        linear-gradient(115deg, rgba(5,6,12,.48), rgba(5,6,12,.12) 47%, rgba(5,6,12,.50)),
+        radial-gradient(circle at 50% 42%, transparent 0 29%, rgba(2,3,8,.22) 86%, rgba(2,3,8,.40) 100%);
+    backdrop-filter: saturate(1.04);
+    -webkit-backdrop-filter: saturate(1.04);
+}
+
+.focus-palette {
+    inset: -18%;
+    z-index: 1;
+    opacity: 0;
+    filter: saturate(1.08) contrast(1.015);
+    transform: translateZ(0);
+    pointer-events: none;
+}
+
+.full-player.open .focus-palette {
+    opacity: 1;
+    transition: opacity 1.15s cubic-bezier(.2,.8,.2,1);
+}
+
+/* Soft color fields: broad and low-contrast, so they read like light in glass. */
+.focus-palette::before,
+.focus-palette::after {
+    position: absolute;
+    display: block;
+    content: "";
+    pointer-events: none;
+    border-radius: 50%;
+    mix-blend-mode: screen;
+    filter: blur(72px);
+    will-change: transform, opacity;
+}
+
+.focus-palette::before {
+    width: 68%;
+    aspect-ratio: 1;
+    top: 2%;
+    left: 6%;
+    background: radial-gradient(circle at 50% 50%, var(--palette-1, rgba(95,95,105,.50)) 0%, transparent 70%);
+    opacity: .30;
+    animation: focusBloomOne 28s cubic-bezier(.25,.7,.2,1) infinite alternate;
+}
+
+.focus-palette::after {
+    width: 58%;
+    aspect-ratio: 1;
+    right: 4%;
+    bottom: -4%;
+    background: radial-gradient(circle at 50% 50%, var(--palette-2, rgba(75,75,85,.42)) 0%, transparent 72%);
+    opacity: .24;
+    animation: focusBloomTwo 32s cubic-bezier(.25,.7,.2,1) infinite alternate;
+}
+
+@keyframes focusBloomOne {
+    0%   { transform: translate3d(-4%, 5%, 0) scale(.94); opacity: .20; }
+    50%  { transform: translate3d(4%, -2%, 0) scale(1.035); opacity: .30; }
+    100% { transform: translate3d(8%, -7%, 0) scale(1.08); opacity: .25; }
+}
+
+@keyframes focusBloomTwo {
+    0%   { transform: translate3d(5%, 2%, 0) scale(.92); opacity: .17; }
+    50%  { transform: translate3d(-3%, -5%, 0) scale(1.03); opacity: .25; }
+    100% { transform: translate3d(-8%, -9%, 0) scale(1.09); opacity: .21; }
+}
+
+/* Four layers remain in the DOM, but become much softer and slower. */
+.focus-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(68px) saturate(1.16);
+    mix-blend-mode: screen;
+    will-change: transform;
+    transition: none;
+}
+
+.focus-blob.b1 {
+    width: 58%;
+    height: 58%;
+    top: -13%;
+    left: -11%;
+    background: var(--palette-1, rgba(90,90,100,.48));
+    opacity: .24;
+    animation: appleBlobOne 30s cubic-bezier(.22,.72,.2,1) infinite alternate;
+}
+
+.focus-blob.b2 {
+    width: 54%;
+    height: 54%;
+    top: -8%;
+    right: -11%;
+    left: auto;
+    background: var(--palette-2, rgba(70,70,80,.42));
+    opacity: .20;
+    animation: appleBlobTwo 34s cubic-bezier(.22,.72,.2,1) infinite alternate;
+}
+
+.focus-blob.b3 {
+    width: 62%;
+    height: 62%;
+    bottom: -24%;
+    left: 17%;
+    top: auto;
+    background: var(--palette-3, rgba(110,110,120,.36));
+    opacity: .18;
+    animation: appleBlobThree 38s cubic-bezier(.22,.72,.2,1) infinite alternate;
+}
+
+.focus-blob.b4 {
+    width: 42%;
+    height: 42%;
+    bottom: 2%;
+    right: -7%;
+    left: auto;
+    top: auto;
+    background: var(--palette-1, rgba(90,90,100,.34));
+    opacity: .12;
+    animation: appleBlobFour 32s cubic-bezier(.22,.72,.2,1) infinite alternate;
+}
+
+@keyframes appleBlobOne {
+    0%   { transform: translate3d(-1%, 2%, 0) scale(.97) rotate(-1deg); }
+    100% { transform: translate3d(9%, -6%, 0) scale(1.09) rotate(4deg); }
+}
+
+@keyframes appleBlobTwo {
+    0%   { transform: translate3d(2%, -2%, 0) scale(.98) rotate(1deg); }
+    100% { transform: translate3d(-8%, 7%, 0) scale(1.07) rotate(-5deg); }
+}
+
+@keyframes appleBlobThree {
+    0%   { transform: translate3d(-3%, 4%, 0) scale(.96) rotate(-2deg); }
+    100% { transform: translate3d(6%, -7%, 0) scale(1.08) rotate(3deg); }
+}
+
+@keyframes appleBlobFour {
+    0%   { transform: translate3d(2%, 1%, 0) scale(.95) rotate(0deg); }
+    100% { transform: translate3d(-7%, -5%, 0) scale(1.06) rotate(-4deg); }
+}
+
+/* Very subtle artwork breathing; no random JS and no border-radius morphing. */
+.full-player.open .full-cover-wrap {
+    animation: appleArtworkFloat 9s cubic-bezier(.22,.72,.2,1) infinite alternate;
+}
+
+@keyframes appleArtworkFloat {
+    0%   { transform: translate3d(0, 0, 0) scale(1) rotate(-.10deg); }
+    100% { transform: translate3d(0, -7px, 0) scale(1.006) rotate(.10deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .full-player.open .full-bg,
+    .focus-palette::before,
+    .focus-palette::after,
+    .focus-blob,
+    .full-player.open .full-cover-wrap {
+        animation: none !important;
+    }
+}
 </style>
 
 </head>
@@ -7699,82 +7892,20 @@ async function updateFocusPalette(song) {
 }
 
 /* =========================================================
-   RANDOM DYNAMIC BLOB MOTION
-   Continuous random targets — never the same path twice
+   APPLE-INSPIRED FOCUS MOTION
+   Slow, coordinated artwork atmosphere driven entirely by CSS.
+   Album-art colors still come from extractFocusPalette().
    ========================================================= */
 
-let blobMotionRaf = null;
-const blobStates = [];
-
-function rand(min, max) {
-    return min + Math.random() * (max - min);
-}
-
+/* Kept as compatibility hooks for the existing player lifecycle.
+   The old per-frame JS blob loop is intentionally gone. */
 function initBlobMotion() {
-    const blobs = document.querySelectorAll(".focus-blob");
-    blobStates.length = 0;
-
-    blobs.forEach((el) => {
-        const state = {
-            el,
-            x: rand(-10, 10),
-            y: rand(-10, 10),
-            scale: rand(0.95, 1.1),
-            rot: rand(-8, 8),
-            tx: rand(-28, 28),
-            ty: rand(-28, 28),
-            tscale: rand(0.82, 1.28),
-            trot: rand(-18, 18),
-            speed: rand(0.0008, 0.0018),
-            nextAt: performance.now() + rand(2500, 5500)
-        };
-        blobStates.push(state);
-        el.style.transform =
-            `translate(${state.x}%, ${state.y}%) scale(${state.scale}) rotate(${state.rot}deg)`;
-    });
-}
-
-function pickNewBlobTarget(state, now) {
-    state.tx = rand(-32, 32);
-    state.ty = rand(-32, 32);
-    state.tscale = rand(0.8, 1.3);
-    state.trot = rand(-20, 20);
-    state.speed = rand(0.0007, 0.002);
-    state.nextAt = now + rand(2800, 6500);
-}
-
-function tickBlobMotion(now) {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        blobMotionRaf = null;
-        return;
-    }
-
-    const open = document.getElementById("fullPlayer")?.classList.contains("open");
-
-    if (open) {
-        blobStates.forEach((state) => {
-            if (now >= state.nextAt) {
-                pickNewBlobTarget(state, now);
-            }
-
-            const ease = 1 - Math.exp(-state.speed * 16);
-            state.x += (state.tx - state.x) * ease;
-            state.y += (state.ty - state.y) * ease;
-            state.scale += (state.tscale - state.scale) * ease;
-            state.rot += (state.trot - state.rot) * ease;
-
-            state.el.style.transform =
-                `translate(${state.x.toFixed(2)}%, ${state.y.toFixed(2)}%) scale(${state.scale.toFixed(3)}) rotate(${state.rot.toFixed(2)}deg)`;
-        });
-    }
-
-    blobMotionRaf = requestAnimationFrame(tickBlobMotion);
+    const palette = document.getElementById("focusPalette");
+    if (palette) palette.style.setProperty("--focus-motion-ready", "1");
 }
 
 function startBlobMotion() {
-    if (blobMotionRaf) return;
-    if (!blobStates.length) initBlobMotion();
-    blobMotionRaf = requestAnimationFrame(tickBlobMotion);
+    initBlobMotion();
 }
 
 /* Smooth cover crossfade — fade out, swap src once loaded, fade in */
