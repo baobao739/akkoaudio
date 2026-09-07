@@ -1,53 +1,6 @@
 (() => {
   "use strict";
 
-  // Performance pass: the main UI had a global transition on every element,
-  // including backdrop-filter. That makes scrolling and interactions very expensive.
-  // Keep the spatial/glass look, but remove the expensive always-on transitions.
-  const PERF_STYLE = document.createElement("style");
-  PERF_STYLE.id = "akkoflac-performance-fix";
-  PERF_STYLE.textContent = `
-    html * {
-      transition-property: none !important;
-      transition-duration: 0s !important;
-      transition-delay: 0s !important;
-    }
-
-    html button,
-    html .song-card,
-    html .control,
-    html .full-control,
-    html .nav-button,
-    html input[type="range"] {
-      transition-property: transform, opacity, background-color, color, border-color, box-shadow !important;
-      transition-duration: .16s !important;
-      transition-timing-function: ease-out !important;
-    }
-
-    /* Backdrop blur is one of the heaviest effects on large/fixed surfaces. */
-    .sidebar,
-    .glass,
-    .glass-strong,
-    .featured,
-    .search-box input,
-    .shuffle-btn {
-      -webkit-backdrop-filter: blur(16px) saturate(1.2) !important;
-      backdrop-filter: blur(16px) saturate(1.2) !important;
-    }
-
-    /* Don't animate decorative effects continuously. */
-    .logo span {
-      animation: none !important;
-    }
-
-    /* Let the browser skip off-screen rendering work where safe. */
-    .song-card,
-    .section {
-      contain: layout paint;
-    }
-  `;
-  document.head.appendChild(PERF_STYLE);
-
   const STYLE = `
     #akkoflac-access-overlay {
       position: fixed;
@@ -76,9 +29,7 @@
       background: rgba(255,255,255,.055);
       backdrop-filter: blur(28px);
       -webkit-backdrop-filter: blur(28px);
-      box-shadow:
-        0 25px 80px rgba(0,0,0,.45),
-        0 0 45px var(--accent-glow, rgba(255,255,255,.08));
+      box-shadow: 0 25px 80px rgba(0,0,0,.45), 0 0 45px var(--accent-glow, rgba(255,255,255,.08));
     }
 
     .akkoflac-access-title {
@@ -136,9 +87,7 @@
       filter: brightness(1.08);
     }
 
-    .akkoflac-access-button:active {
-      transform: translateY(0);
-    }
+    .akkoflac-access-button:active { transform: translateY(0); }
 
     .akkoflac-access-error {
       min-height: 20px;
@@ -148,9 +97,7 @@
       font-weight: 700;
     }
 
-    .akkoflac-access-shake {
-      animation: akkoAccessShake .35s ease;
-    }
+    .akkoflac-access-shake { animation: akkoAccessShake .35s ease; }
 
     @keyframes akkoAccessShake {
       0%,100% { transform: translateX(0); }
@@ -170,39 +117,13 @@
 
     const overlay = document.createElement("div");
     overlay.id = "akkoflac-access-overlay";
-
     overlay.innerHTML = `
       <div class="akkoflac-access-box" id="akkoflac-access-box">
         <h1 class="akkoflac-access-title">Enter Access Code</h1>
-
-        <p class="akkoflac-access-subtitle">
-          Enter your 5-character AkkoFlac access code to continue.
-        </p>
-
-        <input
-          id="akkoflac-access-input"
-          class="akkoflac-access-input"
-          type="text"
-          maxlength="5"
-          minlength="5"
-          autocomplete="off"
-          autocapitalize="characters"
-          spellcheck="false"
-          placeholder="•••••"
-        />
-
-        <button
-          id="akkoflac-access-button"
-          class="akkoflac-access-button"
-          type="button"
-        >
-          Continue
-        </button>
-
-        <div
-          id="akkoflac-access-error"
-          class="akkoflac-access-error"
-        ></div>
+        <p class="akkoflac-access-subtitle">Enter your 5-character AkkoFlac access code to continue.</p>
+        <input id="akkoflac-access-input" class="akkoflac-access-input" type="text" maxlength="5" minlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="•••••" />
+        <button id="akkoflac-access-button" class="akkoflac-access-button" type="button">Continue</button>
+        <div id="akkoflac-access-error" class="akkoflac-access-error"></div>
       </div>
     `;
 
@@ -214,11 +135,7 @@
     const box = document.getElementById("akkoflac-access-box");
 
     input.addEventListener("input", () => {
-      input.value = input.value
-        .replace(/[^a-zA-Z0-9]/g, "")
-        .slice(0, 5)
-        .toUpperCase();
-
+      input.value = input.value.replace(/[^a-zA-Z0-9]/g, "").slice(0, 5).toUpperCase();
       error.textContent = "";
     });
 
@@ -230,7 +147,6 @@
 
     async function redeem() {
       const code = input.value.trim().toUpperCase();
-
       if (code.length !== 5) {
         showError("Enter a 5-character code.");
         return;
@@ -240,16 +156,11 @@
       button.textContent = "Checking...";
 
       try {
-        const response = await fetch(
-          "/.netlify/functions/verify-code",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ code })
-          }
-        );
+        const response = await fetch("/.netlify/functions/verify-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code })
+        });
 
         const data = await response.json().catch(() => ({}));
 
@@ -259,11 +170,7 @@
         }
 
         overlay.classList.add("hidden");
-
-        setTimeout(() => {
-          overlay.remove();
-        }, 500);
-
+        setTimeout(() => overlay.remove(), 500);
       } catch {
         showError("Couldn't connect. Try again.");
       } finally {
@@ -274,11 +181,9 @@
 
     function showError(message) {
       error.textContent = message;
-
       box.classList.remove("akkoflac-access-shake");
       void box.offsetWidth;
       box.classList.add("akkoflac-access-shake");
-
       button.disabled = false;
       button.textContent = "Continue";
     }
@@ -288,51 +193,45 @@
 
   async function checkAccess() {
     try {
-      const response = await fetch(
-        "/.netlify/functions/access-status",
-        {
-          credentials: "include"
-        }
-      );
-
+      const response = await fetch("/.netlify/functions/access-status", { credentials: "include" });
       const data = await response.json();
-
       if (data.valid) return true;
     } catch {}
-
     return false;
   }
 
   async function start() {
     const hasAccess = await checkAccess();
-
     if (hasAccess) return;
 
-    const waitForOnboarding = setInterval(() => {
-      const onboarding =
-        document.getElementById("onboarding");
+    const onboarding = document.getElementById("onboarding");
 
-      const onboardingDone =
-        localStorage.getItem("akkoflac-onboarded") === "1";
-
-      if (
-        onboardingDone &&
-        (!onboarding || onboarding.classList.contains("hidden"))
-      ) {
-        clearInterval(waitForOnboarding);
+    // Watch the onboarding itself. When accent/theme selection completes and
+    // the onboarding gets hidden, create the gate in the same rendering turn.
+    // MutationObserver runs before the browser paints, preventing the website
+    // from flashing for a frame between onboarding and the access screen.
+    const showAfterOnboarding = () => {
+      const onboardingDone = localStorage.getItem("akkoflac-onboarded") === "1";
+      const onboardingHidden = !onboarding || onboarding.classList.contains("hidden");
+      if (onboardingDone && onboardingHidden) {
+        observer.disconnect();
         createGate();
       }
-    }, 200);
+    };
 
+    const observer = new MutationObserver(showAfterOnboarding);
+
+    if (onboarding) {
+      observer.observe(onboarding, { attributes: true, attributeFilter: ["class", "style"] });
+    }
+
+    // Handles users who already completed onboarding before this script ran.
+    showAfterOnboarding();
+
+    // Safety fallback in case the onboarding implementation changes later.
     setTimeout(() => {
-      clearInterval(waitForOnboarding);
-
-      if (
-        localStorage.getItem("akkoflac-onboarded") === "1" &&
-        !document.getElementById("akkoflac-access-overlay")
-      ) {
-        createGate();
-      }
+      observer.disconnect();
+      showAfterOnboarding();
     }, 10000);
   }
 
