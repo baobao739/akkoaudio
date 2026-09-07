@@ -4245,22 +4245,11 @@ function showQueueToast(message) {
 function addSongToQueue(song) {
     if (!song) return;
 
-    if (!playQueue.length) {
-        playQueue = [song];
-        queueIndex = 0;
-        playCurrentFromQueue();
-        showQueueToast("Now playing");
-        const panel = document.getElementById("queuePanel");
-        if (panel && !panel.classList.contains("open")) {
-            panel.classList.add("open");
-        }
-        renderQueuePanel();
-        return;
-    }
-
+    // Up Next contains upcoming songs only — never the song currently playing.
     playQueue.push(song);
+
     const total = playQueue.length;
-    showQueueToast(`Added · ${total} in queue`);
+    showQueueToast(`Added · ${total} ${total === 1 ? "song" : "songs"} up next`);
 
     const panel = document.getElementById("queuePanel");
     if (panel) {
@@ -4545,9 +4534,7 @@ searchInput.addEventListener("input", event => {
    ========================================================= */
 
 function getCurrentSong() {
-    if (playQueue.length) {
-        return playQueue[queueIndex] || null;
-    }
+    // The queue is strictly "Up Next"; it never represents the current song.
     return songs[currentIndex] || null;
 }
 
@@ -5092,27 +5079,24 @@ function shuffleArray(list) {
 function startPlayback(list, startId, autoShuffle = false) {
     if (!list || !list.length) return;
 
-    let queue = [...list];
+    let available = [...list];
 
-    if (autoShuffle && queue.length > 1) {
-        queue = shuffleArray(queue);
-        /* Keep the clicked song first so it plays immediately */
-        const idx = queue.findIndex(s => s.id === startId);
-        if (idx > 0) {
-            const [picked] = queue.splice(idx, 1);
-            queue.unshift(picked);
-        }
+    if (autoShuffle && available.length > 1) {
+        available = shuffleArray(available);
     }
 
-    playQueue = queue;
-    queueIndex = Math.max(0, playQueue.findIndex(s => s.id === startId));
-    if (queueIndex < 0) queueIndex = 0;
+    const picked = available.find(song => song.id === startId) || available[0];
+    if (!picked) return;
 
-    /* Keep currentIndex in sync for any legacy use */
-    currentIndex = songs.findIndex(s => s.id === playQueue[queueIndex].id);
+    // Starting a song directly does NOT fill Up Next.
+    // This keeps the queue empty until the user explicitly adds songs to it.
+    playQueue = [];
+    queueIndex = 0;
+
+    currentIndex = songs.findIndex(s => s.id === picked.id);
     if (currentIndex < 0) currentIndex = 0;
 
-    playCurrentFromQueue();
+    playSongNow(picked);
 }
 
 
@@ -5152,11 +5136,16 @@ function playSongNow(song) {
 function playCurrentFromQueue() {
     if (!playQueue.length) return;
 
-    const song = playQueue[queueIndex];
+    // The first item is always the next song to play.
+    const song = playQueue.shift();
     if (!song) return;
+
+    currentIndex = songs.findIndex(s => s.id === song.id);
+    if (currentIndex < 0) currentIndex = 0;
 
     audio.pause();
     playSongNow(song);
+    renderQueuePanel();
 }
 
 
@@ -5172,10 +5161,15 @@ function shuffleLikedSongs() {
     const liked = songs.filter(s => isLiked(s.id));
     if (!liked.length) return;
 
-    playQueue = shuffleArray(liked);
-    queueIndex = 0;
-    currentIndex = songs.findIndex(s => s.id === playQueue[0].id);
-    playCurrentFromQueue();
+    // Play a liked song immediately without putting the whole liked library
+    // into Up Next.
+    const shuffled = shuffleArray(liked);
+    const song = shuffled[0];
+
+    currentIndex = songs.findIndex(s => s.id === song.id);
+    if (currentIndex < 0) currentIndex = 0;
+
+    playSongNow(song);
     openFullPlayer();
 }
 
@@ -5188,7 +5182,11 @@ function togglePlay() {
         if (playQueue.length) {
             playCurrentFromQueue();
         } else {
-            startPlayback(songs, songs[0]?.id, true);
+            const song = songs[currentIndex] || songs[0];
+            if (song) {
+                currentIndex = songs.findIndex(s => s.id === song.id);
+                playSongNow(song);
+            }
         }
         return;
     }
@@ -5205,25 +5203,24 @@ function togglePlay() {
    ========================================================= */
 
 function nextSong() {
-    if (!playQueue.length) {
-        if (!songs.length) return;
-        startPlayback(songs, songs[0].id, true);
+    // Skip the current song and play the first explicit Up Next item.
+    if (playQueue.length) {
+        playCurrentFromQueue();
         return;
     }
 
-    queueIndex = (queueIndex + 1) % playQueue.length;
-    playCurrentFromQueue();
+    // No Up Next item: keep the current song stopped rather than
+    // silently creating a new queue.
+    audio.pause();
+    updatePlayButtons();
 }
 
 function previousSong() {
-    if (!playQueue.length) {
-        if (!songs.length) return;
-        startPlayback(songs, songs[0].id, true);
-        return;
-    }
+    // Previous remains a simple restart of the currently selected song.
+    if (!getCurrentSong()) return;
 
-    queueIndex = (queueIndex - 1 + playQueue.length) % playQueue.length;
-    playCurrentFromQueue();
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
 }
 
 /* =========================================================
@@ -5304,11 +5301,9 @@ function toggleShuffle(showMessage = true) {
     shuffleEnabled = !shuffleEnabled;
     updateShuffleButtons();
 
+    // Shuffle only the explicit Up Next items. The current song is untouched.
     if (shuffleEnabled && playQueue.length > 1) {
-        const current = playQueue[queueIndex];
-        const rest = playQueue.filter((_, i) => i !== queueIndex);
-        playQueue = [current, ...shuffleArray(rest)];
-        queueIndex = 0;
+        playQueue = shuffleArray(playQueue);
     }
 
     if (!showMessage) return;
@@ -5643,7 +5638,7 @@ function renderQueuePanel() {
 
     const q = queueSearchQuery.trim().toLowerCase();
 
-    // SEARCH MODE: search ALL songs so you can add them
+    // SEARCH MODE: show songs that can be explicitly added to Up Next.
     if (q) {
         if (title) title.textContent = "Add to Queue";
 
@@ -5675,18 +5670,11 @@ function renderQueuePanel() {
 
             row.querySelector(".queue-item-add")?.addEventListener("click", (e) => {
                 e.stopPropagation();
-                addSongToQueue(song);
-                // Go back to the real Up Next list after adding
-                queueSearchQuery = "";
-                const input = document.getElementById("queueSearchInput");
-                if (input) input.value = "";
-                renderQueuePanel();
-            });
 
-            // clicking the row also adds
-            row.addEventListener("click", (e) => {
-                if (e.target.closest(".queue-item-add")) return;
                 addSongToQueue(song);
+
+                // Adding a song ends search mode so the new item is visible
+                // in the real Up Next list. Search must be started again manually.
                 queueSearchQuery = "";
                 const input = document.getElementById("queueSearchInput");
                 if (input) input.value = "";
@@ -5696,23 +5684,24 @@ function renderQueuePanel() {
             list.appendChild(row);
             requestAnimationFrame(() => initSongTitleMarquee(row));
         });
+
         return;
     }
 
-    // NORMAL MODE: show current Up Next queue
+    // NORMAL MODE: show ONLY songs waiting to play.
     const count = playQueue.length;
     if (title) {
         title.textContent = count > 0 ? `Up Next (${count})` : "Up Next";
     }
 
     if (!playQueue.length) {
-        list.innerHTML = '<div class="queue-empty">Queue is empty.<br>Search above to find songs and add them.</div>';
+        list.innerHTML = '<div class="queue-empty">Queue is empty.<br>Search above to find a song and add it.</div>';
         return;
     }
 
     playQueue.forEach((song, index) => {
         const row = document.createElement("div");
-        row.className = "queue-item" + (index === queueIndex ? " current" : "");
+        row.className = "queue-item";
         row.style.animationDelay = `${Math.min(index, 12) * 0.03}s`;
         row.dataset.index = String(index);
 
@@ -5725,10 +5714,17 @@ function renderQueuePanel() {
             <button class="queue-item-remove" title="Remove" data-index="${index}" type="button">×</button>
         `;
 
+        // Clicking a queued song plays it immediately and removes it from Up Next.
         row.addEventListener("click", (e) => {
             if (e.target.closest(".queue-item-remove")) return;
-            queueIndex = index;
-            playCurrentFromQueue();
+
+            const [picked] = playQueue.splice(index, 1);
+            if (!picked) return;
+
+            currentIndex = songs.findIndex(s => s.id === picked.id);
+            if (currentIndex < 0) currentIndex = 0;
+
+            playSongNow(picked);
             renderQueuePanel();
         });
 
@@ -5745,31 +5741,15 @@ function renderQueuePanel() {
 function removeFromQueue(index) {
     if (index < 0 || index >= playQueue.length) return;
 
-    const wasCurrent = index === queueIndex;
     playQueue.splice(index, 1);
-
-    if (!playQueue.length) {
-        queueIndex = 0;
-        renderQueuePanel();
-        return;
-    }
-
-    if (index < queueIndex) {
-        queueIndex = Math.max(0, queueIndex - 1);
-    } else if (wasCurrent) {
-        queueIndex = Math.min(queueIndex, playQueue.length - 1);
-        playCurrentFromQueue();
-    }
-
     renderQueuePanel();
 }
 
 function shuffleQueueKeepCurrent() {
     if (playQueue.length <= 1) return;
-    const current = playQueue[queueIndex];
-    const rest = playQueue.filter((_, i) => i !== queueIndex);
-    playQueue = [current, ...shuffleArray(rest)];
-    queueIndex = 0;
+
+    // There is no "current" item in Up Next, so shuffle every queued item.
+    playQueue = shuffleArray(playQueue);
     renderQueuePanel();
 }
 
@@ -5970,33 +5950,22 @@ audio.addEventListener("ended", () => {
         return;
     }
 
-    // Remove the finished song from Up Next
+    // The current song is not part of Up Next. Only consume the first
+    // explicitly queued song when the current track finishes.
     if (playQueue.length) {
-        playQueue.splice(queueIndex, 1);
-
-        // Last song finished — stop, don't loop it
-        if (!playQueue.length) {
-            queueIndex = 0;
-            audio.pause();
-            updatePlayButtons();
-            if (document.getElementById("queuePanel")?.classList.contains("open")) {
-                renderQueuePanel();
-            }
-            return;
-        }
-
-        // Next song slides into this index
-        if (queueIndex >= playQueue.length) {
-            queueIndex = 0;
-        }
         playCurrentFromQueue();
         return;
     }
 
-    // Empty queue — just stop
+    // Nothing is waiting, so playback simply stops.
     audio.pause();
     updatePlayButtons();
+
+    if (document.getElementById("queuePanel")?.classList.contains("open")) {
+        renderQueuePanel();
+    }
 });
+
 
 /* =========================================================
    KEYBOARD CONTROLS
@@ -6350,7 +6319,7 @@ function initialize() {
     setupOnboarding();
     initCoverLayers();
 
-    /* Start with empty queue — songs get added when you play or tap + */
+    /* Start with a completely empty Up Next queue. */
     playQueue = [];
     queueIndex = 0;
     currentIndex = 0;
