@@ -1411,6 +1411,8 @@ img {
     z-index: 200;
     inset: 0;
     display: flex;
+    /* Hidden Focus Mode must never sit on top of the app and steal mouse clicks. */
+    pointer-events: none;
     visibility: hidden;
     opacity: 0;
     background: var(--bg);
@@ -1420,6 +1422,7 @@ img {
 }
 
 .full-player.open {
+    pointer-events: auto;
     visibility: visible;
     opacity: 1;
     transform: scale(1);
@@ -8444,14 +8447,35 @@ function openFullPlayer() {
     // Focus Mode only opens when there is an actual song playing/selected.
     if (!getCurrentSong()) return;
     fullPlayer.classList.add("open");
+    fullPlayer.style.pointerEvents = "auto";
+    document.body.classList.add("focus-mode-open");
     document.body.style.overflow = "hidden";
     startBlobMotion();
 }
 
 function closeFullPlayer() {
+    // Fully reset Focus Mode so its fixed/animated layers cannot affect the app after closing.
     fullPlayer.classList.remove("open");
-
+    fullPlayer.style.pointerEvents = "none";
     document.body.style.overflow = "";
+
+    // Stop any Focus Mode animation frame immediately.
+    if (typeof stopBlobMotion === "function") {
+        stopBlobMotion();
+    }
+
+    // Remove any temporary focus-mode state from the document.
+    document.body.classList.remove("focus-mode-open");
+}
+
+// Keep the Focus Mode overlay completely click-through until it is actually open.
+function syncFocusPointerEvents() {
+    if (!fullPlayer) return;
+    fullPlayer.style.pointerEvents = fullPlayer.classList.contains("open") ? "auto" : "none";
+}
+
+if (fullPlayer) {
+    syncFocusPointerEvents();
 }
 
 /* =========================================================
