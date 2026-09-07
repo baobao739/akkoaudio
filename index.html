@@ -4907,6 +4907,99 @@ body::after {
     }
 }
 
+
+/* =========================================================
+   SIDEBAR AND PLAYER DOCK ADJUSTMENT
+   Desktop shell: anchored library rail with a floating music dock.
+   ========================================================= */
+
+@media (min-width: 761px) {
+    :root {
+        --player-dock-inset: 18px;
+        --player-dock-gap: 22px;
+    }
+
+    .sidebar {
+        top: 0;
+        bottom: 0;
+        left: 0;
+        border-top: 0;
+        border-bottom: 0;
+        border-left: 0;
+        border-radius: 0;
+        box-shadow:
+            18px 0 48px rgba(0,0,0,.24),
+            inset 0 1px 0 rgba(255,255,255,.13),
+            inset -1px 0 rgba(255,255,255,.06);
+    }
+
+    .main {
+        padding-bottom: calc(var(--player-height) + var(--player-dock-inset) * 2 + 36px);
+    }
+
+    .bottom-player {
+        left: calc(var(--sidebar-width) + var(--player-dock-gap));
+        right: var(--player-dock-inset);
+        bottom: var(--player-dock-inset);
+        height: var(--player-height);
+        border: 1px solid rgba(255,255,255,.17);
+        border-radius: 24px;
+        background:
+            linear-gradient(180deg, rgba(255,255,255,.16), transparent 28%),
+            color-mix(in srgb, var(--accent) 11%, var(--theme-panel));
+        box-shadow:
+            0 22px 52px rgba(0,0,0,.30),
+            0 0 34px color-mix(in srgb, var(--accent) 10%, transparent),
+            inset 0 1px 0 rgba(255,255,255,.20);
+        backdrop-filter: blur(44px) saturate(1.38);
+        -webkit-backdrop-filter: blur(44px) saturate(1.38);
+        transition:
+            left .58s var(--motion-smooth),
+            right .58s var(--motion-smooth),
+            bottom .58s var(--motion-smooth),
+            box-shadow .48s var(--motion-smooth);
+    }
+
+    .bottom-player::before {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(104deg, rgba(255,255,255,.12), transparent 34%);
+        content: "";
+        pointer-events: none;
+    }
+
+    .bottom-player > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .bottom-player:hover {
+        box-shadow:
+            0 28px 62px rgba(0,0,0,.35),
+            0 0 40px color-mix(in srgb, var(--accent) 14%, transparent),
+            inset 0 1px 0 rgba(255,255,255,.23);
+    }
+
+    .mini-song {
+        padding-left: 2px;
+    }
+
+    .player-controls {
+        transform: translateX(3%);
+    }
+
+    .progress-area {
+        padding-right: 2px;
+    }
+}
+
+@media (max-width: 760px) {
+    .bottom-player {
+        border-radius: 18px 18px 0 0;
+    }
+}
+
 </style>
 </head>
 
