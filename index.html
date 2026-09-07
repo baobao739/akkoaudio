@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0a0a12">
-<title>AkkoFlac</title>
+<title>AkkoAudio</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +12,7 @@
 
 <style>
 /* =========================================================
-   AKKOFLAC — SPATIAL UI + GLASS
+   AKKOAUDIO — SPATIAL UI + GLASS
    ========================================================= */
 
 @property --accent {
@@ -5859,6 +5859,57 @@ body {
     text-shadow: 0 8px 28px var(--accent-glow);
 }
 
+/* Make every song-card surface consistently play the song. */
+.song-card,
+.song-card .song-cover,
+.song-card .song-title,
+.song-card .song-artist,
+.song-card .play-overlay,
+.song-card .song-cover img {
+    cursor: pointer !important;
+    user-select: none;
+}
+
+.song-card .song-title,
+.song-card .song-artist,
+.song-card .play-overlay,
+.song-card .song-cover > img {
+    pointer-events: none;
+}
+
+.song-card .like-btn {
+    cursor: pointer !important;
+    pointer-events: auto;
+}
+
+/* Leave the Home title and search field unframed. */
+.topbar {
+    min-height: 0;
+    margin-inline: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+}
+
+.topbar .page-title {
+    padding-left: 0;
+}
+
+/* Keep the dock visually steady on hover. */
+.bottom-player:hover {
+    box-shadow: 0 28px 68px rgba(0,0,0,.34), 0 0 42px color-mix(in srgb, var(--accent) 16%, transparent), inset 0 1px 0 rgba(255,255,255,.25);
+}
+
+/* Dock controls may brighten on hover, but never shift or scale. */
+.bottom-player .control:hover,
+.bottom-player .control.main-play:hover {
+    transform: none;
+}
+
 </style>
 </head>
 
@@ -5881,7 +5932,7 @@ body {
 
         <div class="onboard-step active" id="onboardStepWelcome">
             <div class="onboard-kicker">Welcome</div>
-            <h2 class="onboard-title">Welcome to Akko<span>Flac</span></h2>
+            <h2 class="onboard-title">Welcome to Akko<span>Audio</span></h2>
             <p class="onboard-text">
                 Your personal music player. High quality tracks, synced lyrics, and a clean focus mode built for listening.
             </p>
@@ -5891,7 +5942,7 @@ body {
         <div class="onboard-step" id="onboardStepTheme">
             <div class="onboard-kicker">Personalize</div>
             <h2 class="onboard-title" style="font-size: clamp(24px, 4.5vw, 30px);">Choose your theme</h2>
-            <p class="onboard-text">Pick the look you want for AkkoFlac.</p>
+            <p class="onboard-text">Pick the look you want for AkkoAudio.</p>
             <div class="theme-row onboard-theme-row" id="onboardThemeRow" data-theme-picker></div>
             <div class="onboard-nav">
                 <button class="onboard-btn onboard-back" id="onboardThemeBack" type="button">Back</button>
@@ -5946,7 +5997,7 @@ body {
 <aside class="sidebar">
 
     <div class="logo">
-        Akko<span>Flac</span>
+        Akko<span>Audio</span>
     </div>
 
     <div class="nav-title">LIBRARY</div>
@@ -6036,7 +6087,7 @@ body {
         <div class="section">
 
             <div class="section-heading">
-                <h2>New at Akkoflac</h2>
+                <h2>New at AkkoAudio</h2>
             </div>
 
             <div class="song-grid" id="recentGrid"></div>
@@ -6172,17 +6223,16 @@ body {
         <div class="credits-card">
 
             <h2>
-                Akko<span>Flac</span>
+                Akko<span>Audio</span>
             </h2>
 
             <p>
-              Akko - synced lyrics, cover images, and song files.
+              AkkoAudio - synced lyrics, cover images, and song files.
               Discord @asc.akko for song requests.
-              Special thanks to asadddboiii for helping make the intro before the song.
             </p>
 
             <div class="reserved">
-                Akko Reserved 
+                AkkoAudio Reserved 
             </div>
 
         </div>
