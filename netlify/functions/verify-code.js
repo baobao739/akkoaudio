@@ -18,12 +18,36 @@ exports.handler = async (event) => {
     }
 
     const supabase = db();
+
+    // Look up first so we can return a clear error (used / revoked / missing)
+    const { data: existing, error: findError } = await supabase
+      .from("access_codes")
+      .select("id, code, name, used, revoked")
+      .eq("code", code)
+      .maybeSingle();
+
+    if (findError) {
+      console.error(findError);
+      return json(500, { valid: false, error: "Server error. Try again." });
+    }
+
+    if (!existing) {
+      return json(401, { valid: false, error: "That code is invalid." });
+    }
+
+    if (existing.revoked === true) {
+      return json(401, { valid: false, error: "That code has been revoked." });
+    }
+
+    if (existing.used === true) {
+      return json(401, { valid: false, error: "That code has already been used." });
+    }
+
     const { data, error } = await supabase
       .from("access_codes")
       .update({ used: true, used_at: new Date().toISOString() })
-      .eq("code", code)
+      .eq("id", existing.id)
       .eq("used", false)
-      .eq("revoked", false)
       .select("id, code, name")
       .maybeSingle();
 
@@ -33,10 +57,9 @@ exports.handler = async (event) => {
     }
 
     if (!data) {
-      return json(401, { valid: false, error: "That code is invalid or has already been used." });
+      return json(401, { valid: false, error: "That code has already been used." });
     }
 
-    // Embed code id so access-status can check revocation later
     const token = await makeToken("access", data.id);
     return json(200, { valid: true }, {
       "Set-Cookie": cookie("akkoflac_access", token, 60 * 60 * 24 * 365 * 10),
