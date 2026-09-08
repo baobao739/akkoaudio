@@ -19,10 +19,25 @@
   };
 
   const STYLE = `
+    /* Full-screen gates — always above sidebar/player */
+    #akkoflac-verify-overlay,
+    #akkoflac-access-overlay {
+      position: fixed !important;
+      inset: 0 !important;
+      left: 0 !important;
+      top: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      z-index: 2147483000 !important;
+      isolation: isolate;
+      margin: 0 !important;
+      box-sizing: border-box;
+    }
+
     #akkoflac-verify-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 1000000;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -73,16 +88,15 @@
       75%  { content: "..."; }
       100% { content: ""; }
     }
+
     #akkoflac-access-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 999999;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 24px;
       background: var(--theme-bottom, var(--bg, #121212));
       transition: opacity .45s ease, visibility .45s ease;
+      overflow: auto;
     }
     #akkoflac-access-overlay.hidden {
       opacity: 0;
@@ -90,6 +104,8 @@
       pointer-events: none;
     }
     .akkoflac-access-box {
+      position: relative;
+      z-index: 1;
       width: min(430px, 100%);
       padding: 34px;
       text-align: center;
@@ -99,6 +115,17 @@
       backdrop-filter: blur(28px);
       -webkit-backdrop-filter: blur(28px);
       box-shadow: 0 25px 80px rgba(0,0,0,.45), 0 0 45px var(--accent-glow, rgba(255,255,255,.08));
+    }
+    .akkoflac-revoked-banner {
+      margin: 0 0 18px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 92, 108, 0.45);
+      background: rgba(255, 92, 108, 0.12);
+      color: #ff929f;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.45;
     }
     .akkoflac-access-title {
       margin: 0 0 9px;
@@ -165,19 +192,19 @@
       60% { transform: translateX(-6px); }
       80% { transform: translateX(6px); }
     }
+
     body.akkoflac-gate-locked .sidebar,
     body.akkoflac-gate-locked .main,
     body.akkoflac-gate-locked .bottom-player,
     body.akkoflac-gate-locked .full-player,
-    body.akkoflac-gate-locked .queue-panel {
-      pointer-events: none !important;
-      user-select: none;
-    }
+    body.akkoflac-gate-locked .queue-panel,
     body.akkoflac-awaiting-access .sidebar,
     body.akkoflac-awaiting-access .main,
     body.akkoflac-awaiting-access .bottom-player,
     body.akkoflac-awaiting-access .full-player,
     body.akkoflac-awaiting-access .queue-panel {
+      pointer-events: none !important;
+      user-select: none !important;
       visibility: hidden !important;
     }
   `;
@@ -252,15 +279,20 @@
     setTimeout(() => el.remove(), 500);
   }
 
-  function createGate() {
-    if (document.getElementById("akkoflac-access-overlay")) return;
+  function createGate(opts = {}) {
+    const existing = document.getElementById("akkoflac-access-overlay");
+    if (existing) existing.remove();
+
     applySavedColors();
     lockUI();
+
+    const revoked = !!opts.revoked;
 
     const overlay = document.createElement("div");
     overlay.id = "akkoflac-access-overlay";
     overlay.innerHTML = `
       <div class="akkoflac-access-box" id="akkoflac-access-box">
+        ${revoked ? `<div class="akkoflac-revoked-banner">Access denied! Your access has been revoked. Enter a new access code to continue.</div>` : ""}
         <h1 class="akkoflac-access-title">Enter Access Code</h1>
         <p class="akkoflac-access-subtitle">Enter your 5-character AkkoFlac access code to continue.</p>
         <input id="akkoflac-access-input" class="akkoflac-access-input" type="text" maxlength="5" minlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="•••••" />
@@ -330,9 +362,13 @@
     try {
       const response = await fetch("/.netlify/functions/access-status", { credentials: "include" });
       const data = await response.json();
-      if (data.valid) return true;
-    } catch {}
-    return false;
+      return {
+        valid: !!data.valid,
+        reason: data.reason || (data.valid ? "ok" : "none")
+      };
+    } catch {
+      return { valid: false, reason: "error" };
+    }
   }
 
   async function runVerifyThenGate() {
@@ -342,7 +378,7 @@
     showVerifying();
 
     const startTime = Date.now();
-    const hasAccess = await checkAccess();
+    const status = await checkAccess();
 
     const elapsed = Date.now() - startTime;
     const remaining = Math.max(0, VERIFY_MIN_MS - elapsed);
@@ -352,12 +388,12 @@
 
     hideVerifying();
 
-    if (hasAccess) {
+    if (status.valid) {
       unlockUI();
       return;
     }
 
-    createGate();
+    createGate({ revoked: status.reason === "revoked" });
   }
 
   function isOnboardingDone() {
