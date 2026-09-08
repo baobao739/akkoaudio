@@ -30,27 +30,48 @@ async function sign(value) {
   return toBase64Url(new Uint8Array(signature));
 }
 
-async function makeToken(type) {
-  const payload = `${type}.${Date.now()}`;
+/**
+ * type: "admin" | "access"
+ * extra: optional string (e.g. code UUID) embedded in the token
+ */
+async function makeToken(type, extra = "") {
+  const safeExtra = String(extra || "").replace(/\./g, "");
+  const payload = safeExtra ? `${type}.${Date.now()}.${safeExtra}` : `${type}.${Date.now()}`;
   const signature = await sign(payload);
   return `${payload}.${signature}`;
 }
 
-async function verifyToken(token, expectedType) {
-  if (!token) return false;
+/**
+ * Returns { ok: true, type, issued, extra } or { ok: false }
+ */
+async function parseToken(token, expectedType) {
+  if (!token) return { ok: false };
   const parts = token.split(".");
-  if (parts.length !== 3 || parts[0] !== expectedType) return false;
-  const payload = `${parts[0]}.${parts[1]}`;
+  // admin.<ts>.<sig>  OR  access.<ts>.<codeId>.<sig>
+  if (parts.length < 3) return { ok: false };
+  if (parts[0] !== expectedType) return { ok: false };
+
+  const signature = parts[parts.length - 1];
+  const payload = parts.slice(0, -1).join(".");
   const expected = await sign(payload);
   const a = enc.encode(expected);
-  const b = enc.encode(parts[2]);
-  if (a.length !== b.length) return false;
+  const b = enc.encode(signature);
+  if (a.length !== b.length) return { ok: false };
   let diff = 0;
   for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
-  if (diff !== 0) return false;
+  if (diff !== 0) return { ok: false };
 
   const issued = Number(parts[1]);
-  return Number.isFinite(issued) && issued > 0 && Date.now() - issued < 1000 * 60 * 60 * 24 * 365 * 10;
+  if (!Number.isFinite(issued) || issued <= 0) return { ok: false };
+  if (Date.now() - issued >= 1000 * 60 * 60 * 24 * 365 * 10) return { ok: false };
+
+  const extra = parts.length >= 4 ? parts[2] : "";
+  return { ok: true, type: parts[0], issued, extra };
+}
+
+async function verifyToken(token, expectedType) {
+  const parsed = await parseToken(token, expectedType);
+  return parsed.ok;
 }
 
 function getCookie(event, name) {
@@ -75,4 +96,4 @@ function json(statusCode, body, headers = {}) {
   };
 }
 
-module.exports = { makeToken, verifyToken, getCookie, cookie, clearCookie, json };
+module.exports = { makeToken, verifyToken, parseToken, getCookie, cookie, clearCookie, json };
