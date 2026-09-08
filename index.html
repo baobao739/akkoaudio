@@ -3165,9 +3165,30 @@ html[data-theme="light"] .play-overlay {
     pointer-events: none !important;
 }
 </style>
+
 </head>
 
 <body>
+<h2 class="access-title" id="accessTitle">Enter Access <span>Code</span></h2>
+        <p class="access-text">This player is private. Enter the access code to continue.</p>
+        <form id="accessForm" autocomplete="off">
+            <input
+                class="access-input"
+                id="accessInput"
+                type="password"
+                inputmode="text"
+                placeholder="Access code"
+                maxlength="32"
+                spellcheck="false"
+                autocomplete="off"
+                required
+            >
+            <div class="access-error" id="accessError" aria-live="assertive"></div>
+            <button class="access-btn" id="accessSubmit" type="submit">Unlock</button>
+        </form>
+    </div>
+</div>
+
 <!-- Visual-only ambient layer -->
 <div class="app-atmosphere" aria-hidden="true">
     <span class="ambient-orb ambient-orb-one"></span>
@@ -6523,7 +6544,6 @@ function initialize() {
 
 initialize();
 
-
 /* RESPONSIVE LYRIC VIEWPORT REFINEMENT */
 let lyricLayoutFrame = 0;
 
@@ -6613,7 +6633,6 @@ if ("ResizeObserver" in window) {
 }
 
 </script>
-   
 <script src="access-gate.js"></script>
 </body>
 </html>
