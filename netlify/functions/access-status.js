@@ -8,7 +8,7 @@ exports.handler = async (event) => {
     const token = getCookie(event, "akkoflac_access");
     const parsed = await parseToken(token, "access");
     if (!parsed.ok) {
-      return json(200, { valid: false, unlocked: false }, { "Cache-Control": "no-store" });
+      return json(200, { valid: false, unlocked: false, reason: "none" }, { "Cache-Control": "no-store" });
     }
 
     // Legacy tokens (no code id) stay valid
@@ -16,7 +16,6 @@ exports.handler = async (event) => {
       return json(200, { valid: true, unlocked: true }, { "Cache-Control": "no-store" });
     }
 
-    // Newer tokens: check the code wasn't revoked
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
       auth: { persistSession: false }
     });
@@ -29,13 +28,20 @@ exports.handler = async (event) => {
 
     if (error) {
       console.error(error);
-      return json(200, { valid: false, unlocked: false }, { "Cache-Control": "no-store" });
+      return json(200, { valid: false, unlocked: false, reason: "error" }, { "Cache-Control": "no-store" });
     }
 
-    const valid = !!(data && !data.revoked);
-    return json(200, { valid, unlocked: valid }, { "Cache-Control": "no-store" });
+    if (!data) {
+      return json(200, { valid: false, unlocked: false, reason: "missing" }, { "Cache-Control": "no-store" });
+    }
+
+    if (data.revoked) {
+      return json(200, { valid: false, unlocked: false, reason: "revoked" }, { "Cache-Control": "no-store" });
+    }
+
+    return json(200, { valid: true, unlocked: true }, { "Cache-Control": "no-store" });
   } catch (error) {
     console.error(error);
-    return json(200, { valid: false, unlocked: false }, { "Cache-Control": "no-store" });
+    return json(200, { valid: false, unlocked: false, reason: "error" }, { "Cache-Control": "no-store" });
   }
 };
