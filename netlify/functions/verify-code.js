@@ -13,7 +13,9 @@ exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body || "{}");
     const code = String(body.code || "").trim().toUpperCase();
-    if (!/^[A-Z0-9]{5}$/.test(code)) return json(400, { valid: false, error: "Enter a valid 5-character code." });
+    if (!/^[A-Z0-9]{5}$/.test(code)) {
+      return json(400, { valid: false, error: "Enter a valid 5-character code." });
+    }
 
     const supabase = db();
     const { data, error } = await supabase
@@ -21,7 +23,8 @@ exports.handler = async (event) => {
       .update({ used: true, used_at: new Date().toISOString() })
       .eq("code", code)
       .eq("used", false)
-      .select("id, code")
+      .eq("revoked", false)
+      .select("id, code, name")
       .maybeSingle();
 
     if (error) {
@@ -29,9 +32,12 @@ exports.handler = async (event) => {
       return json(500, { valid: false, error: "Server error. Try again." });
     }
 
-    if (!data) return json(401, { valid: false, error: "That code is invalid or has already been used." });
+    if (!data) {
+      return json(401, { valid: false, error: "That code is invalid or has already been used." });
+    }
 
-    const token = await makeToken("access");
+    // Embed code id so access-status can check revocation later
+    const token = await makeToken("access", data.id);
     return json(200, { valid: true }, {
       "Set-Cookie": cookie("akkoflac_access", token, 60 * 60 * 24 * 365 * 10),
       "Cache-Control": "no-store"

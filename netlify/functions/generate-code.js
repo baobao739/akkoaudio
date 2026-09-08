@@ -23,14 +23,17 @@ exports.handler = async (event) => {
   }
 
   try {
+    const body = JSON.parse(event.body || "{}");
+    const name = String(body.name || "").trim().slice(0, 64) || null;
+
     const supabase = db();
     let code;
     for (let attempt = 0; attempt < 10; attempt++) {
       const candidate = makeCode();
       const { data, error } = await supabase
         .from("access_codes")
-        .insert({ code: candidate, used: false })
-        .select("id, code, created_at")
+        .insert({ code: candidate, used: false, name, revoked: false })
+        .select("id, code, name, created_at")
         .single();
       if (!error) { code = data; break; }
       if (error.code !== "23505") throw error;
