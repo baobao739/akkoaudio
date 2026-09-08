@@ -192,27 +192,6 @@
       80% { transform: translateX(6px); }
     }
 
-    /* Kill leftover old access UI from index.html */
-    .access-title,
-    .access-text,
-    .access-input,
-    .access-btn,
-    .access-error,
-    #accessTitle,
-    #accessForm,
-    #accessInput,
-    #accessSubmit,
-    #accessError {
-      display: none !important;
-      visibility: hidden !important;
-      pointer-events: none !important;
-      position: absolute !important;
-      width: 0 !important;
-      height: 0 !important;
-      overflow: hidden !important;
-      opacity: 0 !important;
-    }
-
     body.akkoflac-gate-locked .sidebar,
     body.akkoflac-gate-locked .main,
     body.akkoflac-gate-locked .bottom-player,
@@ -422,13 +401,6 @@
 
   function start() {
     document.body.classList.add("akkoflac-awaiting-access");
-
-    // Also strip any leftover old access nodes from index.html
-    ["accessTitle", "accessForm", "accessInput", "accessSubmit", "accessError"].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.remove();
-    });
-    document.querySelectorAll(".access-title, .access-text").forEach(el => el.remove());
 
     if (isOnboardingDone()) {
       runVerifyThenGate();
