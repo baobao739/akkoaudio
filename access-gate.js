@@ -1,7 +1,24 @@
 (() => {
   "use strict";
 
-  const VERIFY_MIN_MS = 3000; // minimum time the verifying screen stays visible
+  const VERIFY_MIN_MS = 3000;
+
+  // Minimal theme map so verifying always uses the user's chosen colors
+  // even before the main player JS finishes applying them.
+  const THEMES = {
+    charcoal:  { bottom: "#1b1c24" },
+    midnight:  { bottom: "#141a31" },
+    ocean:     { bottom: "#102a39" },
+    plum:      { bottom: "#251a2d" },
+    dawn:      { bottom: "#352333" },
+    forest:    { bottom: "#172c25" },
+    lavender:  { bottom: "#2c2a45" },
+    rosewood:  { bottom: "#321f2a" },
+    ember:     { bottom: "#321e1a" },
+    glacier:   { bottom: "#20343d" },
+    cocoa:     { bottom: "#2d231f" },
+    aurora:    { bottom: "#133b37" }
+  };
 
   const STYLE = `
     /* ===== VERIFYING OVERLAY ===== */
@@ -69,7 +86,7 @@
       100% { content: ""; }
     }
 
-    /* ===== ACCESS CODE OVERLAY (existing) ===== */
+    /* ===== ACCESS CODE OVERLAY ===== */
     #akkoflac-access-overlay {
       position: fixed;
       inset: 0;
@@ -175,13 +192,11 @@
       80% { transform: translateX(6px); }
     }
 
-    /* Lock everything under the gate */
     body.akkoflac-gate-locked .sidebar,
     body.akkoflac-gate-locked .main,
     body.akkoflac-gate-locked .bottom-player,
     body.akkoflac-gate-locked .full-player,
-    body.akkoflac-gate-locked .queue-panel,
-    body.akkoflac-gate-locked .onboarding {
+    body.akkoflac-gate-locked .queue-panel {
       pointer-events: none !important;
       user-select: none;
     }
@@ -191,9 +206,46 @@
   style.textContent = STYLE;
   document.head.appendChild(style);
 
+  /* ---------- APPLY SAVED THEME + ACCENT ---------- */
+  function hexToRgb(hex) {
+    const h = hex.replace("#", "");
+    const full = h.length === 3 ? h.split("").map(c => c + c).join("") : h;
+    const n = parseInt(full, 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+  }
+
+  function lightenHex(hex, amount) {
+    const { r, g, b } = hexToRgb(hex);
+    const lr = Math.min(255, Math.round(r + (255 - r) * amount));
+    const lg = Math.min(255, Math.round(g + (255 - g) * amount));
+    const lb = Math.min(255, Math.round(b + (255 - b) * amount));
+    return "#" + [lr, lg, lb].map(v => v.toString(16).padStart(2, "0")).join("");
+  }
+
+  function applySavedColors() {
+    const root = document.documentElement;
+
+    // Accent
+    const accent = localStorage.getItem("akkoflac-accent") || "#7b8cff";
+    const { r, g, b } = hexToRgb(accent);
+    root.style.setProperty("--accent", accent);
+    root.style.setProperty("--accent-bright", lightenHex(accent, 0.18));
+    root.style.setProperty("--accent-soft", `rgba(${r}, ${g}, ${b}, 0.15)`);
+    root.style.setProperty("--accent-glow", `rgba(${r}, ${g}, ${b}, 0.35)`);
+
+    // Theme
+    const themeName = localStorage.getItem("akkoflac-theme") || "charcoal";
+    const theme = THEMES[themeName] || THEMES.charcoal;
+    root.style.setProperty("--theme-bottom", theme.bottom);
+    root.style.setProperty("--bg", theme.bottom);
+    root.style.setProperty("--bg-deep", theme.bottom);
+  }
+
   /* ---------- VERIFYING SCREEN ---------- */
   function showVerifying() {
     if (document.getElementById("akkoflac-verify-overlay")) return;
+
+    applySavedColors(); // make sure colors match what the user chose
 
     const overlay = document.createElement("div");
     overlay.id = "akkoflac-verify-overlay";
@@ -217,9 +269,11 @@
     setTimeout(() => el.remove(), 500);
   }
 
-  /* ---------- ACCESS CODE GATE (original) ---------- */
+  /* ---------- ACCESS CODE GATE ---------- */
   function createGate() {
     if (document.getElementById("akkoflac-access-overlay")) return;
+
+    applySavedColors();
 
     const overlay = document.createElement("div");
     overlay.id = "akkoflac-access-overlay";
@@ -311,59 +365,72 @@
     return false;
   }
 
-  /* ---------- MAIN FLOW ---------- */
-  async function start() {
-    // 1. Always show verifying screen first on every visit
+  /* ---------- RUN VERIFY + GATE ---------- */
+  async function runVerifyThenGate() {
     showVerifying();
 
     const startTime = Date.now();
-
-    // 2. Run the real access check in parallel
     const hasAccess = await checkAccess();
 
-    // 3. Enforce minimum verifying time so it always feels intentional
     const elapsed = Date.now() - startTime;
     const remaining = Math.max(0, VERIFY_MIN_MS - elapsed);
     if (remaining > 0) {
       await new Promise(r => setTimeout(r, remaining));
     }
 
-    // 4. Hide verifying
     hideVerifying();
 
-    // 5. If already has access → unlock UI and let the player run
     if (hasAccess) {
       document.body.classList.remove("akkoflac-gate-locked");
       document.body.style.overflow = "";
       return;
     }
 
-    // 6. No access → wait for onboarding to finish, then show code gate
+    // No access → show the code gate
+    createGate();
+  }
+
+  /* ---------- MAIN FLOW ---------- */
+  function isOnboardingDone() {
+    return localStorage.getItem("akkoflac-onboarded") === "1";
+  }
+
+  function start() {
+    // Returning user (already picked theme/accent) → verifying right away
+    if (isOnboardingDone()) {
+      runVerifyThenGate();
+      return;
+    }
+
+    // First-time user → wait for onboarding to finish, then verifying → code
     const onboarding = document.getElementById("onboarding");
 
-    const showAfterOnboarding = () => {
-      const onboardingDone = localStorage.getItem("akkoflac-onboarded") === "1";
-      const onboardingHidden = !onboarding || onboarding.classList.contains("hidden");
-      if (onboardingDone && onboardingHidden) {
+    const afterOnboarding = () => {
+      const done = isOnboardingDone();
+      const hidden = !onboarding || onboarding.classList.contains("hidden");
+      if (done && hidden) {
         observer.disconnect();
-        createGate();
+        runVerifyThenGate();
       }
     };
 
-    const observer = new MutationObserver(showAfterOnboarding);
+    const observer = new MutationObserver(afterOnboarding);
 
     if (onboarding) {
       observer.observe(onboarding, { attributes: true, attributeFilter: ["class", "style"] });
     }
 
-    // Handles users who already completed onboarding
-    showAfterOnboarding();
+    // In case onboarding is already finished by the time we run
+    afterOnboarding();
 
     // Safety fallback
     setTimeout(() => {
       observer.disconnect();
-      showAfterOnboarding();
-    }, 10000);
+      if (!document.getElementById("akkoflac-verify-overlay") &&
+          !document.getElementById("akkoflac-access-overlay")) {
+        runVerifyThenGate();
+      }
+    }, 15000);
   }
 
   if (document.readyState === "loading") {
