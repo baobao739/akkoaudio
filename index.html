@@ -1734,8 +1734,8 @@ body::after {
     height: calc(100% + 80px);
     object-fit: cover;
     object-position: center;
-    filter: blur(110px) saturate(2.7) brightness(1.15) contrast(1.12);
-    transform: scale(1.42);
+    filter: blur(96px) saturate(3.1) brightness(1.28) contrast(1.15);
+    transform: scale(1.5);
     pointer-events: none;
     user-select: none;
     transition: opacity 0.7s var(--ease);
@@ -1764,7 +1764,7 @@ body::after {
 .focus-blob {
     position: absolute;
     border-radius: 50%;
-    filter: blur(72px) saturate(2.1);
+    filter: blur(60px) saturate(2.8);
     will-change: transform;
     mix-blend-mode: screen;
     opacity: 1;
@@ -2039,8 +2039,8 @@ body::after {
     overflow: hidden;
     padding: 0 12px 0 0;
     scrollbar-width: none;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 78%, transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 78%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
 }
 
 #lyricsContainer::-webkit-scrollbar { display: none; }
@@ -2048,45 +2048,45 @@ body::after {
 .lyrics-track {
     will-change: transform;
     transform: translate3d(0, 0, 0);
-    /* Step-up scroll — smooth, no bounce */
-    transition: transform 0.85s cubic-bezier(0.25, 0.1, 0.25, 1);
-    padding: 18vh 0 40vh;
+    transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+    padding: 4vh 0 58vh;
 }
 
 .lyric-line {
     width: 100%;
     max-width: 850px;
-    margin: 0 0 clamp(14px, 1.8vh, 24px);
+    margin: 0 0 clamp(28px, 4.2vh, 48px);
     padding: 0;
-    color: rgba(255,255,255,0.34);
-    font-size: clamp(26px, 3.2vw, 50px);
+    color: rgba(255,255,255,0.9);
+    font-size: clamp(28px, 3.4vw, 52px);
     font-weight: 700;
-    line-height: 1.18;
+    line-height: 1.2;
     letter-spacing: -1.1px;
     overflow-wrap: anywhere;
     word-break: break-word;
-    transform: none;
+    transform: translate3d(0, 10px, 0);
     transform-origin: left center;
-    opacity: 1;
-    will-change: color, opacity, filter;
+    opacity: 0.9;
+    will-change: color, opacity, filter, transform;
     transition:
-        color 0.75s cubic-bezier(0.25, 0.1, 0.25, 1),
-        opacity 0.75s cubic-bezier(0.25, 0.1, 0.25, 1),
-        filter 0.75s cubic-bezier(0.25, 0.1, 0.25, 1);
+        color 0.7s cubic-bezier(0.25, 0.1, 0.25, 1),
+        opacity 0.7s cubic-bezier(0.25, 0.1, 0.25, 1),
+        filter 0.7s cubic-bezier(0.25, 0.1, 0.25, 1),
+        transform 0.85s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-/* Current — accent only, same size (no enlarge) */
+/* Current — accent, settles into place */
 .lyric-line.active {
     color: var(--accent-bright);
     opacity: 1;
-    font-weight: 750;
+    font-weight: 760;
     filter: none;
     text-shadow: none;
     animation: none;
-    transform: none;
+    transform: translate3d(0, 0, 0);
 }
 
-/* Upcoming — same size, dimmer */
+/* Upcoming — same brightness, wait below and step up with scroll */
 .lyric-line.next,
 .lyric-line.next-next,
 .lyric-line.next-third,
@@ -2094,26 +2094,27 @@ body::after {
     color: rgba(255,255,255,0.92);
     opacity: 1;
     filter: none;
-    transform: none;
+    transform: translate3d(0, 0, 0);
 }
 
-/* Past — stay visible, blurred, no disappear */
-.lyric-line.past,
-.lyric-line.fade-past {
-    color: rgba(255,255,255,0.28);
+/* Only ONE past lyric shown — soft blur */
+.lyric-line.past {
+    color: rgba(255,255,255,0.4);
     opacity: 0.55;
-    filter: blur(3px);
-    transform: none;
+    filter: blur(2.5px);
+    transform: translate3d(0, 0, 0);
 }
 
+.lyric-line.fade-past,
 .lyric-line.offscreen {
-    /* far-past: still in flow but heavier blur */
-    color: rgba(255,255,255,0.18);
-    opacity: 0.35;
-    filter: blur(5px);
-    visibility: visible;
+    opacity: 0 !important;
+    filter: blur(4px);
+    visibility: hidden;
     pointer-events: none;
-    transform: none;
+    height: 0 !important;
+    margin: 0 !important;
+    overflow: hidden;
+    transform: translate3d(0, -8px, 0);
 }
 
 .lyric-line.pause {
@@ -5772,8 +5773,8 @@ function buildFluidPath(initial = {}) {
 
     for (let i = 0; i < count; i++) {
         const centerBias = Math.sin((i / (count - 1)) * Math.PI) * 1.4;
-        x = Math.max(-14, Math.min(14, x + organicRand(-3.8, 3.8) + centerBias * organicRand(-1, 1)));
-        y = Math.max(-12, Math.min(12, y + organicRand(-3.2, 3.2)));
+        x = Math.max(-18, Math.min(18, x + organicRand(-3.8, 3.8) + centerBias * organicRand(-1, 1)));
+        y = Math.max(-16, Math.min(16, y + organicRand(-3.2, 3.2)));
         scale = Math.max(.985, Math.min(1.045, scale + organicRand(-.012, .016)));
         rotate = Math.max(-.45, Math.min(.45, rotate + organicRand(-.20, .20)));
 
@@ -5819,8 +5820,8 @@ function startBlobMotion() {
         setTimeout(() => animateFluidElement(
             el,
             {},
-            5000 + i * 280,
-            10000 + i * 450
+            4000 + i * 250,
+            8000 + i * 400
         ), organicRand(100, 1300));
     });
 
@@ -5846,17 +5847,17 @@ let focusBgActive = false;
 
 function makeBackgroundPath() {
     const points = [];
-    const count = Math.floor(10 + Math.random() * 6);
-    let x = organicRand(-7, 7);
-    let y = organicRand(-6, 6);
-    let scale = organicRand(1.35, 1.5);
-    let rotate = organicRand(-1.4, 1.4);
+    const count = Math.floor(8 + Math.random() * 5);
+    let x = organicRand(-10, 10);
+    let y = organicRand(-9, 9);
+    let scale = organicRand(1.4, 1.62);
+    let rotate = organicRand(-2.5, 2.5);
 
     for (let i = 0; i < count; i++) {
-        x = Math.max(-12, Math.min(12, x + organicRand(-5, 5)));
-        y = Math.max(-11, Math.min(11, y + organicRand(-4.5, 4.5)));
-        scale = Math.max(1.28, Math.min(1.55, scale + organicRand(-0.04, 0.04)));
-        rotate = Math.max(-2.2, Math.min(2.2, rotate + organicRand(-0.35, 0.35)));
+        x = Math.max(-16, Math.min(16, x + organicRand(-7, 7)));
+        y = Math.max(-18, Math.min(18, y + organicRand(-6.5, 6.5)));
+        scale = Math.max(1.32, Math.min(1.7, scale + organicRand(-0.06, 0.06)));
+        rotate = Math.max(-4, Math.min(4, rotate + organicRand(-0.7, 0.7)));
         points.push({
             transform: `scale(${scale.toFixed(3)}) translate3d(${x.toFixed(2)}%, ${y.toFixed(2)}%, 0) rotate(${rotate.toFixed(3)}deg)`,
             offset: i / (count - 1)
@@ -5871,7 +5872,7 @@ function queueBackgroundMotion() {
     if (!bg || document.hidden) return;
 
     const animation = bg.animate(makeBackgroundPath(), {
-        duration: Math.round(6500 + Math.random() * 5500),
+        duration: Math.round(4500 + Math.random() * 3500),
         fill: 'forwards',
         easing: 'ease-in-out'
     });
@@ -5888,7 +5889,7 @@ function startFocusBackgroundMotion() {
     focusBgActive = true;
     const bg = document.getElementById('fullBg');
     if (bg) {
-        bg.style.transform = 'scale(1.45) translate3d(0%, 0%, 0) rotate(0deg)';
+        bg.style.transform = 'scale(1.55) translate3d(0%, 0%, 0) rotate(0deg)';
         setTimeout(queueBackgroundMotion, 150);
     }
 }
@@ -7508,38 +7509,41 @@ function updateLyrics(time) {
         );
 
         if (activeIndex < 0) {
-            // Nothing active yet — all upcoming, same size
+            // First lyric sits at the top as "next" until it becomes active
             if (index === 0) element.classList.add("next");
+            else if (index === 1) element.classList.add("next-next");
             else element.classList.add("upcoming");
             return;
         }
 
-        if (index < activeIndex - 2) {
-            // Older past lines — heavier blur, still visible
+        if (index < activeIndex - 1) {
+            // Older than the single past line — hide
             element.classList.add("offscreen");
-        } else if (index < activeIndex) {
-            // Recent past — soft blur, stays on screen
+        } else if (index === activeIndex - 1) {
+            // Only one past lyric
             element.classList.add("past");
         } else if (index === activeIndex) {
             element.classList.add("active");
         } else if (index === activeIndex + 1) {
             element.classList.add("next");
+        } else if (index === activeIndex + 2) {
+            element.classList.add("next-next");
         } else {
             element.classList.add("upcoming");
         }
     });
 
-    // Step the track so the active line sits in a stable focus band
+    // Step track so active line is near the TOP (Apple-style), past sits just above
     requestAnimationFrame(() => {
         const focusIndex = activeIndex < 0 ? 0 : activeIndex;
         const line = elements[focusIndex];
         if (!line) return;
         const viewportHeight = Math.max(1, lyricsContainer.clientHeight);
-        // Keep active line around upper-middle — past lines remain above
-        const anchorRatio = 0.34;
+        // Active near top band
+        const anchorRatio = activeIndex < 0 ? 0.06 : 0.14;
         const anchor = viewportHeight * anchorRatio;
         const desired = line.offsetTop - anchor;
-        const maxOffset = Math.max(0, track.offsetHeight - viewportHeight * 0.55);
+        const maxOffset = Math.max(0, track.offsetHeight - viewportHeight * 0.4);
         const offset = Math.min(Math.max(0, desired), maxOffset);
         track.style.transform = "translate3d(0, " + (-offset) + "px, 0)";
     });
