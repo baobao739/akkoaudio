@@ -1205,8 +1205,8 @@ body::after {
 .featured-title.marquee .marquee-copy + .marquee-copy { margin-left: 48px; }
 
 @keyframes songTitleMarquee {
-    0%, 14% { transform: translate3d(0, 0, 0); }
-    86%, 100% { transform: translate3d(calc(-1 * var(--marquee-shift, 0px)), 0, 0); }
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(calc(-1 * var(--marquee-shift, 0px)), 0, 0); }
 }
 
 .player-controls {
@@ -1690,10 +1690,10 @@ body::after {
 .focus-blob {
     position: absolute;
     border-radius: 50%;
-    filter: blur(80px) saturate(1.6);
+    filter: blur(72px) saturate(2.1);
     will-change: transform;
     mix-blend-mode: screen;
-    opacity: 0.9;
+    opacity: 1;
     transition: none;
 }
 
@@ -1837,7 +1837,9 @@ body::after {
     line-height: 1.12;
     letter-spacing: -1px;
     overflow: hidden;
-    text-shadow: 0 4px 24px rgba(0,0,0,0.35);
+    text-shadow:
+        0 2px 12px rgba(0,0,0,0.25),
+        0 0 28px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .full-artist {
@@ -1969,14 +1971,14 @@ body::after {
 .lyrics-track {
     will-change: transform;
     transform: translate3d(0, 0, 0);
-    transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
-    padding: 4px 0 24px;
+    transition: transform 0.95s cubic-bezier(0.22, 1.15, 0.36, 1);
+    padding: 4px 0 28vh;
 }
 
 .lyric-line {
     width: 100%;
     max-width: 850px;
-    margin: 0 0 clamp(12px, 1.6vh, 22px);
+    margin: 0 0 clamp(14px, 1.8vh, 26px);
     padding: 0;
     color: rgba(255,255,255,0.26);
     font-size: clamp(26px, 3.2vw, 50px);
@@ -1985,58 +1987,77 @@ body::after {
     letter-spacing: -1.2px;
     overflow-wrap: anywhere;
     word-break: break-word;
-    transform: scale(0.985);
+    transform: translate3d(0, 10px, 0) scale(0.96);
     transform-origin: left center;
+    opacity: 0.55;
+    will-change: transform, opacity, filter, color;
     transition:
-        color 0.4s var(--ease),
-        opacity 0.4s var(--ease),
-        transform 0.55s var(--ease),
-        filter 0.4s ease,
-        text-shadow 0.4s ease;
+        color 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.85s cubic-bezier(0.34, 1.45, 0.64, 1),
+        filter 0.55s ease,
+        text-shadow 0.55s ease;
 }
 
 .lyric-line.active {
-    color: var(--accent-bright);
+    color: #fff;
     opacity: 1;
-    transform: scale(1.035);
-    text-shadow: 0 0 32px var(--accent-glow), 0 4px 20px rgba(0,0,0,0.3);
+    transform: translate3d(0, 0, 0) scale(1.06);
+    text-shadow:
+        0 0 20px color-mix(in srgb, var(--accent) 50%, transparent),
+        0 0 48px color-mix(in srgb, var(--accent) 28%, transparent),
+        0 2px 16px rgba(0,0,0,0.2);
+    animation: lyricBubblePop 0.8s cubic-bezier(0.34, 1.55, 0.64, 1) both;
+}
+
+@keyframes lyricBubblePop {
+    0%   { transform: translate3d(0, 22px, 0) scale(0.9);  opacity: 0.65; }
+    55%  { transform: translate3d(0, -6px, 0) scale(1.09); opacity: 1; }
+    78%  { transform: translate3d(0, 2px, 0) scale(1.03); }
+    100% { transform: translate3d(0, 0, 0) scale(1.06); opacity: 1; }
 }
 
 .lyric-line.next {
-    color: rgba(255,255,255,0.76);
+    color: rgba(255,255,255,0.78);
     opacity: 1;
-    transform: scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
 }
 
 .lyric-line.next-next {
-    color: rgba(255,255,255,0.5);
-    opacity: 1;
+    color: rgba(255,255,255,0.48);
+    opacity: 0.95;
+    transform: translate3d(0, 4px, 0) scale(0.98);
 }
 
 .lyric-line.next-third,
 .lyric-line.upcoming {
-    color: rgba(255,255,255,0.28);
-    opacity: 1;
-    transform: scale(0.99);
+    color: rgba(255,255,255,0.26);
+    opacity: 0.85;
+    transform: translate3d(0, 10px, 0) scale(0.95);
 }
 
 .lyric-line.past {
-    color: rgba(255,255,255,0.14);
+    color: rgba(255,255,255,0.12);
     opacity: 0;
-    filter: blur(1.5px);
-    transform: translateY(-12px) scale(0.975);
+    filter: blur(2px);
+    transform: translate3d(0, -18px, 0) scale(0.94);
 }
 
 .lyric-line.fade-past {
     opacity: 0 !important;
-    transform: translateY(-16px) scale(0.96);
-    filter: blur(3px);
+    transform: translate3d(0, -24px, 0) scale(0.92);
+    filter: blur(4px);
+    transition:
+        opacity 0.5s ease,
+        transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+        filter 0.5s ease !important;
 }
 
 .lyric-line.offscreen {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
+    transform: translate3d(0, 16px, 0) scale(0.94);
 }
 
 .lyric-line.pause {
@@ -2754,7 +2775,7 @@ html[data-theme="light"] .play-overlay {
     pointer-events: none;
     border-radius: 50%;
     mix-blend-mode: screen;
-    filter: blur(72px);
+    filter: blur(64px) saturate(1.85);
     will-change: transform, opacity;
 }
 
@@ -2763,8 +2784,8 @@ html[data-theme="light"] .play-overlay {
     aspect-ratio: 1;
     top: 2%;
     left: 6%;
-    background: radial-gradient(circle at 50% 50%, var(--palette-1, rgba(95,95,105,.50)) 0%, transparent 70%);
-    opacity: .30;
+    background: radial-gradient(circle at 50% 50%, var(--palette-1, rgba(95,95,105,.70)) 0%, transparent 70%);
+    opacity: .55;
     animation: focusBloomOne 28s cubic-bezier(.25,.7,.2,1) infinite alternate;
 }
 
@@ -2773,19 +2794,22 @@ html[data-theme="light"] .play-overlay {
     aspect-ratio: 1;
     right: 4%;
     bottom: -4%;
-    background: radial-gradient(circle at 50% 50%, var(--palette-2, rgba(75,75,85,.42)) 0%, transparent 72%);
-    opacity: .24;
+    background: radial-gradient(circle at 50% 50%, var(--palette-2, rgba(75,75,85,.70)) 0%, transparent 72%);
+    opacity: .50;
     animation: focusBloomTwo 32s cubic-bezier(.25,.7,.2,1) infinite alternate;
 }
 
 @keyframes focusBloomOne {
-    0%   { transform: translate3d(-4%, 5%, 0) scale(.94); opacity: .20; }
-    50%  { transform: translate3d(4%, -2%, 0) scale(1.035); opacity: .30; }
-    100% { transform: translate3d(8%, -7%, 0) scale(1.08); opacity: .25; }
+    0%   { transform: translate3d(-4%, 5%, 0) scale(.94); opacity: .38; }
+    50%  { transform: translate3d(4%, -2%, 0) scale(1.06); opacity: .55; }
+    100% { transform: translate3d(8%, -7%, 0) scale(1.1); opacity: .42; }
 }
 
 @keyframes focusBloomTwo {
-    0%   { transform: translate3d(5%, 2%, 0) scale(.92); opacity: .17; }
+    0%   { transform: translate3d(5%, 2%, 0) scale(.92); opacity: .32; }
+    50%  { transform: translate3d(-3%, -5%, 0) scale(1.05); opacity: .48; }
+    100% { transform: translate3d(-8%, -9%, 0) scale(1.12); opacity: .36; }
+}
     50%  { transform: translate3d(-3%, -5%, 0) scale(1.03); opacity: .25; }
     100% { transform: translate3d(-8%, -9%, 0) scale(1.09); opacity: .21; }
 }
@@ -4196,6 +4220,8 @@ let repeatTimer = null;
 /* Current playback queue. Liked uses liked-only queue. */
 let playQueue = [];
 let queueIndex = 0;
+/* Active playback context (e.g. liked-only). null = full library */
+let playbackList = null;
 
 /* =========================================================
    ELEMENTS
@@ -5260,6 +5286,12 @@ function shuffleArray(list) {
     return arr;
 }
 
+
+function getPlaybackSongs() {
+    if (playbackList && playbackList.length) return playbackList;
+    return songs;
+}
+
 function startPlayback(list, startId, autoShuffle = false) {
     if (!list || !list.length) return;
 
@@ -5272,10 +5304,12 @@ function startPlayback(list, startId, autoShuffle = false) {
     const picked = available.find(song => song.id === startId) || available[0];
     if (!picked) return;
 
-    // Playing a song directly must NEVER erase the user's explicit Up Next list.
-    currentIndex = songs.findIndex(s => s.id === picked.id);
+    // Stay inside the list you started from (e.g. Liked) for next/prev/ended.
+    playbackList = available;
+    currentIndex = available.findIndex(s => s.id === picked.id);
     if (currentIndex < 0) currentIndex = 0;
 
+    // Playing a song directly must NEVER erase the user's explicit Up Next list.
     playSongNow(picked);
 }
 
@@ -5284,8 +5318,14 @@ function startPlayback(list, startId, autoShuffle = false) {
 function playSongNow(song) {
     if (!song) return;
 
-    currentIndex = songs.findIndex(s => s.id === song.id);
-    if (currentIndex < 0) currentIndex = 0;
+    const list = getPlaybackSongs();
+    let idx = list.findIndex(s => s.id === song.id);
+    if (idx < 0) {
+        // Song outside current context — fall back to full library
+        playbackList = null;
+        idx = songs.findIndex(s => s.id === song.id);
+    }
+    currentIndex = idx >= 0 ? idx : 0;
 
     addToRecentlyPlayed(song.id);
 
@@ -5341,15 +5381,11 @@ function shuffleLikedSongs() {
     const liked = songs.filter(s => isLiked(s.id));
     if (!liked.length) return;
 
-    // Play a liked song immediately without putting the whole liked library
-    // into Up Next.
+    // Shuffle within Liked only — stay in that context after the track ends.
     const shuffled = shuffleArray(liked);
-    const song = shuffled[0];
-
-    currentIndex = songs.findIndex(s => s.id === song.id);
-    if (currentIndex < 0) currentIndex = 0;
-
-    playSongNow(song);
+    playbackList = shuffled;
+    currentIndex = 0;
+    playSongNow(shuffled[0]);
     openFullPlayer();
 }
 
@@ -5396,20 +5432,20 @@ function nextSong() {
         return;
     }
 
-    // If Up Next is empty, Next still behaves like a normal music player:
-    // move through the library without filling Up Next.
-    if (!songs.length) return;
+    // Stay inside the active context (Liked, search results, etc.)
+    const list = getPlaybackSongs();
+    if (!list.length) return;
 
     let nextIndex;
-    if (shuffleEnabled && songs.length > 1) {
-        const choices = songs.map((_, i) => i).filter(i => i !== currentIndex);
+    if (shuffleEnabled && list.length > 1) {
+        const choices = list.map((_, i) => i).filter(i => i !== currentIndex);
         nextIndex = choices[Math.floor(Math.random() * choices.length)];
     } else {
-        nextIndex = (currentIndex + 1) % songs.length;
+        nextIndex = (currentIndex + 1) % list.length;
     }
 
     currentIndex = nextIndex;
-    playSongNow(songs[currentIndex]);
+    playSongNow(list[currentIndex]);
 }
 
 function previousSong() {
@@ -5422,9 +5458,10 @@ function previousSong() {
         return;
     }
 
-    if (songs.length > 1) {
-        currentIndex = (currentIndex - 1 + songs.length) % songs.length;
-        playSongNow(songs[currentIndex]);
+    const list = getPlaybackSongs();
+    if (list.length > 1) {
+        currentIndex = (currentIndex - 1 + list.length) % list.length;
+        playSongNow(list[currentIndex]);
     } else {
         audio.currentTime = 0;
         audio.play().catch(() => {});
@@ -6149,6 +6186,27 @@ audio.addEventListener("timeupdate", () => {
     updateProgress();
 });
 
+/* High-frequency lyric sync for smoother line changes (esp. Safari / iPad) */
+let lyricRafId = 0;
+function lyricSyncLoop() {
+    lyricRafId = 0;
+    if (!audio.paused && currentLyrics.length) {
+        updateLyrics(audio.currentTime || 0);
+    }
+    if (!audio.paused) {
+        lyricRafId = requestAnimationFrame(lyricSyncLoop);
+    }
+}
+audio.addEventListener("play", () => {
+    if (!lyricRafId) lyricRafId = requestAnimationFrame(lyricSyncLoop);
+});
+audio.addEventListener("pause", () => {
+    if (lyricRafId) {
+        cancelAnimationFrame(lyricRafId);
+        lyricRafId = 0;
+    }
+});
+
 audio.addEventListener("ended", () => {
     if (repeatEnabled) {
         audio.currentTime = 0;
@@ -6165,19 +6223,24 @@ audio.addEventListener("ended", () => {
         return;
     }
 
-    // Nothing is explicitly queued: continue through the library normally.
-    // This does not add anything to Up Next.
-    if (songs.length > 1) {
+    // Nothing explicitly queued: continue inside the active context
+    // (Liked stays in Liked — does not jump to random library tracks).
+    const list = getPlaybackSongs();
+    if (list.length > 1) {
         let nextIndex;
         if (shuffleEnabled) {
-            const choices = songs.map((_, i) => i).filter(i => i !== currentIndex);
+            const choices = list.map((_, i) => i).filter(i => i !== currentIndex);
             nextIndex = choices[Math.floor(Math.random() * choices.length)];
         } else {
-            nextIndex = (currentIndex + 1) % songs.length;
+            nextIndex = (currentIndex + 1) % list.length;
         }
 
         currentIndex = nextIndex;
-        playSongNow(songs[currentIndex]);
+        playSongNow(list[currentIndex]);
+    } else if (list.length === 1) {
+        // Single-song context: restart or stop
+        audio.currentTime = 0;
+        audio.play().catch(() => updatePlayButtons());
     } else {
         audio.pause();
         updatePlayButtons();
@@ -6596,6 +6659,7 @@ function updateLyrics(time) {
     }
 
     if (lastActiveIndex !== null && activeIndex === lastActiveIndex) return;
+    const prevActive = lastActiveIndex;
     lastActiveIndex = activeIndex;
 
     const elements = Array.from(
@@ -6618,34 +6682,50 @@ function updateLyrics(time) {
         if (activeIndex < 0) {
             if (index === 0) element.classList.add("next");
             else if (index === 1) element.classList.add("next-next");
+            else if (index === 2) element.classList.add("next-third");
             else element.classList.add("upcoming");
             return;
         }
 
-        if (index < activeIndex) {
+        if (index < activeIndex - 1) {
+            element.classList.add("offscreen");
+        } else if (index === activeIndex - 1) {
             element.classList.add("past");
+            element._fadeTimer = setTimeout(() => {
+                element.classList.remove("past");
+                element.classList.add("fade-past");
+                element._fadeTimer = setTimeout(() => {
+                    element.classList.remove("fade-past");
+                    element.classList.add("offscreen");
+                    element._fadeTimer = null;
+                }, 480);
+            }, 320);
         } else if (index === activeIndex) {
+            // Force bubble animation to restart every time a line becomes current
+            void element.offsetWidth;
             element.classList.add("active");
         } else if (index === activeIndex + 1) {
             element.classList.add("next");
         } else if (index === activeIndex + 2) {
             element.classList.add("next-next");
+        } else if (index === activeIndex + 3) {
+            element.classList.add("next-third");
         } else {
             element.classList.add("upcoming");
         }
     });
 
-    const focusIndex = activeIndex < 0 ? 0 : activeIndex;
-    const focusLine = elements[focusIndex];
-    if (!focusLine) return;
-
+    // Smooth springy scroll so the active line floats into place
     requestAnimationFrame(() => {
+        const focusIndex = activeIndex < 0 ? 0 : activeIndex;
+        const line = elements[focusIndex];
+        if (!line) return;
         const viewportHeight = Math.max(1, lyricsContainer.clientHeight);
-        const anchor = activeIndex < 0 ? 0 : viewportHeight * 0.22;
-        const desiredOffset = Math.max(0, focusLine.offsetTop - anchor);
+        const anchorRatio = activeIndex < 0 ? 0.30 : 0.22;
+        const anchor = viewportHeight * anchorRatio;
+        const desired = line.offsetTop - anchor;
         const maxOffset = Math.max(0, track.offsetHeight - viewportHeight);
-        const offset = Math.min(desiredOffset, maxOffset);
-
+        const offset = Math.min(Math.max(0, desired), maxOffset);
         track.style.transform = "translate3d(0, " + (-offset) + "px, 0)";
     });
 }
@@ -6657,6 +6737,6 @@ if ("ResizeObserver" in window) {
 }
 
 </script>
-<script src="access-gate.js"></script>
+
 </body>
 </html>
