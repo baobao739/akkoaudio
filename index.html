@@ -1685,7 +1685,12 @@ body::after {
     overflow: hidden;
 }
 
-.full-player.open .focus-palette { opacity: 1; }
+.full-player.open .focus-palette { opacity: 1; animation: focusPalettePulse 8s ease-in-out infinite; }
+
+@keyframes focusPalettePulse {
+    0%, 100% { filter: saturate(1.05) brightness(1); }
+    50% { filter: saturate(1.35) brightness(1.08); }
+}
 
 .focus-blob {
     position: absolute;
@@ -1727,8 +1732,8 @@ body::after {
     inset: 0;
     z-index: 2;
     background:
-        linear-gradient(90deg, rgba(8,9,16,0.22), rgba(8,9,16,0.08) 52%, rgba(8,9,16,0.26)),
-        radial-gradient(circle at 54% 46%, transparent 0%, rgba(6,7,12,0.12) 100%);
+        linear-gradient(90deg, rgba(8,9,16,0.12), rgba(8,9,16,0.04) 52%, rgba(8,9,16,0.14)),
+        radial-gradient(circle at 54% 46%, transparent 0%, rgba(6,7,12,0.08) 100%);
     pointer-events: none;
 }
 
@@ -1786,7 +1791,8 @@ body::after {
         0 32px 72px rgba(0,0,0,0.5),
         0 0 0 1px rgba(255,255,255,0.12),
         0 0 60px color-mix(in srgb, var(--accent) 18%, transparent);
-    animation: coverFloat 5.5s ease-in-out infinite;
+    animation: none !important;
+    transform: none !important;
 }
 
 .full-cover-wrap:hover {
@@ -1969,91 +1975,85 @@ body::after {
 .lyrics-track {
     will-change: transform;
     transform: translate3d(0, 0, 0);
-    transition: transform 0.95s cubic-bezier(0.22, 1.15, 0.36, 1);
-    padding: 4px 0 28vh;
+    /* Smooth continuous scroll — Apple-like ease */
+    transition: transform 0.9s cubic-bezier(0.25, 0.1, 0.25, 1);
+    padding: 4px 0 32vh;
 }
 
 .lyric-line {
     width: 100%;
     max-width: 850px;
-    margin: 0 0 clamp(14px, 1.8vh, 26px);
+    margin: 0 0 clamp(12px, 1.6vh, 22px);
     padding: 0;
-    color: rgba(255,255,255,0.26);
+    color: rgba(255,255,255,0.28);
     font-size: clamp(26px, 3.2vw, 50px);
-    font-weight: 750;
-    line-height: 1.14;
-    letter-spacing: -1.2px;
+    font-weight: 700;
+    line-height: 1.16;
+    letter-spacing: -1.1px;
     overflow-wrap: anywhere;
     word-break: break-word;
-    transform: translate3d(0, 10px, 0) scale(0.96);
+    transform: scale(0.92);
     transform-origin: left center;
-    opacity: 0.55;
-    will-change: transform, opacity, filter, color;
+    opacity: 0.4;
+    will-change: transform, opacity, color, filter;
+    /* Apple-like smooth ease — no bounce */
     transition:
-        color 0.65s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
-        transform 0.85s cubic-bezier(0.34, 1.45, 0.64, 1),
-        filter 0.55s ease,
-        text-shadow 0.55s ease;
+        color 0.7s cubic-bezier(0.25, 0.1, 0.25, 1),
+        opacity 0.7s cubic-bezier(0.25, 0.1, 0.25, 1),
+        transform 0.85s cubic-bezier(0.25, 0.1, 0.25, 1),
+        filter 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
+/* Current line — accent, slightly larger, buttery scale-in */
 .lyric-line.active {
     color: var(--accent-bright);
     opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1.04);
+    font-weight: 760;
+    transform: scale(1.05);
+    filter: none;
     text-shadow: none;
-    animation: lyricBubblePop 0.7s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+    animation: none;
 }
 
-@keyframes lyricBubblePop {
-    0%   { transform: translate3d(0, 0, 0) scale(1); }
-    35%  { transform: translate3d(0, -16px, 0) scale(1.05); }
-    60%  { transform: translate3d(0, 5px, 0) scale(1.02); }
-    80%  { transform: translate3d(0, -3px, 0) scale(1.04); }
-    100% { transform: translate3d(0, 0, 0) scale(1.04); }
-}
-
+/* Next line — clearly readable, waiting to become current */
 .lyric-line.next {
-    color: rgba(255,255,255,0.78);
+    color: rgba(255,255,255,0.72);
     opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: scale(0.98);
 }
 
 .lyric-line.next-next {
-    color: rgba(255,255,255,0.48);
+    color: rgba(255,255,255,0.42);
     opacity: 0.95;
-    transform: translate3d(0, 4px, 0) scale(0.98);
+    transform: scale(0.94);
 }
 
 .lyric-line.next-third,
 .lyric-line.upcoming {
-    color: rgba(255,255,255,0.26);
-    opacity: 0.85;
-    transform: translate3d(0, 10px, 0) scale(0.95);
+    color: rgba(255,255,255,0.22);
+    opacity: 0.8;
+    transform: scale(0.90);
 }
 
+/* Leave upward gently */
 .lyric-line.past {
-    color: rgba(255,255,255,0.12);
-    opacity: 0;
-    filter: blur(2px);
-    transform: translate3d(0, -18px, 0) scale(0.94);
+    color: rgba(255,255,255,0.14);
+    opacity: 0.15;
+    filter: blur(0.5px);
+    transform: scale(0.90);
 }
 
 .lyric-line.fade-past {
     opacity: 0 !important;
-    transform: translate3d(0, -24px, 0) scale(0.92);
-    filter: blur(4px);
-    transition:
-        opacity 0.5s ease,
-        transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
-        filter 0.5s ease !important;
+    transform: scale(0.88);
+    filter: blur(1.5px);
 }
 
 .lyric-line.offscreen {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: translate3d(0, 16px, 0) scale(0.94);
+    transform: scale(0.88);
 }
 
 .lyric-line.pause {
@@ -2886,7 +2886,8 @@ html[data-theme="light"] .play-overlay {
 
 /* Very subtle artwork breathing; no random JS and no border-radius morphing. */
 .full-player.open .full-cover-wrap {
-    animation: appleArtworkFloat 9s cubic-bezier(.22,.72,.2,1) infinite alternate;
+    animation: none !important;
+    transform: none !important;
 }
 
 @keyframes appleArtworkFloat {
@@ -3028,7 +3029,8 @@ html[data-theme="light"] .play-overlay {
 }
 
 .full-player.open .full-cover-wrap {
-    animation: focusArtworkBright 6.5s cubic-bezier(.35,.05,.2,1) infinite alternate;
+    animation: none !important;
+    transform: none !important;
 }
 
 @keyframes focusArtworkBright {
@@ -5058,7 +5060,7 @@ function startFocusBackgroundMotion() {
     focusBgActive = true;
     const bg = document.getElementById('fullBg');
     if (bg) {
-        bg.style.transform = 'scale(1.27) translate3d(0%, 0%, 0) rotate(0deg)';
+        bg.style.transform = 'scale(1.34) translate3d(0%, 0%, 0) rotate(0deg)';
         setTimeout(queueBackgroundMotion, 150);
     }
 }
@@ -6697,11 +6699,9 @@ function updateLyrics(time) {
                     element.classList.remove("fade-past");
                     element.classList.add("offscreen");
                     element._fadeTimer = null;
-                }, 480);
-            }, 320);
+                }, 700);
+            }, 500);
         } else if (index === activeIndex) {
-            // Force bubble animation to restart every time a line becomes current
-            void element.offsetWidth;
             element.classList.add("active");
         } else if (index === activeIndex + 1) {
             element.classList.add("next");
