@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -3487,6 +3486,63 @@ button.full-like.liked svg {
     stroke: none !important;
     filter: none !important;
 }
+
+/* =========================================================
+   AKKOAUDIO — EXTRA FLUID GLASS + PAGE TRANSITIONS
+   ========================================================= */
+:root {
+  --glass-alpha: 0.42;
+  --glass-alpha-strong: 0.56;
+  --fluid-ease: cubic-bezier(.16, 1, .3, 1);
+  --fluid-ease-soft: cubic-bezier(.22, .8, .24, 1);
+}
+
+body {
+  background:
+    radial-gradient(ellipse 90% 65% at 90% -10%, color-mix(in srgb, var(--accent) 25%, transparent), transparent 62%),
+    radial-gradient(ellipse 70% 55% at 0% 100%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 65%),
+    linear-gradient(160deg, color-mix(in srgb, var(--theme-top) 82%, transparent), var(--theme-bottom));
+}
+
+.glass, .glass-strong, .topbar, .featured, .credits-card, .settings-card,
+.bottom-player, .queue-panel, .focus-panel, .modal, .search-box input {
+  background-color: color-mix(in srgb, var(--theme-panel) 58%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 20%, rgba(255,255,255,.13));
+  backdrop-filter: blur(34px) saturate(1.35);
+  -webkit-backdrop-filter: blur(34px) saturate(1.35);
+  transition: background-color .55s var(--fluid-ease-soft), border-color .55s var(--fluid-ease-soft), box-shadow .55s var(--fluid-ease-soft), backdrop-filter .55s var(--fluid-ease-soft);
+}
+
+.nav-button, .song-card, .track-row, .control, .full-control, .shuffle-btn,
+.like-btn, .queue-add-btn, .play-overlay, .accent-swatch, .theme-option {
+  transition: transform .42s var(--fluid-ease), opacity .42s var(--fluid-ease),
+              background-color .42s var(--fluid-ease), color .42s var(--fluid-ease),
+              border-color .42s var(--fluid-ease), box-shadow .42s var(--fluid-ease),
+              filter .42s var(--fluid-ease);
+}
+
+.nav-button:hover { transform: translateX(3px); }
+.song-card:hover { transform: translateY(-5px) scale(1.012); }
+.track-row:hover { transform: translateX(3px); }
+
+/* Every top-level page gets one consistent, soft transition. */
+.page-view {
+  animation: none;
+}
+.page-view.page-transition-in {
+  animation: pageCrossfade .52s var(--fluid-ease) both;
+  will-change: opacity, transform, filter;
+}
+@keyframes pageCrossfade {
+  0% { opacity: 0; transform: translate3d(0, 14px, 0) scale(.992); filter: blur(5px); }
+  55% { opacity: 1; filter: blur(0); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
 </style>
 
 <style id="akko-mobile-dock-fix">
@@ -6371,59 +6427,42 @@ function renderAll() {
    ========================================================= */
 
 function showPage(page, keepSearch = false) {
+    const previousPage = currentPage;
     currentPage = page;
 
-    const pages = [
-        "home",
-        "songs",
-        "liked",
-        "settings",
-        "credits"
-    ];
+    const pages = ["home", "songs", "liked", "settings", "credits"];
+    const previousElement = document.getElementById(previousPage + "Page");
+    const targetElement = document.getElementById(page + "Page");
 
     pages.forEach(name => {
-        const element =
-            document.getElementById(name + "Page");
-
-        if (element) {
-            const isTarget = name === page;
-
-            element.classList.toggle("hidden", !isTarget);
-
-            // Songs was being revealed instantly because its section stayed
-            // mounted without restarting an enter animation. Restart it only
-            // when Songs is actually selected, so other page behavior stays intact.
-            if (isTarget && name === "songs") {
-                element.classList.remove("page-transition-in");
-                void element.offsetWidth;
-                element.classList.add("page-transition-in");
-            }
+        const element = document.getElementById(name + "Page");
+        if (!element) return;
+        const isTarget = name === page;
+        element.classList.toggle("hidden", !isTarget);
+        if (isTarget) {
+            element.classList.add("page-view");
+            element.classList.remove("page-transition-in");
+            void element.offsetWidth;
+            element.classList.add("page-transition-in");
         }
     });
 
-    document.querySelectorAll(".nav-button")
-        .forEach(button => {
-            button.classList.toggle(
-                "active",
-                button.dataset.page === page
-            );
-        });
+    document.querySelectorAll(".nav-button").forEach(button => {
+        button.classList.toggle("active", button.dataset.page === page);
+    });
 
     if (!keepSearch) {
         searchInput.value = "";
         searchQuery = "";
     }
 
-    if (searchQuery) {
-        pageTitle.textContent = "Search";
-    } else {
-        pageTitle.textContent =
-            page.charAt(0).toUpperCase() +
-            page.slice(1);
-    }
+    pageTitle.textContent = searchQuery
+        ? "Search"
+        : page.charAt(0).toUpperCase() + page.slice(1);
 
     renderAll();
 }
+
 
 /* =========================================================
    NAV BUTTONS
