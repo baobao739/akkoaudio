@@ -9025,5 +9025,83 @@ button:active,
 }
 </style>
 
+
+<style id="akko-transparent-progress-featured-fix">
+/* Transparent progress bars in focus mode and the bottom dock */
+.bottom-player .progress-bar,
+.bottom-player .progress-track,
+.bottom-player .full-progress-bar,
+.bottom-player .progress,
+.bottom-player input[type="range"],
+.focus-panel .progress-bar,
+.focus-panel .progress-track,
+.focus-panel .full-progress-bar,
+.focus-panel .progress,
+.focus-panel input[type="range"],
+.focus-mode .progress-bar,
+.focus-mode .progress-track,
+.focus-mode .full-progress-bar,
+.focus-mode .progress,
+.focus-mode input[type="range"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Keep the actual progress fill visible */
+.bottom-player .progress-bar::before,
+.bottom-player .progress-bar::after,
+.bottom-player .progress-track::before,
+.bottom-player .progress-track::after,
+.focus-panel .progress-bar::before,
+.focus-panel .progress-bar::after,
+.focus-panel .progress-track::before,
+.focus-panel .progress-track::after,
+.focus-mode .progress-bar::before,
+.focus-mode .progress-bar::after,
+.focus-mode .progress-track::before,
+.focus-mode .progress-track::after {
+  border: 0 !important;
+  outline: 0 !important;
+}
+
+/* Remove every visible outline around Featured and its cover */
+.featured,
+.featured-section,
+.featured-card,
+.featured-container,
+.featured-content,
+.featured .song-cover,
+.featured .cover,
+.featured img,
+.featured-section .song-cover,
+.featured-section .cover,
+.featured-section img,
+.featured-card .song-cover,
+.featured-card .cover,
+.featured-card img {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Also remove pseudo-element outlines sometimes used by glass/neomorphic cards */
+.featured::before,
+.featured::after,
+.featured-section::before,
+.featured-section::after,
+.featured-card::before,
+.featured-card::after,
+.featured .song-cover::before,
+.featured .song-cover::after,
+.featured img::before,
+.featured img::after {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+</style>
 </body>
 </html>
