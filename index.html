@@ -251,6 +251,25 @@ body::after {
 
 @keyframes fadeUp {
     from { opacity: 0; transform: translateY(18px); }
+
+/* Songs page uses the same soft navigation motion as the other library pages.
+   It is intentionally separate from song loading, so navigation never waits for audio. */
+@keyframes songsPageEnter {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 12px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+#songsPage.page-transition-in {
+    animation: songsPageEnter 0.42s cubic-bezier(.22, 1, .36, 1) both;
+    will-change: opacity, transform;
+}
+
     to { opacity: 1; transform: translateY(0); }
 }
 
@@ -2096,11 +2115,19 @@ body::after {
     transform: translate3d(0, 0, 0);
 }
 
-/* Only ONE past lyric shown — soft blur */
+/* First past lyric — still clearly readable, like a recently finished line */
 .lyric-line.past {
     color: rgba(255,255,255,0.4);
     opacity: 0.55;
-    filter: blur(2.5px);
+    filter: blur(1.8px);
+    transform: translate3d(0, 0, 0);
+}
+
+/* Second past lyric — only the upper part should peek through, very faded */
+.lyric-line.past-second {
+    color: rgba(255,255,255,0.22);
+    opacity: 0.24;
+    filter: blur(3px);
     transform: translate3d(0, 0, 0);
 }
 
@@ -5645,10 +5672,18 @@ function showPage(page, keepSearch = false) {
             document.getElementById(name + "Page");
 
         if (element) {
-            element.classList.toggle(
-                "hidden",
-                name !== page
-            );
+            const isTarget = name === page;
+
+            element.classList.toggle("hidden", !isTarget);
+
+            // Songs was being revealed instantly because its section stayed
+            // mounted without restarting an enter animation. Restart it only
+            // when Songs is actually selected, so other page behavior stays intact.
+            if (isTarget && name === "songs") {
+                element.classList.remove("page-transition-in");
+                void element.offsetWidth;
+                element.classList.add("page-transition-in");
+            }
         }
     });
 
@@ -6872,7 +6907,7 @@ function updateLyrics(time) {
         elements.forEach((element, index) => {
             element.classList.remove(
                 'active', 'next', 'next-next', 'next-third',
-                'next-fourth', 'past', 'fade-past', 'offscreen'
+                'next-fourth', 'past', 'past-second', 'fade-past', 'offscreen'
             );
 
             if (element._fadeTimer) {
@@ -6894,17 +6929,12 @@ function updateLyrics(time) {
                 return;
             }
 
-            if (index === activeIndex - 1) {
+            if (index === activeIndex - 2) {
+                // Keep the second-most-recent line as a faint sliver at the top.
+                element.classList.add('past-second');
+            } else if (index === activeIndex - 1) {
+                // The immediately previous line stays visible and gently faded.
                 element.classList.add('past');
-                element._fadeTimer = setTimeout(() => {
-                    element.classList.remove('past');
-                    element.classList.add('fade-past');
-                    element._fadeTimer = setTimeout(() => {
-                        element.classList.remove('fade-past');
-                        element.classList.add('offscreen');
-                        element._fadeTimer = null;
-                    }, 950);
-                }, 1100);
             } else if (index === activeIndex) {
                 element.classList.add('active');
             } else if (index === activeIndex + 1) {
@@ -6925,7 +6955,7 @@ function updateLyrics(time) {
 
         requestAnimationFrame(() => {
             // Before first lyric: sit a bit higher so incoming lines fill the box
-            const anchorRatio = activeIndex < 0 ? 0.28 : 0.18;
+            const anchorRatio = activeIndex < 0 ? 0.28 : 0.31;
             const anchor = lyricsContainer.clientHeight * anchorRatio;
             const target = line.offsetTop - anchor;
             track.style.transform =
@@ -7806,6 +7836,6 @@ if ("ResizeObserver" in window) {
 }
 
 </script>
-
+<script src="access-gate.js"></script>
 </body>
 </html>
