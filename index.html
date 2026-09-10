@@ -8239,6 +8239,26 @@ audio.addEventListener("timeupdate", () => {
     updateProgress();
 });
 
+/* Re-sync lyrics immediately after seeking, including backward skips.
+   Resetting the active index also prevents stale faded classes/transforms. */
+audio.addEventListener("seeking", () => {
+    lastActiveIndex = null;
+    const track = lyricsContainer?.querySelector(".lyrics-track");
+    if (track) track.style.transition = "none";
+});
+
+audio.addEventListener("seeked", () => {
+    lastActiveIndex = null;
+    updateLyrics(audio.currentTime || 0);
+    requestAnimationFrame(() => {
+        const track = lyricsContainer?.querySelector(".lyrics-track");
+        if (track) {
+            track.style.transition = "";
+            track.getBoundingClientRect();
+        }
+    });
+});
+
 /* High-frequency lyric sync for smoother line changes (esp. Safari / iPad) */
 let lyricRafId = 0;
 function lyricSyncLoop() {
@@ -9103,5 +9123,90 @@ button:active,
   box-shadow: none !important;
 }
 </style>
+
+
+<style id="akko-final-search-lyrics-fixes">
+/* Search text is always bright white, regardless of accent/theme. */
+.search-box input,
+.search-box input:focus,
+.search-box input:hover,
+.search-box input:active {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  caret-color: #fff !important;
+}
+.search-box input::placeholder {
+  color: rgba(255,255,255,0.72) !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.72) !important;
+  opacity: 1 !important;
+}
+
+/* Upcoming lyrics must remain muted even when the accent is white. */
+.lyric-line.next,
+.lyric-line.next-next,
+.lyric-line.next-third,
+.lyric-line.next-fourth,
+.lyric-line.past,
+.lyric-line.past-second,
+.lyric-line.offscreen {
+  color: rgba(255,255,255,0.34) !important;
+  -webkit-text-fill-color: rgba(255,255,255,0.34) !important;
+  opacity: 0.34 !important;
+  text-shadow: none !important;
+}
+.lyric-line.active {
+  color: var(--accent-bright) !important;
+  -webkit-text-fill-color: var(--accent-bright) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* Prevent stale transition/fade effects after seeking backward. */
+#lyricsContainer.is-seeking .lyric-line {
+  transition: none !important;
+}
+</style>
+
+<style id="akko-apple-music-upcoming-gradient-fix">
+/* All upcoming lyrics share one consistent gray tone. */
+#lyricsContainer .lyric-line.next,
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third,
+#lyricsContainer .lyric-line.upcoming {
+    color: rgba(170, 170, 178, 0.68) !important;
+    opacity: 1 !important;
+    filter: none !important;
+    text-shadow: none !important;
+}
+
+/* Keep the current lyric as the only accent-colored line. */
+#lyricsContainer .lyric-line.active {
+    color: var(--accent-bright) !important;
+    opacity: 1 !important;
+    filter: none !important;
+}
+
+/* The lyric viewport fades toward the bottom like Apple Music. */
+#lyricsContainer {
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        #000 0%,
+        #000 62%,
+        rgba(0,0,0,0.88) 76%,
+        rgba(0,0,0,0.48) 88%,
+        transparent 100%
+    ) !important;
+    mask-image: linear-gradient(
+        to bottom,
+        #000 0%,
+        #000 62%,
+        rgba(0,0,0,0.88) 76%,
+        rgba(0,0,0,0.48) 88%,
+        transparent 100%
+    ) !important;
+}
+</style>
+
 </body>
 </html>
