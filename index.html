@@ -3543,6 +3543,144 @@ body {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
 
+
+/* FINAL FLUID NAVIGATION + CARD-LIKE BUTTONS */
+html button,
+html button:focus,
+html button:focus-visible,
+html .nav-button,
+html .nav-button:focus,
+html .nav-button:focus-visible,
+html .control,
+html .full-control,
+html .shuffle-btn,
+html .like-btn,
+html .queue-add-btn,
+html .play-overlay {
+    outline: none !important;
+}
+
+html button {
+    border: 1px solid transparent;
+    box-shadow: none;
+}
+
+html button:focus-visible {
+    background: color-mix(in srgb, var(--accent) 13%, var(--theme-panel));
+    border-color: color-mix(in srgb, var(--accent) 22%, transparent);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.page-view {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+    will-change: opacity, transform, filter;
+}
+
+.page-view.page-leaving {
+    animation: pageLeave .22s cubic-bezier(.4, 0, 1, 1) both;
+    pointer-events: none;
+}
+
+.page-view.page-transition-in {
+    animation: pageEnter .62s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+@keyframes pageLeave {
+    from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+    to { opacity: 0; transform: translate3d(0, -8px, 0) scale(.992); filter: blur(3px); }
+}
+
+@keyframes pageEnter {
+    from { opacity: 0; transform: translate3d(0, 22px, 0) scale(.985); filter: blur(7px); }
+    45% { opacity: 1; filter: blur(1px); }
+    to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-view.page-leaving, .page-view.page-transition-in { animation: none !important; }
+}
+
+
+/* =========================================================
+   CLEAN EDGELESS GLASS UI
+   ========================================================= */
+/* Remove visible outlines and borders from the entire interface. */
+.sidebar,
+.bottom-player,
+.topbar,
+.glass,
+.glass-strong,
+.featured,
+.credits-card,
+.settings-card,
+.queue-panel,
+.focus-panel,
+.modal,
+.song-card,
+.track-row,
+.nav-button,
+button,
+.control,
+.full-control,
+.shuffle-btn,
+.like-btn,
+.queue-add-btn,
+.play-overlay,
+.search-box,
+.search-box input,
+input,
+textarea,
+select,
+.theme-option,
+.accent-swatch {
+    border: none !important;
+    outline: none !important;
+}
+
+/* Remove inset highlight lines that can look like outlines. */
+.sidebar,
+.bottom-player,
+.topbar,
+.glass,
+.glass-strong,
+.featured,
+.credits-card,
+.settings-card,
+.queue-panel,
+.focus-panel,
+.modal {
+    box-shadow:
+        0 24px 64px rgba(0, 0, 0, 0.28),
+        0 8px 24px rgba(0, 0, 0, 0.16) !important;
+}
+
+/* Keep keyboard navigation visible without bringing back hard outlines. */
+button:focus-visible,
+.nav-button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+    outline: none !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent) !important;
+}
+
+/* Move the sidebar much closer to the screen edge. */
+.sidebar {
+    left: 6px !important;
+    top: 10px !important;
+    bottom: 10px !important;
+}
+
+@media (max-width: 760px) {
+    .sidebar {
+        left: 6px !important;
+        top: 8px !important;
+        bottom: calc(var(--mobile-nav-height) + 8px) !important;
+    }
+}
 </style>
 
 <style id="akko-mobile-dock-fix">
@@ -6427,25 +6565,36 @@ function renderAll() {
    ========================================================= */
 
 function showPage(page, keepSearch = false) {
-    const previousPage = currentPage;
-    currentPage = page;
+    if (page === currentPage) return;
 
-    const pages = ["home", "songs", "liked", "settings", "credits"];
+    const previousPage = currentPage;
     const previousElement = document.getElementById(previousPage + "Page");
     const targetElement = document.getElementById(page + "Page");
+    const pages = ["home", "songs", "liked", "settings", "credits"];
 
-    pages.forEach(name => {
-        const element = document.getElementById(name + "Page");
-        if (!element) return;
-        const isTarget = name === page;
-        element.classList.toggle("hidden", !isTarget);
-        if (isTarget) {
-            element.classList.add("page-view");
-            element.classList.remove("page-transition-in");
-            void element.offsetWidth;
-            element.classList.add("page-transition-in");
+    // Let the current page finish a short exit motion before swapping visibility.
+    if (previousElement) {
+        previousElement.classList.remove("page-transition-in");
+        previousElement.classList.add("page-view", "page-leaving");
+    }
+
+    currentPage = page;
+
+    window.setTimeout(() => {
+        pages.forEach(name => {
+            const element = document.getElementById(name + "Page");
+            if (!element) return;
+            element.classList.toggle("hidden", name !== page);
+            element.classList.remove("page-leaving");
+        });
+
+        if (targetElement) {
+            targetElement.classList.add("page-view");
+            targetElement.classList.remove("page-transition-in");
+            void targetElement.offsetWidth;
+            targetElement.classList.add("page-transition-in");
         }
-    });
+    }, 190);
 
     document.querySelectorAll(".nav-button").forEach(button => {
         button.classList.toggle("active", button.dataset.page === page);
