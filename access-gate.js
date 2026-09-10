@@ -1,427 +1,407 @@
 (() => {
   "use strict";
 
-  /*
-    AKKOAUDIO ACCESS GATE
-    Version 1.07
-
-    IMPORTANT:
-    Terminal text uses INLINE STYLES on purpose.
-    This prevents the main AkkoAudio stylesheet
-    from hiding or overriding terminal output.
-  */
-
   const OVERLAY_ID = "akkoflac-verify-overlay";
+  const GATE_LOCK_CLASS = "akkoflac-gate-locked";
 
-  const sleep = ms =>
-    new Promise(resolve => setTimeout(resolve, ms));
+  const THEMES = {
+    charcoal: "#1b1c24",
+    midnight: "#141a31",
+    ocean: "#102a39",
+    plum: "#251a2d",
+    dawn: "#352333",
+    forest: "#172c25",
+    lavender: "#2c2a45",
+    rosewood: "#321f2a",
+    ember: "#321e1a",
+    glacier: "#20343d",
+    cocoa: "#2d231f",
+    aurora: "#133b37"
+  };
 
-  /* =========================================================
-     PREVERIFY
-     ========================================================= */
-
-  function clearPreverify() {
-    document.documentElement.classList.remove(
-      "akkoflac-preverify"
-    );
-  }
-
-  /* =========================================================
-     COLORS
-     ========================================================= */
-
-  function getAccent() {
-    try {
-      return (
-        localStorage.getItem("akkoflac-accent") ||
-        "#7b8cff"
-      );
-    } catch {
-      return "#7b8cff";
-    }
-  }
-
-  function applyAccent() {
-    const accent = getAccent();
-
-    document.documentElement.style.setProperty(
-      "--accent",
-      accent
-    );
-  }
+  let started = false;
 
   /* =========================================================
-     BODY LOCK
+     SAFE HELPERS
      ========================================================= */
 
-  function lockUI() {
-    document.body.classList.add(
-      "akkoflac-gate-locked",
-      "akkoflac-awaiting-access"
-    );
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 
+  function removeExistingOverlay() {
+    const old = document.getElementById(OVERLAY_ID);
+    if (old) old.remove();
+  }
+
+  function unlockPage() {
+    document.body.classList.remove(GATE_LOCK_CLASS);
+    document.body.style.overflow = "";
+
+    const onboarding = document.getElementById("onboarding");
+
+    /*
+      Do NOT touch onboarding visibility here.
+      The main app owns onboarding.
+    */
+  }
+
+  function lockPage() {
+    document.body.classList.add(GATE_LOCK_CLASS);
     document.body.style.overflow = "hidden";
   }
 
-  function unlockUI() {
-    document.body.classList.remove(
-      "akkoflac-gate-locked",
-      "akkoflac-awaiting-access"
-    );
+  function getAccent() {
+    const saved = localStorage.getItem("akkoflac-accent");
 
-    document.body.style.overflow = "";
+    if (
+      saved &&
+      /^#[0-9a-fA-F]{3}$/.test(saved)
+    ) {
+      return saved;
+    }
+
+    if (
+      saved &&
+      /^#[0-9a-fA-F]{6}$/.test(saved)
+    ) {
+      return saved;
+    }
+
+    return "#7b8cff";
+  }
+
+  function getThemeBackground() {
+    const theme = localStorage.getItem("akkoflac-theme") || "charcoal";
+    return THEMES[theme] || THEMES.charcoal;
   }
 
   /* =========================================================
-     CLEAN OLD GATE
+     STYLES
      ========================================================= */
 
-  function removeOldGate() {
-    const old =
-      document.getElementById(OVERLAY_ID);
-
-    if (old) {
-      old.remove();
+  function installStyles() {
+    if (document.getElementById("akkoflac-access-gate-styles")) {
+      return;
     }
 
-    const oldStyle =
-      document.getElementById(
-        "akkoflac-terminal-force-style"
-      );
-
-    if (oldStyle) {
-      oldStyle.remove();
-    }
-  }
-
-  /* =========================================================
-     TERMINAL CSS
-
-     Only layout is handled here.
-     TEXT VISIBILITY IS HANDLED INLINE IN JS.
-     ========================================================= */
-
-  function installStyle() {
-    const old =
-      document.getElementById(
-        "akkoflac-terminal-force-style"
-      );
-
-    if (old) {
-      old.remove();
-    }
-
-    const style =
-      document.createElement("style");
-
-    style.id =
-      "akkoflac-terminal-force-style";
+    const style = document.createElement("style");
+    style.id = "akkoflac-access-gate-styles";
 
     style.textContent = `
+      /* =====================================================
+         AKKOAUDIO ACCESS GATE
+         Everything is uniquely prefixed to avoid collisions.
+         ===================================================== */
+
       #akkoflac-verify-overlay {
         position: fixed !important;
         inset: 0 !important;
-
         width: 100vw !important;
         height: 100vh !important;
         height: 100dvh !important;
-
+        min-width: 100vw !important;
+        min-height: 100vh !important;
         z-index: 2147483647 !important;
-
-        margin: 0 !important;
-        padding: 0 !important;
 
         display: block !important;
 
+        margin: 0 !important;
+        padding: 0 !important;
+
         background: #050505 !important;
+        color: #d7dce3 !important;
+
+        font-family:
+          SFMono-Regular,
+          SFMono-Regular,
+          Consolas,
+          "Liberation Mono",
+          Menlo,
+          monospace !important;
+
+        box-sizing: border-box !important;
 
         overflow: hidden !important;
 
-        isolation: isolate !important;
-
         opacity: 1 !important;
         visibility: visible !important;
-
-        transition: opacity .35s ease !important;
+        pointer-events: auto !important;
       }
 
-      #akkoflac-verify-overlay.akkoflac-gate-fade {
-        opacity: 0 !important;
-        pointer-events: none !important;
+      #akkoflac-verify-overlay *,
+      #akkoflac-verify-overlay *::before,
+      #akkoflac-verify-overlay *::after {
+        box-sizing: border-box !important;
       }
 
-      #akkoflac-verify-overlay
-      .akkoflac-terminal-root {
-        position: fixed !important;
+      #akkoflac-terminal-root {
+        position: absolute !important;
         inset: 0 !important;
 
-        width: 100vw !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-
-        margin: 0 !important;
-        padding: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
 
         display: flex !important;
         flex-direction: column !important;
 
         background: #050505 !important;
 
-        overflow: hidden !important;
-
-        border: 0 !important;
-        border-radius: 0 !important;
-
-        box-shadow: none !important;
-
+        color: #d7dce3 !important;
         font-family:
-          "SFMono-Regular",
-          "Cascadia Code",
-          "Roboto Mono",
+          SFMono-Regular,
           Consolas,
-          "Courier New",
+          "Liberation Mono",
+          Menlo,
           monospace !important;
+
+        overflow: hidden !important;
       }
 
-      #akkoflac-verify-overlay
-      .akkoflac-terminal-header {
+      #akkoflac-terminal-header {
+        flex: 0 0 38px !important;
+
         width: 100% !important;
-
-        height: 36px !important;
-        min-height: 36px !important;
-
-        flex: 0 0 36px !important;
+        height: 38px !important;
 
         display: flex !important;
         align-items: center !important;
 
         gap: 7px !important;
 
-        padding: 0 12px !important;
-
-        box-sizing: border-box !important;
+        padding: 0 13px !important;
 
         background: #101010 !important;
 
-        border-bottom:
-          1px solid rgba(255,255,255,.08) !important;
+        border-bottom: 1px solid rgba(255,255,255,.08) !important;
+
+        color: rgba(255,255,255,.48) !important;
+
+        font-family:
+          SFMono-Regular,
+          Consolas,
+          monospace !important;
+
+        font-size: 11px !important;
+        line-height: 1 !important;
 
         user-select: none !important;
       }
 
-      #akkoflac-verify-overlay
       .akkoflac-terminal-dot {
+        display: block !important;
+
         width: 9px !important;
         height: 9px !important;
 
         min-width: 9px !important;
+        min-height: 9px !important;
 
         border-radius: 50% !important;
 
-        display: block !important;
-
-        background:
-          rgba(255,255,255,.18) !important;
+        background: rgba(255,255,255,.2) !important;
       }
 
-      #akkoflac-verify-overlay
-      .akkoflac-terminal-window-title {
+      #akkoflac-terminal-name {
         margin-left: 7px !important;
 
-        color:
-          rgba(255,255,255,.48) !important;
+        color: rgba(255,255,255,.42) !important;
 
         font-family:
-          "Segoe UI",
-          Arial,
-          sans-serif !important;
+          SFMono-Regular,
+          Consolas,
+          monospace !important;
 
         font-size: 11px !important;
-
-        font-weight: 400 !important;
-
-        line-height: 1 !important;
-
-        background: transparent !important;
+        font-weight: 500 !important;
+        letter-spacing: .02em !important;
       }
 
-      #akkoflac-verify-overlay
-      .akkoflac-terminal-output {
+      #akkoflac-terminal-output {
         flex: 1 1 auto !important;
 
+        width: 100% !important;
         min-height: 0 !important;
 
-        width: 100% !important;
-
-        box-sizing: border-box !important;
-
-        padding:
-          14px
-          18px
-          32px !important;
-
-        margin: 0 !important;
+        padding: 16px 18px 30px !important;
 
         overflow-x: hidden !important;
         overflow-y: auto !important;
 
         background: #050505 !important;
 
+        color: #d7dce3 !important;
+
         font-family:
-          "SFMono-Regular",
-          "Cascadia Code",
-          "Roboto Mono",
+          SFMono-Regular,
           Consolas,
-          "Courier New",
+          "Liberation Mono",
+          Menlo,
           monospace !important;
 
-        font-size:
-          clamp(12px, 1.55vw, 14px) !important;
-
-        line-height: 1.7 !important;
+        font-size: 14px !important;
+        line-height: 1.72 !important;
 
         text-align: left !important;
 
-        white-space: pre-wrap !important;
+        white-space: normal !important;
 
         scrollbar-width: thin !important;
-
-        scrollbar-color:
-          #333
-          #050505 !important;
       }
 
-      #akkoflac-verify-overlay
       .akkoflac-terminal-line {
         display: block !important;
 
         width: 100% !important;
 
-        min-height: 1.7em !important;
+        min-height: 24px !important;
 
         margin: 0 !important;
         padding: 0 !important;
 
-        background: transparent !important;
-
-        text-align: left !important;
-
-        white-space: pre-wrap !important;
-
-        font-family:
-          "SFMono-Regular",
-          "Cascadia Code",
-          "Roboto Mono",
-          Consolas,
-          "Courier New",
-          monospace !important;
-
-        font-size: inherit !important;
-
-        line-height: 1.7 !important;
-
-        font-weight: 400 !important;
-
         opacity: 1 !important;
-
         visibility: visible !important;
 
         transform: none !important;
 
         animation: none !important;
-
         transition: none !important;
+
+        color: rgba(255,255,255,.42) !important;
+
+        font-family:
+          SFMono-Regular,
+          Consolas,
+          "Liberation Mono",
+          Menlo,
+          monospace !important;
+
+        font-size: 14px !important;
+        line-height: 1.72 !important;
+
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
       }
 
-      #akkoflac-verify-overlay
-      .akkoflac-terminal-input {
+      .akkoflac-terminal-line.system {
+        color: rgba(255,255,255,.42) !important;
+      }
+
+      .akkoflac-terminal-line.accent {
+        color: var(--akkoflac-gate-accent) !important;
+      }
+
+      .akkoflac-terminal-line.success {
+        color: #66e39a !important;
+      }
+
+      .akkoflac-terminal-line.warning {
+        color: #f5c76a !important;
+      }
+
+      .akkoflac-terminal-line.error {
+        color: #ff7272 !important;
+      }
+
+      .akkoflac-terminal-cursor {
         display: inline-block !important;
 
-        width: 5ch !important;
-        min-width: 5ch !important;
-        max-width: 12ch !important;
+        width: 7px !important;
+        height: 1em !important;
 
-        height: 1.7em !important;
+        margin-left: 3px !important;
+
+        vertical-align: -0.12em !important;
+
+        background: var(--akkoflac-gate-accent) !important;
+
+        opacity: 1 !important;
+
+        animation:
+          akkoflacGateCursor .75s steps(1,end) infinite !important;
+      }
+
+      @keyframes akkoflacGateCursor {
+        0%, 49% {
+          opacity: 1;
+        }
+
+        50%, 100% {
+          opacity: 0;
+        }
+      }
+
+      .akkoflac-gate-prompt {
+        display: inline-flex !important;
+
+        align-items: center !important;
+
+        vertical-align: baseline !important;
+
+        min-height: 24px !important;
+      }
+
+      .akkoflac-gate-input {
+        display: inline-block !important;
+
+        width: 7ch !important;
+        min-width: 7ch !important;
+        max-width: 7ch !important;
+
+        height: 24px !important;
 
         margin: 0 !important;
         padding: 0 !important;
 
         border: 0 !important;
         outline: 0 !important;
-        border-radius: 0 !important;
 
         background: transparent !important;
 
-        box-shadow: none !important;
+        color: var(--akkoflac-gate-accent) !important;
 
-        color:
-          var(--accent, #7b8cff) !important;
+        caret-color: var(--akkoflac-gate-accent) !important;
 
         font-family:
-          "SFMono-Regular",
-          "Cascadia Code",
-          "Roboto Mono",
+          SFMono-Regular,
           Consolas,
-          "Courier New",
+          "Liberation Mono",
+          Menlo,
           monospace !important;
 
-        font-size: inherit !important;
-
+        font-size: 14px !important;
         font-weight: 700 !important;
 
-        line-height: inherit !important;
-
-        letter-spacing: .04em !important;
-
-        caret-color:
-          var(--accent, #7b8cff) !important;
+        letter-spacing: .05em !important;
 
         text-transform: uppercase !important;
-
-        appearance: none !important;
-        -webkit-appearance: none !important;
-
-        opacity: 1 !important;
-        visibility: visible !important;
-
-        transition: none !important;
       }
 
-      #akkoflac-verify-overlay
-      .akkoflac-terminal-input:disabled {
+      .akkoflac-gate-input:disabled {
         opacity: .55 !important;
       }
 
-      body.akkoflac-gate-locked {
-        overflow: hidden !important;
+      #akkoflac-gate-title {
+        color: var(--akkoflac-gate-accent) !important;
+
+        font-weight: 700 !important;
       }
 
-      body.akkoflac-awaiting-access {
-        overflow: hidden !important;
+      #akkoflac-gate-title::selection,
+      #akkoflac-terminal-output::selection {
+        background: var(--akkoflac-gate-accent) !important;
+        color: #050505 !important;
       }
 
-      @media (max-width: 600px) {
-        #akkoflac-verify-overlay
-        .akkoflac-terminal-header {
-          height: 34px !important;
-          min-height: 34px !important;
-          flex-basis: 34px !important;
-        }
-
-        #akkoflac-verify-overlay
-        .akkoflac-terminal-window-title {
-          font-size: 10px !important;
-        }
-
-        #akkoflac-verify-overlay
-        .akkoflac-terminal-output {
-          padding:
-            10px
-            12px
-            24px !important;
-
-          font-size: 12px !important;
-        }
+      /* Hide the actual app ONLY while the access gate is active. */
+      body.akkoflac-gate-locked .sidebar,
+      body.akkoflac-gate-locked .main,
+      body.akkoflac-gate-locked .bottom-player,
+      body.akkoflac-gate-locked .full-player,
+      body.akkoflac-gate-locked .queue-panel {
+        visibility: hidden !important;
+        pointer-events: none !important;
+        user-select: none !important;
       }
     `;
 
@@ -429,508 +409,182 @@
   }
 
   /* =========================================================
-     CREATE TERMINAL
+     TERMINAL CREATION
      ========================================================= */
 
-  function createTerminal() {
-    removeOldGate();
-    installStyle();
+  function createOverlay() {
+    removeExistingOverlay();
 
-    const overlay =
-      document.createElement("div");
+    const overlay = document.createElement("div");
 
-    overlay.id =
-      OVERLAY_ID;
+    overlay.id = OVERLAY_ID;
+
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-live", "polite");
+
+    const accent = getAccent();
+
+    overlay.style.setProperty(
+      "--akkoflac-gate-accent",
+      accent
+    );
 
     overlay.innerHTML = `
-      <div class="akkoflac-terminal-root">
+      <div id="akkoflac-terminal-root">
 
-        <div class="akkoflac-terminal-header">
-
+        <div id="akkoflac-terminal-header">
           <span class="akkoflac-terminal-dot"></span>
           <span class="akkoflac-terminal-dot"></span>
           <span class="akkoflac-terminal-dot"></span>
 
-          <span class="akkoflac-terminal-window-title">
-            AkkoAudio Version 1.07
+          <span id="akkoflac-terminal-name">
+            AkkoAudio Terminal
           </span>
-
         </div>
 
         <div
           id="akkoflac-terminal-output"
-          class="akkoflac-terminal-output"
+          aria-live="polite"
         ></div>
 
       </div>
     `;
 
-    document.body.appendChild(
-      overlay
-    );
+    document.body.appendChild(overlay);
 
     return overlay;
   }
 
-  /* =========================================================
-     CREATE TEXT LINE
-
-     INLINE COLOR + INLINE OPACITY.
-     THIS IS THE IMPORTANT FIX.
-     ========================================================= */
-
-  function createTextLine(
-    output,
-    type = "normal"
-  ) {
-    const line =
-      document.createElement("div");
+  function addLine(output, text, type = "system") {
+    const line = document.createElement("div");
 
     line.className =
-      "akkoflac-terminal-line";
+      "akkoflac-terminal-line " + type;
 
-    line.style.display =
-      "block";
+    line.textContent = text;
 
-    line.style.opacity =
-      "1";
+    output.appendChild(line);
 
-    line.style.visibility =
-      "visible";
-
-    line.style.color =
-      type === "accent"
-        ? getAccent()
-        : type === "success"
-          ? "#66e39a"
-          : type === "warning"
-            ? "#f5c76a"
-            : "#c7c7c7";
-
-    line.style.fontFamily =
-      '"SFMono-Regular","Cascadia Code","Roboto Mono",Consolas,"Courier New",monospace';
-
-    line.style.fontSize =
-      "inherit";
-
-    line.style.fontWeight =
-      type === "success"
-        ? "600"
-        : "400";
-
-    line.style.lineHeight =
-      "1.7";
-
-    line.style.background =
-      "transparent";
-
-    line.style.transition =
-      "none";
-
-    line.style.animation =
-      "none";
-
-    output.appendChild(
-      line
-    );
+    output.scrollTop = output.scrollHeight;
 
     return line;
   }
 
   /* =========================================================
-     TYPEWRITER
+     FAST TYPEWRITER
      ========================================================= */
 
   async function typeLine(
     output,
     text,
-    type = "normal",
-    speed = 3
+    type = "system",
+    speed = 2
   ) {
-    const line =
-      createTextLine(
-        output,
-        type
+    const line = document.createElement("div");
+
+    line.className =
+      "akkoflac-terminal-line " + type;
+
+    output.appendChild(line);
+
+    const cursor = document.createElement("span");
+
+    cursor.className =
+      "akkoflac-terminal-cursor";
+
+    line.appendChild(cursor);
+
+    for (let i = 0; i < text.length; i++) {
+      cursor.before(
+        document.createTextNode(text[i])
       );
 
-    const textNode =
-      document.createTextNode("");
+      output.scrollTop = output.scrollHeight;
 
-    line.appendChild(
-      textNode
-    );
-
-    const cursor =
-      document.createElement(
-        "span"
-      );
-
-    cursor.style.display =
-      "inline-block";
-
-    cursor.style.width =
-      "7px";
-
-    cursor.style.height =
-      "1.05em";
-
-    cursor.style.marginLeft =
-      "3px";
-
-    cursor.style.verticalAlign =
-      "-0.16em";
-
-    cursor.style.background =
-      getAccent();
-
-    cursor.style.opacity =
-      "1";
-
-    cursor.style.visibility =
-      "visible";
-
-    cursor.style.animation =
-      "none";
-
-    line.appendChild(
-      cursor
-    );
-
-    for (
-      const character of text
-    ) {
-      textNode.textContent +=
-        character;
-
-      output.scrollTop =
-        output.scrollHeight;
-
-      await sleep(
-        speed +
-        Math.random() * 2
-      );
+      await sleep(speed);
     }
 
     cursor.remove();
 
-    output.scrollTop =
-      output.scrollHeight;
-
-    return line;
-  }
-
-  function staticLine(
-    output,
-    text,
-    type = "normal"
-  ) {
-    const line =
-      createTextLine(
-        output,
-        type
-      );
-
-    line.textContent =
-      text;
-
-    output.scrollTop =
-      output.scrollHeight;
+    output.scrollTop = output.scrollHeight;
 
     return line;
   }
 
   /* =========================================================
-     COMMAND PROMPT
+     VERIFICATION SCREEN
      ========================================================= */
 
-  function createPrompt(
-    output,
-    maxLength
-  ) {
-    const line =
-      createTextLine(
-        output,
-        "normal"
-      );
+  async function showVerificationScreen() {
+    lockPage();
 
-    const prefix =
-      document.createElement(
-        "span"
-      );
-
-    prefix.textContent =
-      "C:\\AkkoAudio> ";
-
-    prefix.style.color =
-      getAccent();
-
-    prefix.style.fontWeight =
-      "400";
-
-    prefix.style.visibility =
-      "visible";
-
-    prefix.style.opacity =
-      "1";
-
-    line.appendChild(
-      prefix
-    );
-
-    const input =
-      document.createElement(
-        "input"
-      );
-
-    input.type =
-      "text";
-
-    input.className =
-      "akkoflac-terminal-input";
-
-    input.maxLength =
-      maxLength;
-
-    input.autocomplete =
-      "off";
-
-    input.autocorrect =
-      "off";
-
-    input.autocapitalize =
-      "none";
-
-    input.spellcheck =
-      false;
-
-    input.inputMode =
-      "text";
-
-    input.setAttribute(
-      "aria-label",
-      "Terminal input"
-    );
-
-    line.appendChild(
-      input
-    );
-
-    output.scrollTop =
-      output.scrollHeight;
-
-    setTimeout(
-      () => {
-        try {
-          input.focus();
-        } catch {}
-      },
-      30
-    );
-
-    return {
-      line,
-      input
-    };
-  }
-
-  /* =========================================================
-     HIDE / ENTER PLAYER
-     ========================================================= */
-
-  async function enterPlayer(
-    overlay,
-    output
-  ) {
-    await typeLine(
-      output,
-      "C:\\AkkoAudio> akko",
-      "normal",
-      3
-    );
-
-    await typeLine(
-      output,
-      "[system] command accepted.",
-      "success",
-      3
-    );
-
-    await typeLine(
-      output,
-      "[system] starting AkkoAudio...",
-      "normal",
-      3
-    );
-
-    await typeLine(
-      output,
-      "[system] entering player...",
-      "normal",
-      3
-    );
-
-    await sleep(200);
-
-    overlay.classList.add(
-      "akkoflac-gate-fade"
-    );
-
-    unlockUI();
-
-    await sleep(400);
-
-    overlay.remove();
-
-    clearPreverify();
-  }
-
-  /* =========================================================
-     AKKO COMMAND
-     ========================================================= */
-
-  function waitForAkko(
-    overlay,
-    output
-  ) {
-    return new Promise(resolve => {
-      typeLine(
-        output,
-        "Type akko to enter AkkoAudio.",
-        "accent",
-        3
-      ).then(() => {
-        const prompt =
-          createPrompt(
-            output,
-            4
-          );
-
-        prompt.input.addEventListener(
-          "input",
-          () => {
-            prompt.input.value =
-              prompt.input.value
-                .replace(
-                  /[^a-zA-Z]/g,
-                  ""
-                )
-                .slice(
-                  0,
-                  4
-                );
-          }
-        );
-
-        prompt.input.addEventListener(
-          "keydown",
-          async event => {
-            if (
-              event.key !==
-              "Enter"
-            ) {
-              return;
-            }
-
-            event.preventDefault();
-
-            const command =
-              prompt.input.value
-                .trim()
-                .toLowerCase();
-
-            if (
-              command !==
-              "akko"
-            ) {
-              await typeLine(
-                output,
-                "[error] command not recognized.",
-                "warning",
-                3
-              );
-
-              await typeLine(
-                output,
-                "[auth] type akko to enter.",
-                "accent",
-                3
-              );
-
-              prompt.input.value =
-                "";
-
-              prompt.input.focus();
-
-              return;
-            }
-
-            prompt.input.disabled =
-              true;
-
-            await enterPlayer(
-              overlay,
-              output
-            );
-
-            resolve();
-          }
-        );
-      });
-    });
-  }
-
-  /* =========================================================
-     VERIFICATION
-     ========================================================= */
-
-  async function showVerifying() {
-    lockUI();
-
-    clearPreverify();
-
-    applyAccent();
-
-    const overlay =
-      createTerminal();
+    const overlay = createOverlay();
 
     const output =
-      overlay.querySelector(
-        "#akkoflac-terminal-output"
+      document.getElementById(
+        "akkoflac-terminal-output"
       );
 
-    await typeLine(
+    /*
+      IMPORTANT:
+      Put the first line on screen immediately.
+      This prevents a completely blank terminal if
+      anything asynchronous fails.
+    */
+
+    addLine(
       output,
-      "[system] initializing secure access check..."
+      "AkkoAudio Version 1.07",
+      "accent"
+    );
+
+    addLine(
+      output,
+      "",
+      "system"
     );
 
     await typeLine(
       output,
-      "[network] connecting to AkkoAudio cloud..."
+      "[system] initializing secure access check...",
+      "system"
     );
 
     await typeLine(
       output,
-      "[network] connection established"
+      "[network] connecting to AkkoAudio cloud...",
+      "system"
     );
 
     await typeLine(
       output,
-      "[auth] checking access session..."
+      "[network] connection established",
+      "system"
     );
 
     await typeLine(
       output,
-      "[auth] validating session credentials..."
+      "[auth] checking access session...",
+      "system"
     );
 
     await typeLine(
       output,
-      "[database] checking access status..."
+      "[auth] validating session credentials...",
+      "system"
     );
 
     await typeLine(
       output,
-      "[security] checking code state..."
+      "[database] checking access status...",
+      "system"
+    );
+
+    await typeLine(
+      output,
+      "[security] checking code state...",
+      "system"
     );
 
     await typeLine(
@@ -943,358 +597,306 @@
   }
 
   /* =========================================================
-     VERIFIED SESSION
-     ========================================================= */
-
-  async function showVerificationSuccess(
-    overlay
-  ) {
-    const output =
-      overlay.querySelector(
-        "#akkoflac-terminal-output"
-      );
-
-    if (!output) {
-      return;
-    }
-
-    await typeLine(
-      output,
-      "[auth] access session verified."
-    );
-
-    await typeLine(
-      output,
-      "[auth] credentials accepted."
-    );
-
-    await typeLine(
-      output,
-      "[security] access granted."
-    );
-
-    await typeLine(
-      output,
-      "[system] authentication successful.",
-      "success"
-    );
-
-    await typeLine(
-      output,
-      "Authentication complete."
-    );
-
-    await waitForAkko(
-      overlay,
-      output
-    );
-  }
-
-  /* =========================================================
      ACCESS CODE GATE
      ========================================================= */
 
-  async function showGate(
-    revoked = false
-  ) {
-    lockUI();
+  async function showAccessGate(revoked = false) {
+    lockPage();
 
-    clearPreverify();
-
-    applyAccent();
-
-    const overlay =
-      createTerminal();
+    const overlay = createOverlay();
 
     const output =
-      overlay.querySelector(
-        "#akkoflac-terminal-output"
+      document.getElementById(
+        "akkoflac-terminal-output"
       );
 
-    await typeLine(
+    addLine(
       output,
-      "[auth] no active access session."
+      "AkkoAudio Version 1.07",
+      "accent"
+    );
+
+    addLine(
+      output,
+      "",
+      "system"
     );
 
     await typeLine(
       output,
-      "[security] access code required."
+      "[auth] no active access session...",
+      "system"
+    );
+
+    await typeLine(
+      output,
+      "[security] access code required",
+      "system"
     );
 
     if (revoked) {
       await typeLine(
         output,
-        "[security] previous access code has been revoked.",
+        "[security] previous access code has been revoked",
         "warning"
       );
     }
 
     await typeLine(
       output,
-      "[terminal] enter your access code below",
+      "[terminal] type your access code below",
       "accent"
     );
 
-    let submitting =
-      false;
+    createCodePrompt(overlay, output);
 
-    async function makePrompt() {
-      const prompt =
-        createPrompt(
-          output,
-          5
-        );
+    return overlay;
+  }
 
-      prompt.input.addEventListener(
-        "input",
-        () => {
-          prompt.input.value =
-            prompt.input.value
-              .replace(
-                /[^a-zA-Z0-9]/g,
-                ""
-              )
-              .toUpperCase()
-              .slice(
-                0,
-                5
-              );
-        }
-      );
+  function createCodePrompt(overlay, output) {
+    const promptLine = document.createElement("div");
 
-      prompt.input.addEventListener(
-        "keydown",
-        async event => {
-          if (
-            event.key !==
-            "Enter"
-          ) {
-            return;
-          }
+    promptLine.className =
+      "akkoflac-terminal-line accent";
 
-          event.preventDefault();
+    promptLine.textContent = "ACCESS CODE: ";
 
-          if (submitting) {
-            return;
-          }
+    const wrap = document.createElement("span");
 
-          const code =
-            prompt.input.value
-              .trim()
-              .toUpperCase();
+    wrap.className =
+      "akkoflac-gate-prompt";
 
-          if (
-            code.length !==
-            5
-          ) {
-            await typeLine(
-              output,
-              "[error] access code must be 5 characters.",
-              "warning"
-            );
+    const input = document.createElement("input");
 
-            prompt.input.value =
-              "";
+    input.className =
+      "akkoflac-gate-input";
 
-            prompt.input.focus();
+    input.type = "text";
+    input.maxLength = 5;
 
-            return;
-          }
+    input.autocomplete = "off";
+    input.autocorrect = "off";
+    input.autocapitalize = "characters";
+    input.spellcheck = false;
 
-          submitting =
-            true;
+    input.inputMode = "text";
 
-          prompt.input.disabled =
-            true;
+    input.setAttribute(
+      "aria-label",
+      "Access code"
+    );
 
-          await redeem(
-            code
-          );
-        }
-      );
-    }
+    wrap.appendChild(input);
+    promptLine.appendChild(wrap);
 
-    async function redeem(
-      code
-    ) {
-      /*
-        Replay the code with the SAME
-        terminal typing effect.
-      */
+    output.appendChild(promptLine);
 
-      await typeLine(
-        output,
-        "C:\\AkkoAudio> " +
-          code,
-        "normal",
-        3
-      );
+    output.scrollTop = output.scrollHeight;
 
-      await typeLine(
-        output,
-        "[auth] validating access code..."
-      );
-
-      await typeLine(
-        output,
-        "[database] checking code status..."
-      );
-
-      try {
-        const response =
-          await fetch(
-            "/.netlify/functions/verify-code",
-            {
-              method:
-                "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
-
-              credentials:
-                "include",
-
-              body:
-                JSON.stringify({
-                  code
-                })
-            }
-          );
-
-        const data =
-          await response
-            .json()
-            .catch(
-              () => ({})
-            );
-
-        if (
-          !response.ok ||
-          !data.valid
-        ) {
-          const reason =
-            String(
-              data.reason ||
-              data.error ||
-              ""
-            ).toLowerCase();
-
-          if (
-            reason.includes(
-              "revok"
-            )
-          ) {
-            await typeLine(
-              output,
-              "[security] access code has been revoked.",
-              "warning"
-            );
-          } else {
-            await typeLine(
-              output,
-              "[error] invalid access code.",
-              "warning"
-            );
-          }
-
-          await typeLine(
-            output,
-            "[auth] authentication failed."
-          );
-
-          await typeLine(
-            output,
-            "[terminal] try again.",
-            "accent"
-          );
-
-          submitting =
-            false;
-
-          await makePrompt();
-
-          return;
-        }
-
-        await typeLine(
-          output,
-          "[auth] access code accepted.",
-          "success"
-        );
-
-        await typeLine(
-          output,
-          "[auth] authentication successful.",
-          "success"
-        );
-
-        await typeLine(
-          output,
-          "[security] access granted.",
-          "success"
-        );
-
-        await typeLine(
-          output,
-          "Authentication complete.",
-          "success"
-        );
-
-        await waitForAkko(
-          overlay,
-          output
-        );
-
-      } catch (error) {
-        await typeLine(
-          output,
-          "[network] authentication server unavailable.",
-          "warning"
-        );
-
-        await typeLine(
-          output,
-          "[network] please try again.",
-          "warning"
-        );
-
-        submitting =
-          false;
-
-        await makePrompt();
+    input.addEventListener(
+      "input",
+      () => {
+        input.value =
+          input.value
+            .replace(/[^a-zA-Z0-9]/g, "")
+            .slice(0, 5)
+            .toUpperCase();
       }
-    }
+    );
 
-    await makePrompt();
-
-    overlay.addEventListener(
-      "click",
+    input.addEventListener(
+      "keydown",
       event => {
-        const activeInput =
-          output.querySelector(
-            "input:not(:disabled)"
-          );
-
         if (
-          activeInput &&
-          (
-            event.target ===
-              overlay ||
-            event.target.closest(
-              "#akkoflac-terminal-output"
-            )
-          )
+          event.key === "Enter" &&
+          !input.disabled
         ) {
-          activeInput.focus();
+          redeemAccessCode(
+            overlay,
+            output,
+            input
+          );
         }
       }
     );
+
+    setTimeout(() => {
+      try {
+        input.focus();
+      } catch {}
+    }, 100);
+
+    return input;
   }
 
   /* =========================================================
-     SERVER ACCESS CHECK
+     VERIFY ACCESS CODE
+     ========================================================= */
+
+  async function redeemAccessCode(
+    overlay,
+    output,
+    input
+  ) {
+    if (!input || input.disabled) {
+      return;
+    }
+
+    const code =
+      input.value
+        .trim()
+        .toUpperCase();
+
+    if (code.length !== 5) {
+      addLine(
+        output,
+        "[error] access code must be 5 characters",
+        "warning"
+      );
+
+      input.focus();
+      return;
+    }
+
+    input.disabled = true;
+
+    /*
+      Replay exactly what the user entered.
+    */
+
+    await typeLine(
+      output,
+      "[terminal] ACCESS CODE: " + code,
+      "accent"
+    );
+
+    await typeLine(
+      output,
+      "[auth] validating code...",
+      "system"
+    );
+
+    await typeLine(
+      output,
+      "[database] checking code status...",
+      "system"
+    );
+
+    try {
+      const response = await fetch(
+        "/.netlify/functions/verify-code",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          credentials: "include",
+
+          cache: "no-store",
+
+          body: JSON.stringify({
+            code
+          })
+        }
+      );
+
+      const data =
+        await response
+          .json()
+          .catch(() => ({}));
+
+      if (
+        !response.ok ||
+        !data.valid
+      ) {
+        const reason =
+          String(
+            data.reason ||
+            data.error ||
+            ""
+          ).toLowerCase();
+
+        if (reason.includes("revok")) {
+          await typeLine(
+            output,
+            "[security] this access code has been revoked",
+            "warning"
+          );
+        } else {
+          await typeLine(
+            output,
+            "[error] invalid access code",
+            "warning"
+          );
+        }
+
+        await typeLine(
+          output,
+          "[terminal] try another code...",
+          "system"
+        );
+
+        input.disabled = false;
+        input.value = "";
+
+        input.focus();
+
+        return;
+      }
+
+      await typeLine(
+        output,
+        "[success] verification successful",
+        "success"
+      );
+
+      await typeLine(
+        output,
+        "[system] access granted",
+        "system"
+      );
+
+      await typeLine(
+        output,
+        "[system] launching music player...",
+        "accent"
+      );
+
+      /*
+        Give the browser a moment to paint the final line,
+        but do not use a long forced delay.
+      */
+
+      await sleep(350);
+
+      overlay.remove();
+
+      unlockPage();
+
+    } catch (error) {
+      console.error(
+        "AkkoAudio access verification error:",
+        error
+      );
+
+      await typeLine(
+        output,
+        "[network] connection failed — try again",
+        "warning"
+      );
+
+      input.disabled = false;
+      input.value = "";
+
+      input.focus();
+    }
+  }
+
+  /* =========================================================
+     ACCESS STATUS
      ========================================================= */
 
   async function checkAccess() {
@@ -1303,38 +905,33 @@
         await fetch(
           "/.netlify/functions/access-status",
           {
-            method:
-              "GET",
-
-            credentials:
-              "include",
-
-            cache:
-              "no-store"
+            method: "GET",
+            credentials: "include",
+            cache: "no-store"
           }
         );
 
       const data =
         await response
           .json()
-          .catch(
-            () => ({})
-          );
+          .catch(() => ({}));
 
       return {
-        valid:
-          !!data.valid,
+        valid: data.valid === true,
 
         reason:
           data.reason ||
-          (
-            data.valid
-              ? "ok"
-              : "none"
-          )
+          (data.valid
+            ? "ok"
+            : "none")
       };
 
-    } catch {
+    } catch (error) {
+      console.error(
+        "AkkoAudio access-status error:",
+        error
+      );
+
       return {
         valid: false,
         reason: "error"
@@ -1343,50 +940,138 @@
   }
 
   /* =========================================================
-     VERIFY FLOW
-
-     IMPORTANT:
-     showVerifying() IS AWAITED NOW.
+     SUCCESSFUL EXISTING SESSION
      ========================================================= */
 
-  async function runVerifyThenGate() {
-    if (
-      runVerifyThenGate.running
-    ) {
-      return;
-    }
-
-    runVerifyThenGate.running =
-      true;
-
-    const statusPromise =
-      checkAccess();
-
-    const overlay =
-      await showVerifying();
-
-    const status =
-      await statusPromise;
-
-    if (status.valid) {
-      await showVerificationSuccess(
-        overlay
+  async function finishExistingSession(
+    overlay
+  ) {
+    const output =
+      document.getElementById(
+        "akkoflac-terminal-output"
       );
 
+    if (!output) {
+      overlay.remove();
+      unlockPage();
       return;
     }
 
-    if (
-      overlay &&
-      overlay.parentNode
-    ) {
-      overlay.remove();
+    await typeLine(
+      output,
+      "[success] verification successful",
+      "success"
+    );
+
+    await typeLine(
+      output,
+      "[system] access granted",
+      "system"
+    );
+
+    await typeLine(
+      output,
+      "[system] launching music player...",
+      "accent"
+    );
+
+    await sleep(350);
+
+    overlay.remove();
+
+    unlockPage();
+  }
+
+  /* =========================================================
+     MAIN AUTH FLOW
+     ========================================================= */
+
+  async function runAuth() {
+    if (runAuth.running) {
+      return;
     }
 
-    await showGate(
-      status.reason ===
-      "revoked"
-    );
+    runAuth.running = true;
+
+    try {
+      /*
+        Start the network request FIRST.
+        The terminal renders independently.
+      */
+
+      const statusPromise =
+        checkAccess();
+
+      const overlay =
+        await showVerificationScreen();
+
+      const status =
+        await statusPromise;
+
+      if (status.valid) {
+        await finishExistingSession(
+          overlay
+        );
+
+        return;
+      }
+
+      overlay.remove();
+
+      await showAccessGate(
+        status.reason === "revoked"
+      );
+
+    } catch (error) {
+      console.error(
+        "AkkoAudio gate error:",
+        error
+      );
+
+      /*
+        Last-resort fallback.
+        NEVER leave the user with a blank page.
+      */
+
+      removeExistingOverlay();
+
+      const overlay =
+        createOverlay();
+
+      const output =
+        document.getElementById(
+          "akkoflac-terminal-output"
+        );
+
+      addLine(
+        output,
+        "AkkoAudio Version 1.07",
+        "accent"
+      );
+
+      addLine(
+        output,
+        "",
+        "system"
+      );
+
+      addLine(
+        output,
+        "[error] access gate encountered an unexpected error.",
+        "error"
+      );
+
+      addLine(
+        output,
+        "[system] please refresh the page and try again.",
+        "system"
+      );
+
+      console.error(
+        "AkkoAudio fatal gate error:",
+        error
+      );
+    }
   }
 
   /* =========================================================
@@ -1394,24 +1079,58 @@
      ========================================================= */
 
   function onboardingFinished() {
-    try {
-      return (
-        localStorage.getItem(
-          "akkoflac-onboarded"
-        ) === "1"
-      );
-    } catch {
+    return (
+      localStorage.getItem(
+        "akkoflac-onboarded"
+      ) === "1"
+    );
+  }
+
+  function startAfterOnboarding() {
+    if (!onboardingFinished()) {
       return false;
     }
+
+    const onboarding =
+      document.getElementById(
+        "onboarding"
+      );
+
+    /*
+      If onboarding still exists and isn't hidden,
+      let the main page finish it first.
+    */
+
+    if (
+      onboarding &&
+      !onboarding.classList.contains(
+        "hidden"
+      )
+    ) {
+      return false;
+    }
+
+    runAuth();
+
+    return true;
   }
 
   function start() {
-    applyAccent();
+    if (started) {
+      return;
+    }
 
-    if (
-      onboardingFinished()
-    ) {
-      runVerifyThenGate();
+    started = true;
+
+    installStyles();
+
+    /*
+      If onboarding is already complete,
+      immediately start authentication.
+    */
+
+    if (onboardingFinished()) {
+      startAfterOnboarding();
       return;
     }
 
@@ -1420,75 +1139,67 @@
         "onboarding"
       );
 
-    if (!onboarding) {
-      runVerifyThenGate();
+    /*
+      Wait for the user's onboarding to finish.
+    */
+
+    if (onboarding) {
+      const observer =
+        new MutationObserver(() => {
+          if (
+            onboardingFinished() &&
+            onboarding.classList.contains(
+              "hidden"
+            )
+          ) {
+            observer.disconnect();
+            runAuth();
+          }
+        });
+
+      observer.observe(
+        onboarding,
+        {
+          attributes: true,
+          attributeFilter: [
+            "class",
+            "style"
+          ]
+        });
+
+      /*
+        Safety polling in case another script
+        changes localStorage without changing
+        the onboarding class.
+      */
+
+      const poll =
+        setInterval(() => {
+          if (
+            onboardingFinished() &&
+            onboarding.classList.contains(
+              "hidden"
+            )
+          ) {
+            clearInterval(poll);
+            observer.disconnect();
+            runAuth();
+          }
+        }, 300);
+
       return;
     }
 
-    let started =
-      false;
+    /*
+      If onboarding doesn't exist,
+      do not block the entire site.
+    */
 
-    function checkOnboarding() {
-      if (started) {
-        return;
-      }
-
-      if (
-        !onboardingFinished()
-      ) {
-        return;
-      }
-
-      if (
-        !onboarding.classList.contains(
-          "hidden"
-        )
-      ) {
-        return;
-      }
-
-      started =
-        true;
-
-      observer.disconnect();
-
-      if (poll) {
-        clearInterval(
-          poll
-        );
-      }
-
-      runVerifyThenGate();
-    }
-
-    const observer =
-      new MutationObserver(
-        checkOnboarding
-      );
-
-    observer.observe(
-      onboarding,
-      {
-        attributes: true,
-
-        attributeFilter: [
-          "class",
-          "style"
-        ]
-      }
-    );
-
-    const poll =
-      setInterval(
-        checkOnboarding,
-        300
-      );
-
-    checkOnboarding();
+    runAuth();
   }
 
   /* =========================================================
-     START
+     START SAFELY
      ========================================================= */
 
   if (
@@ -1498,9 +1209,7 @@
     document.addEventListener(
       "DOMContentLoaded",
       start,
-      {
-        once: true
-      }
+      { once: true }
     );
   } else {
     start();
