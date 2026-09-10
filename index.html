@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -4237,6 +4238,664 @@ button.full-like.liked svg {
         opacity: 0.20 !important;
         filter: blur(2.4px) !important;
     }
+}
+</style>
+
+<style id="akko-fluid-clear-ui">
+/* =========================================================
+   FLUID CLEAR UI — translucent glass + icon-only controls
+   ========================================================= */
+
+:root {
+    --surface: color-mix(in srgb, var(--accent) 10%, rgba(255, 255, 255, 0.06)) !important;
+    --surface-2: color-mix(in srgb, var(--accent) 12%, rgba(255, 255, 255, 0.09)) !important;
+    --surface-3: color-mix(in srgb, var(--accent) 16%, rgba(255, 255, 255, 0.12)) !important;
+    --glass-border: color-mix(in srgb, var(--accent) 22%, rgba(255, 255, 255, 0.12)) !important;
+    --glass-border-strong: color-mix(in srgb, var(--accent) 32%, rgba(255, 255, 255, 0.18)) !important;
+    --glass-shadow:
+        0 10px 36px rgba(0, 0, 0, 0.28),
+        0 2px 10px rgba(0, 0, 0, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+    --floating-shadow:
+        0 24px 64px rgba(0, 0, 0, 0.32),
+        0 8px 24px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        0 0 36px color-mix(in srgb, var(--accent) 10%, transparent) !important;
+    --neo-out:
+        0 12px 40px rgba(0, 0, 0, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+    --neo-out-sm:
+        0 6px 18px rgba(0, 0, 0, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    --neo-in:
+        inset 4px 4px 12px rgba(0, 0, 0, 0.22),
+        inset -2px -2px 8px rgba(255, 255, 255, 0.05) !important;
+    --neo-in-sm:
+        inset 3px 3px 8px rgba(0, 0, 0, 0.2),
+        inset -2px -2px 6px rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Clearer glass panels */
+.glass,
+.glass-strong,
+.sidebar,
+.topbar,
+.bottom-player,
+.queue-panel,
+.featured,
+.credits-card,
+.settings-card,
+.onboard-card,
+.song-card,
+.track-row {
+    backdrop-filter: blur(36px) saturate(1.65) !important;
+    -webkit-backdrop-filter: blur(36px) saturate(1.65) !important;
+}
+
+.sidebar {
+    background:
+        linear-gradient(165deg,
+            color-mix(in srgb, var(--accent) 18%, rgba(255,255,255,0.08)),
+            color-mix(in srgb, var(--accent) 6%, rgba(12,14,22,0.55))) !important;
+    border: 1px solid color-mix(in srgb, var(--accent) 24%, rgba(255,255,255,0.14)) !important;
+    box-shadow:
+        0 16px 48px rgba(0,0,0,0.28),
+        inset 0 1px 0 rgba(255,255,255,0.12) !important;
+}
+
+.topbar {
+    background:
+        linear-gradient(135deg,
+            color-mix(in srgb, var(--accent) 18%, rgba(255,255,255,0.1)),
+            color-mix(in srgb, var(--accent) 6%, rgba(255,255,255,0.04))) !important;
+    border: 1px solid color-mix(in srgb, var(--accent) 26%, rgba(255,255,255,0.12)) !important;
+    box-shadow:
+        0 10px 28px rgba(0,0,0,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.14) !important;
+}
+
+.bottom-player {
+    background:
+        linear-gradient(180deg,
+            color-mix(in srgb, var(--accent) 12%, rgba(255,255,255,0.08)),
+            color-mix(in srgb, var(--accent) 6%, rgba(10,12,20,0.55))) !important;
+    border: 1px solid color-mix(in srgb, var(--accent) 24%, rgba(255,255,255,0.12)) !important;
+    box-shadow:
+        0 12px 36px rgba(0,0,0,0.28),
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        0 0 28px color-mix(in srgb, var(--accent) 12%, transparent) !important;
+}
+
+.featured {
+    background:
+        linear-gradient(118deg,
+            color-mix(in srgb, var(--accent) 36%, rgba(255,255,255,0.08)),
+            color-mix(in srgb, var(--accent) 12%, rgba(20,22,34,0.45))) !important;
+    border: 1px solid color-mix(in srgb, var(--accent) 34%, rgba(255,255,255,0.14)) !important;
+}
+
+.song-card {
+    background:
+        linear-gradient(165deg,
+            color-mix(in srgb, var(--accent) 10%, rgba(255,255,255,0.06)),
+            color-mix(in srgb, var(--accent) 5%, rgba(12,14,22,0.45))) !important;
+    box-shadow:
+        0 10px 28px rgba(0,0,0,0.24),
+        inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+
+.queue-panel {
+    background:
+        linear-gradient(150deg,
+            color-mix(in srgb, var(--accent) 14%, rgba(255,255,255,0.08)),
+            color-mix(in srgb, var(--accent) 6%, rgba(12,14,22,0.55))) !important;
+}
+
+.search-box input {
+    background: color-mix(in srgb, var(--accent) 8%, rgba(255,255,255,0.06)) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+
+/* ---------------------------------------------------------
+   Icon-only controls — no circle backgrounds
+   Play matches next / prev (same color, no fill)
+   --------------------------------------------------------- */
+
+.control,
+.full-control,
+.control.main-play,
+.control.play,
+.full-control.big,
+.full-control.play,
+#playBtn,
+#playButton,
+#fullPlay {
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    color: var(--accent-bright) !important;
+}
+
+.control.main-play,
+.control.play,
+.full-control.big,
+.full-control.play,
+#playBtn,
+#playButton,
+#fullPlay {
+    background: transparent !important;
+    color: var(--accent-bright) !important;
+    box-shadow: none !important;
+}
+
+.control.main-play svg,
+.control.play svg,
+.full-control.big svg,
+#playButton svg,
+#fullPlay svg {
+    color: var(--accent-bright) !important;
+    fill: currentColor !important;
+}
+
+.control:hover,
+.full-control:hover,
+.control.main-play:hover,
+.full-control.big:hover,
+#playButton:hover,
+#fullPlay:hover {
+    background: transparent !important;
+    color: #fff !important;
+    box-shadow: none !important;
+    transform: scale(1.12);
+    filter: drop-shadow(0 0 10px var(--accent-soft));
+}
+
+.control:active,
+.full-control:active {
+    box-shadow: none !important;
+    transform: scale(0.96);
+}
+
+/* Keep active states readable without circles */
+.repeat.active,
+.shuffle.active,
+.control.queue-btn.active,
+.full-control.queue-btn.active {
+    background: transparent !important;
+    color: #fff !important;
+    box-shadow: none !important;
+    filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+
+.repeat.active::after,
+.shuffle.active::after {
+    box-shadow: 0 0 8px rgba(255,255,255,0.9);
+}
+
+/* Play overlay on song cards — soft glass disc is fine, but lighter */
+.play-overlay {
+    background: color-mix(in srgb, var(--accent) 55%, rgba(255,255,255,0.25)) !important;
+    color: #0c0c14 !important;
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 35%, transparent) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    backdrop-filter: blur(12px) saturate(1.4) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(1.4) !important;
+}
+
+/* Like / queue add stay subtle glass pills */
+.like-btn,
+.queue-add-btn {
+    background: rgba(10,10,18,0.35) !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+    box-shadow: none !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+.like-btn:hover,
+.queue-add-btn:hover {
+    background: color-mix(in srgb, var(--accent) 40%, rgba(255,255,255,0.15)) !important;
+    color: #0c0c14 !important;
+    box-shadow: 0 0 14px var(--accent-soft) !important;
+}
+
+.full-back,
+.full-like {
+    background: color-mix(in srgb, var(--accent) 10%, rgba(255,255,255,0.08)) !important;
+    box-shadow: none !important;
+    border: 1px solid color-mix(in srgb, var(--accent) 20%, rgba(255,255,255,0.12)) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+.full-like.liked {
+    background: color-mix(in srgb, var(--accent) 8%, rgba(255,255,255,0.06)) !important;
+    box-shadow: none !important;
+}
+
+/* Mobile dock controls stay icon-only */
+@media (max-width: 760px) {
+    .bottom-player .control,
+    .bottom-player .control.main-play,
+    .bottom-player #playBtn,
+    .bottom-player #playButton {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        color: var(--accent-bright) !important;
+    }
+    .bottom-player .control.main-play svg,
+    .bottom-player #playButton svg {
+        fill: currentColor !important;
+        color: var(--accent-bright) !important;
+    }
+
+    .bottom-player {
+        background:
+            linear-gradient(180deg,
+                color-mix(in srgb, var(--accent) 14%, rgba(255,255,255,0.08)),
+                color-mix(in srgb, var(--accent) 6%, rgba(12,14,22,0.6))) !important;
+        box-shadow:
+            0 10px 28px rgba(0,0,0,0.28),
+            inset 0 1px 0 rgba(255,255,255,0.1) !important;
+    }
+
+    .sidebar {
+        background:
+            linear-gradient(180deg,
+                color-mix(in srgb, var(--accent) 12%, rgba(255,255,255,0.06)),
+                color-mix(in srgb, var(--accent) 5%, rgba(12,14,22,0.7))) !important;
+    }
+}
+
+html[data-theme="light"] .control.main-play,
+html[data-theme="light"] .full-control.big,
+html[data-theme="light"] .control,
+html[data-theme="light"] .full-control {
+    color: var(--accent) !important;
+    background: transparent !important;
+}
+
+html[data-theme="light"] .control.main-play svg,
+html[data-theme="light"] .full-control.big svg {
+    fill: currentColor !important;
+    color: inherit !important;
+}
+</style>
+
+<style id="akko-ultra-smooth-fluid">
+/* =========================================================
+   ULTRA SMOOTH + FLUID — butter motion everywhere
+   ========================================================= */
+
+:root {
+    --ease: cubic-bezier(0.22, 1, 0.36, 1) !important;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1) !important;
+    --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1) !important;
+    --ease-soft: cubic-bezier(0.33, 1, 0.68, 1) !important;
+}
+
+/* Global smoother motion — slightly longer, softer curves */
+html * {
+    transition-duration: 0.48s !important;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+html button,
+html .song-card,
+html .control,
+html .full-control,
+html .nav-button,
+html input[type="range"],
+html .track-row,
+html .queue-item,
+html .like-btn,
+html .play-overlay {
+    transition-duration: 0.42s !important;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* Smoother page enters */
+@keyframes pageIn {
+    from { opacity: 0; transform: translateY(22px) scale(0.985); filter: blur(6px); }
+    to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); filter: blur(4px); }
+    to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.92) translateY(12px); filter: blur(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+}
+
+@keyframes songsPageEnter {
+    from { opacity: 0; transform: translate3d(0, 18px, 0); filter: blur(5px); }
+    to   { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
+}
+
+#songsPage.page-transition-in {
+    animation: songsPageEnter 0.55s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+.main,
+.sidebar {
+    animation-duration: 0.7s !important;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.section {
+    animation-duration: 0.65s !important;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* Ambient orbs drift slower / silkier */
+body::before,
+body::after {
+    animation-duration: 28s, 34s !important;
+    filter: blur(56px) !important;
+    opacity: 0.75 !important;
+}
+
+@keyframes ambientDrift {
+    0%, 100% { transform: translate3d(-3%, -2%, 0) scale(1); }
+    33%      { transform: translate3d(4%, 1.5%, 0) scale(1.06); }
+    66%      { transform: translate3d(1%, 3.5%, 0) scale(1.03); }
+}
+
+/* Cards — fluid lift */
+.song-card {
+    transition:
+        transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+        background 0.5s ease,
+        border-color 0.45s ease !important;
+    will-change: transform;
+}
+
+.song-card:hover {
+    transform: translateY(-10px) scale(1.035) !important;
+}
+
+.song-cover img {
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), filter 0.45s ease !important;
+}
+
+.song-card:hover .song-cover img {
+    transform: scale(1.08) !important;
+    filter: brightness(1.1) saturate(1.12) !important;
+}
+
+.play-overlay {
+    transition:
+        opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.4s cubic-bezier(0.34, 1.3, 0.64, 1),
+        background 0.35s ease,
+        box-shadow 0.35s ease !important;
+}
+
+.song-card:hover .play-overlay {
+    transform: translateY(0) scale(1) !important;
+}
+
+.like-btn,
+.queue-add-btn {
+    transition:
+        opacity 0.3s ease,
+        transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1),
+        background 0.3s ease,
+        color 0.3s ease,
+        box-shadow 0.3s ease !important;
+}
+
+/* Featured — silk hover */
+.featured {
+    transition:
+        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.55s ease,
+        border-color 0.45s ease !important;
+}
+
+.featured:hover {
+    transform: translateY(-6px) scale(1.012) !important;
+}
+
+.featured img {
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease !important;
+}
+
+/* Nav buttons — soft glide */
+.nav-button {
+    transition:
+        background 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        color 0.35s ease,
+        box-shadow 0.4s ease,
+        transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.35s ease !important;
+}
+
+.nav-button:hover {
+    transform: translateX(2px);
+}
+
+.nav-button.active {
+    transition: background 0.45s ease, box-shadow 0.45s ease, color 0.35s ease !important;
+}
+
+/* Icon controls — smooth scale + glow */
+.control,
+.full-control,
+.control.main-play,
+.full-control.big,
+#playButton,
+#fullPlay {
+    transition:
+        transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1),
+        color 0.3s ease,
+        filter 0.35s ease,
+        opacity 0.3s ease !important;
+}
+
+.control:hover,
+.full-control:hover,
+.control.main-play:hover,
+.full-control.big:hover {
+    transform: scale(1.18) !important;
+    filter: drop-shadow(0 0 12px var(--accent-soft)) !important;
+}
+
+.control:active,
+.full-control:active {
+    transform: scale(0.92) !important;
+    transition-duration: 0.15s !important;
+}
+
+/* Track rows */
+.track-row {
+    transition:
+        background 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.35s ease,
+        box-shadow 0.4s ease,
+        transform 0.35s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.track-row:hover {
+    transform: translateX(4px);
+}
+
+/* Queue panel — smoother open */
+.queue-panel {
+    transition:
+        opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0.4s ease !important;
+}
+
+.queue-panel.open {
+    transform: translateY(0) scale(1) !important;
+}
+
+.queue-item {
+    transition:
+        background 0.35s ease,
+        transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.3s ease !important;
+}
+
+.queue-item:hover {
+    transform: translateX(3px);
+}
+
+/* Full player open/close */
+.full-player {
+    transition:
+        opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0.45s ease !important;
+}
+
+.full-player.open {
+    transform: scale(1) !important;
+}
+
+.full-cover-wrap {
+    transition: box-shadow 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.full-cover-wrap .cover-layer,
+.full-cover {
+    transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.mini-cover-wrap .cover-layer {
+    transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* Progress bars — fluid thumb */
+.progress,
+.full-progress-bar {
+    transition: background 0.3s ease !important;
+}
+
+.progress::-webkit-slider-thumb,
+.full-progress-bar::-webkit-slider-thumb {
+    transition: transform 0.25s cubic-bezier(0.34, 1.3, 0.64, 1), box-shadow 0.25s ease !important;
+}
+
+.progress:hover::-webkit-slider-thumb,
+.full-progress-bar:hover::-webkit-slider-thumb {
+    transform: scale(1.25);
+}
+
+/* Lyrics — silkier line changes */
+.lyric-line {
+    transition:
+        color 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+        filter 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.lyrics-track {
+    transition: transform 1.05s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Search + inputs */
+.search-box input,
+.queue-search input {
+    transition:
+        border-color 0.35s ease,
+        box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+        background 0.35s ease !important;
+}
+
+/* Theme / accent swatches */
+.theme-option,
+.accent-swatch {
+    transition:
+        transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1),
+        box-shadow 0.4s ease,
+        border-color 0.35s ease,
+        background 0.4s ease,
+        color 0.3s ease !important;
+}
+
+.theme-option:hover,
+.accent-swatch:hover {
+    transform: scale(1.08) translateY(-2px);
+}
+
+/* Bottom player + topbar glass breathe */
+.bottom-player,
+.topbar,
+.sidebar {
+    transition:
+        background 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.45s ease,
+        box-shadow 0.5s ease !important;
+}
+
+/* Onboarding */
+.onboard-card {
+    animation-duration: 0.65s !important;
+}
+
+.onboard-step.active {
+    animation-duration: 0.5s !important;
+}
+
+.onboard-btn {
+    transition:
+        transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1),
+        background 0.35s ease,
+        box-shadow 0.4s ease,
+        filter 0.3s ease !important;
+}
+
+.onboard-btn:hover {
+    transform: translateY(-3px) scale(1.02);
+}
+
+/* Toast / labels */
+.queue-toast,
+.repeat-label {
+    transition:
+        opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.4s cubic-bezier(0.34, 1.3, 0.64, 1) !important;
+}
+
+/* Keep reduced-motion respectful */
+@media (prefers-reduced-motion: reduce) {
+    html *,
+    html *::before,
+    html *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* GPU-friendly smooth scrolling feel */
+.main,
+.queue-list,
+#lyricsContainer {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+}
+
+.song-card,
+.featured,
+.control,
+.full-control,
+.nav-button,
+.track-row {
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
 }
 </style>
 </head>
