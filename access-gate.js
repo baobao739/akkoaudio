@@ -185,9 +185,18 @@
       vertical-align: baseline;
     }
 
+    .akkoflac-terminal-input-row {
+      display: flex;
+      align-items: center;
+      width: max-content;
+      max-width: 100%;
+      white-space: nowrap;
+    }
+
     .akkoflac-terminal-input {
-      width: 5ch;
-      min-width: 5ch;
+      width: 7ch;
+      min-width: 7ch;
+      max-width: 7ch;
       height: 1.7em;
       margin: 0;
       padding: 0;
@@ -200,6 +209,7 @@
       letter-spacing: .04em;
       text-transform: uppercase;
       caret-color: var(--accent, #7b8cff);
+      box-sizing: content-box;
     }
 
     .akkoflac-terminal-input:disabled {
@@ -496,39 +506,6 @@
     return new Promise(resolve =>
       setTimeout(resolve, ms)
     );
-  }
-
-  async function checkAccess() {
-    try {
-      const response = await fetch(
-        "/.netlify/functions/access-status",
-        {
-          credentials: "include",
-          cache: "no-store"
-        }
-      );
-
-      if (!response.ok) {
-        return {
-          valid: false,
-          reason: "unavailable"
-        };
-      }
-
-      const data =
-        await response.json()
-          .catch(() => ({}));
-
-      return {
-        valid: !!data.valid,
-        reason: data.reason || ""
-      };
-    } catch {
-      return {
-        valid: false,
-        reason: "network"
-      };
-    }
   }
 
   function createTerminalOverlay() {
@@ -997,13 +974,6 @@
             "accent"
           );
 
-          /*
-           * ACCESS CODE VERIFICATION
-           *
-           * Only the requested checks are shown.
-           * Each one is separated by a pause.
-           */
-
           await typeLine(
             "[auth] checking code access...",
             "muted"
@@ -1072,13 +1042,6 @@
             return;
           }
 
-          await typeLine(
-            "[verification] response received...",
-            "accent"
-          );
-
-          await sleep(450);
-
           if (
             !response.ok ||
             !data.valid
@@ -1093,20 +1056,13 @@
                 .includes("revok");
 
             await typeLine(
-              isRevoked
-                ? "[error] INVALID ACCESS CODE"
-                : "[error] INVALID ACCESS CODE",
+              "[error] INVALID ACCESS CODE",
               "warn"
             );
 
             await sleep(180);
 
             await blankLine();
-
-            /*
-             * Keep all previous terminal history.
-             * The terminal is never cleared.
-             */
 
             await showAccessPrompt(
               isRevoked
@@ -1129,159 +1085,7 @@
       );
     }
 
-    /*
-     * TERMINAL HEADER
-     */
-
-    await typeLine(
-      "AkkoAudio [Version 1.07]",
-      "accent"
-    );
-
-    await typeLine(
-      "AkkoAudio. All rights reserved.",
-      "muted"
-    );
-
-    await blankLine();
-
-    /*
-     * INITIAL TERMINAL SETUP
-     */
-
-    await typeLine(
-      "[system] initializing authentication terminal...",
-      "muted"
-    );
-
-    await typeLine(
-      "[system] loading security modules...",
-      "muted"
-    );
-
-    await typeLine(
-      "[system] preparing verification service...",
-      "muted"
-    );
-
-    await blankLine();
-
-    /*
-     * START PROMPT
-     */
-
-    await typeLine(
-      "[auth] type START to begin authentication",
-      "accent"
-    );
-
-    await blankLine();
-
-    const showStartPrompt =
-      () =>
-        makePrompt(
-          "AKKO> ",
-          5,
-          async (
-            value,
-            input
-          ) => {
-            if (input.disabled) {
-              return;
-            }
-
-            if (value !== "START") {
-              input.disabled =
-                true;
-
-              await typeLine(
-                "[error] type START to begin authentication",
-                "warn"
-              );
-
-              await blankLine();
-
-              showStartPrompt();
-
-              return;
-            }
-
-            input.disabled =
-              true;
-
-            await typeLine(
-              "[input] START",
-              "accent"
-            );
-
-            await blankLine();
-
-            /*
-             * EXACT START VERIFICATION FLOW
-             */
-
-            await typeLine(
-              "[auth] checking authentication...",
-              "muted"
-            );
-
-            await sleep(500);
-
-            await typeLine(
-              "[security] verifying eligible access code...",
-              "muted"
-            );
-
-            await sleep(550);
-
-            await typeLine(
-              "[verification] running final auth check...",
-              "muted"
-            );
-
-            await sleep(650);
-
-            await typeLine(
-              "[verification] response received...",
-              "accent"
-            );
-
-            await sleep(450);
-
-            const status =
-              await checkAccess();
-
-            if (status.valid) {
-              await typeLine(
-                "[success] VERIFIED — access authorization confirmed",
-                "success"
-              );
-
-              await sleep(250);
-
-              await blankLine();
-
-              await showEntryPrompt();
-
-            } else {
-              await typeLine(
-                "[error] NOT VERIFIED — access authorization required",
-                "warn"
-              );
-
-              await sleep(250);
-
-              await blankLine();
-
-              await showAccessPrompt(
-                status.reason ===
-                  "revoked"
-              );
-            }
-          }
-        );
-
-    showStartPrompt();
+    await showAccessPrompt();
 
     overlay.setAttribute(
       "aria-busy",
