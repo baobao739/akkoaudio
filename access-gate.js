@@ -1,8 +1,6 @@
 (() => {
   "use strict";
 
-  const VERIFY_MIN_MS = 1500;
-
   const THEMES = {
     charcoal:  { bottom: "#1b1c24" },
     midnight:  { bottom: "#141a31" },
@@ -518,13 +516,13 @@
 
       promptLine = document.createElement("div");
       promptLine.className = "akkoflac-terminal-line";
-      promptLine.innerHTML = `<span class="accent">ACCESS CODE:</span> <span class="akkoflac-terminal-prompt-wrap"></span>`;
+      promptLine.innerHTML = `<span class="accent">${opts.entry ? "TYPE AKKO TO ENTER:" : "ACCESS CODE:"}</span> <span class="akkoflac-terminal-prompt-wrap"></span>`;
       output.appendChild(promptLine);
 
       const wrap = promptLine.querySelector(".akkoflac-terminal-prompt-wrap");
       promptInput = document.createElement("input");
       promptInput.type = "text";
-      promptInput.maxLength = 5;
+      promptInput.maxLength = opts.entry ? 4 : 5;
       promptInput.autocomplete = "off";
       promptInput.autocapitalize = "characters";
       promptInput.spellcheck = false;
@@ -545,15 +543,45 @@
     }
 
     (async () => {
-      await typeLine("[auth] no active access session...", "muted");
-      await typeLine("[security] access code required", "muted");
-      if (revoked) await typeLine("[security] previous access code has been revoked", "warn");
-      await typeLine("[terminal] type your access code below", "accent");
+      if (opts.entry) {
+        await typeLine("[auth] access verified", "success");
+        await typeLine("[security] re-entry confirmation required", "muted");
+        await typeLine("[terminal] type AKKO to enter the music player", "accent");
+      } else {
+        await typeLine("[auth] no active access session...", "muted");
+        await typeLine("[security] access code required", "muted");
+        if (revoked) await typeLine("[security] previous access code has been revoked", "warn");
+        await typeLine("[terminal] type your access code below", "accent");
+      }
       showPrompt();
     })();
 
     async function redeem(code) {
       if (submitting) return;
+
+      // After a valid access code, require AKKO immediately.
+      if (opts.entry) {
+        if (code !== "AKKO") {
+          submitting = true;
+          if (promptInput) promptInput.disabled = true;
+          finishPrompt();
+          await typeLine("[error] type AKKO to enter AkkoAudio", "warn");
+          submitting = false;
+          showPrompt();
+          return;
+        }
+
+        submitting = true;
+        if (promptInput) promptInput.disabled = true;
+        finishPrompt();
+        await typeLine("[success] AKKO accepted", "success");
+        await typeLine("[system] entering music player...", "muted");
+        overlay.classList.add("hidden");
+        unlockUI();
+        setTimeout(() => overlay.remove(), 500);
+        return;
+      }
+
       if (code.length !== 5) {
         addLine("[error] access code must be 5 characters", "warn");
         if (promptInput) promptInput.focus();
@@ -586,11 +614,9 @@
         }
 
         await typeLine("[success] verification successful", "success");
-        await typeLine("[system] access granted — launching music player...", "muted");
-        await sleep(1500);
-        overlay.classList.add("hidden");
-        unlockUI();
-        setTimeout(() => overlay.remove(), 500);
+        await typeLine("[security] type AKKO to enter the music player", "accent");
+        overlay.remove();
+        createGate({ entry: true });
       } catch {
         await typeLine("[network] connection failed — try again", "warn");
         submitting = false;
@@ -616,26 +642,12 @@
     if (runVerifyThenGate._running) return;
     runVerifyThenGate._running = true;
 
+    // Put the terminal over the player BEFORE the network check so the
+    // music UI is never briefly usable while access is being verified.
     showVerifying();
 
-    const startTime = Date.now();
-    const statusPromise = checkAccess();
-
-    // Keep the terminal sequence visible long enough to feel intentional,
-    // while still waiting for the real access check in the background.
-    await new Promise(r => setTimeout(r, 2500));
-    const status = await statusPromise;
-
-    if (status.valid) {
-      await showVerificationSuccess();
-      hideVerifying();
-      unlockUI();
-      return;
-    }
-
-    // If the previous session/code was revoked, make that explicit on the gate.
-    hideVerifying();
-    createGate({ revoked: status.reason === "revoked" });
+    const status = await checkAccess();
+    createGate(status.valid ? { entry: true } : { revoked: status.reason === "revoked" });
   }
 
 
