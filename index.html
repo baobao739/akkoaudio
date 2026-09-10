@@ -9237,5 +9237,45 @@ button:active,
 }
 </style>
 
+
+<style id="akko-light-gray-upcoming-final">
+/* Upcoming lyrics: light gray and clearly brighter than past lyrics. */
+#lyricsContainer .lyric-line.next,
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third,
+#lyricsContainer .lyric-line.next-fourth,
+#lyricsContainer .lyric-line.upcoming,
+.lyrics-container .lyric-line.next,
+.lyrics-container .lyric-line.next-next,
+.lyrics-container .lyric-line.upcoming {
+  color: #c9c9d1 !important;
+  -webkit-text-fill-color: #c9c9d1 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* Past lyrics remain distinctly darker. */
+#lyricsContainer .lyric-line.past,
+#lyricsContainer .lyric-line.past-second,
+#lyricsContainer .lyric-line.offscreen,
+.lyrics-container .lyric-line.past {
+  color: #666671 !important;
+  -webkit-text-fill-color: #666671 !important;
+  opacity: .72 !important;
+  filter: none !important;
+}
+
+/* Current lyric remains the only accent-colored line. */
+#lyricsContainer .lyric-line.active,
+.lyrics-container .lyric-line.active,
+.lyric-line.current {
+  color: var(--accent-bright) !important;
+  -webkit-text-fill-color: var(--accent-bright) !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+</style>
+
 </body>
 </html>
