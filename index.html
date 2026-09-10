@@ -9277,5 +9277,61 @@ button:active,
 }
 </style>
 
+
+<style id="akko-past-lyrics-brighter-blur-fade">
+/* Past lyrics: slightly brighter than before, softly blurred, and faded toward the top */
+.lyrics-container .lyric-line.past,
+.lyrics .lyric-line.past,
+.lyric-line.past {
+  color: rgba(155, 155, 166, .58) !important;
+  opacity: 1 !important;
+  filter: blur(.45px) !important;
+  transition: color .25s ease, opacity .25s ease, filter .25s ease !important;
+}
+
+/* Keep the current lyric crisp */
+.lyrics-container .lyric-line.active,
+.lyrics .lyric-line.active,
+.lyric-line.active,
+.lyric-line.current {
+  filter: none !important;
+}
+
+/* Soft top fade for the past-lyrics area, matching the upcoming bottom fade */
+.lyrics-container,
+.lyrics,
+.lyrics-box,
+.lyrics-panel {
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(0,0,0,.45) 7%,
+    #000 18%,
+    #000 100%);
+  mask-image: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(0,0,0,.45) 7%,
+    #000 18%,
+    #000 100%);
+}
+</style>
+
+
+<style id="akko-next-lyric-highlight-final">
+/* Apple Music-style: only the immediately upcoming line is slightly brighter */
+.lyric-line.next {
+  color: #e1e1e8 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  font-weight: 700 !important;
+}
+.lyric-line.next-next,
+.lyric-line.next-third,
+.lyric-line.upcoming {
+  color: #c9c9d1 !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+</style>
+
 </body>
 </html>
