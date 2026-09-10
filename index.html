@@ -8780,5 +8780,250 @@ if ("ResizeObserver" in window) {
 
 </script>
 
+
+<style id="akko-final-fluid-borderless">
+/* AKKOAUDIO FINAL POLISH
+   Borderless surfaces, softer depth, fluid motion, reliable iPhone dock. */
+:root {
+  --fluid-ease: cubic-bezier(.2,.75,.2,1);
+  --fluid-fast: .22s;
+  --fluid-med: .42s;
+}
+
+/* Remove visible outlines/borders from the main UI surfaces. */
+.sidebar,
+.featured,
+.topbar,
+.bottom-player,
+.queue-panel,
+.credits-card,
+.settings-card,
+.focus-panel,
+.modal,
+.search-box,
+.search-box input,
+.track-row,
+.nav-button,
+.theme-option,
+.song-card,
+.song-cover,
+.track-row-like,
+.reserved,
+.shuffle-btn,
+.control,
+.full-control,
+.full-back,
+.full-like,
+.full-progress-bar,
+.progress,
+input,
+textarea,
+select,
+button {
+  border: 0 !important;
+  outline: 0 !important;
+}
+
+/* Keep depth through soft shadows rather than edge lines. */
+.sidebar {
+  box-shadow: 0 24px 70px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+.featured {
+  box-shadow: 0 26px 70px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+.topbar,
+.credits-card,
+.settings-card,
+.queue-panel {
+  box-shadow: 0 18px 48px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+.bottom-player {
+  box-shadow: 0 18px 46px rgba(0,0,0,.38), 0 0 30px color-mix(in srgb, var(--accent) 8%, transparent) !important;
+}
+
+/* Smooth, consistent interaction motion. */
+.featured,
+.song-card,
+.track-row,
+.nav-button,
+.bottom-player,
+.control,
+.full-control,
+.full-back,
+.full-like,
+.shuffle-btn,
+.play-overlay,
+.like-btn,
+.queue-add-btn,
+.theme-option,
+.accent-swatch,
+.search-box,
+.queue-panel,
+.credits-card,
+.settings-card {
+  transition:
+    transform var(--fluid-med) var(--fluid-ease),
+    opacity var(--fluid-med) var(--fluid-ease),
+    background-color var(--fluid-med) var(--fluid-ease),
+    color var(--fluid-med) var(--fluid-ease),
+    box-shadow var(--fluid-med) var(--fluid-ease),
+    filter var(--fluid-med) var(--fluid-ease) !important;
+}
+
+.featured:hover {
+  transform: translateY(-3px) !important;
+}
+.song-card:hover {
+  transform: translateY(-5px) scale(1.012) !important;
+}
+.track-row:hover {
+  transform: translateX(3px) !important;
+}
+.nav-button:hover {
+  transform: translateX(2px) !important;
+}
+button:active,
+.control:active,
+.full-control:active,
+.nav-button:active,
+.track-row:active,
+.song-card:active {
+  transform: scale(.97) !important;
+}
+
+/* Never show browser focus rectangles as UI outlines. */
+:focus,
+:focus-visible {
+  outline: none !important;
+}
+
+/* iPhone: the sidebar is the bottom navigation, never a top bar. */
+@media (max-width: 768px) {
+  :root {
+    --mobile-nav-height: 64px;
+  }
+
+  .sidebar {
+    position: fixed !important;
+    top: auto !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px)) !important;
+    min-height: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px)) !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 5px 8px calc(5px + env(safe-area-inset-bottom, 0px)) !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    gap: 4px !important;
+    border-radius: 22px 22px 0 0 !important;
+    z-index: 9999 !important;
+    transform: none !important;
+  }
+
+  .sidebar::before,
+  .sidebar::after {
+    display: none !important;
+  }
+
+  .sidebar .logo,
+  .sidebar .nav-title,
+  .sidebar .sidebar-credit {
+    display: none !important;
+  }
+
+  .sidebar nav,
+  .sidebar .nav,
+  .sidebar .sidebar-nav {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    gap: 3px !important;
+  }
+
+  .sidebar .nav-button {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: 52px !important;
+    margin: 0 !important;
+    padding: 6px 3px !important;
+    border-radius: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    text-align: center !important;
+    font-size: 10px !important;
+    line-height: 1.1 !important;
+  }
+
+  .sidebar .nav-button::before {
+    display: none !important;
+  }
+
+  .sidebar .nav-button.active {
+    box-shadow: none !important;
+    background: color-mix(in srgb, var(--accent) 18%, transparent) !important;
+  }
+
+  .main {
+    margin-left: 0 !important;
+    padding-top: 14px !important;
+    padding-bottom: calc(var(--player-height) + var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + 34px) !important;
+  }
+
+  .bottom-player {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + 8px) !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
+    z-index: 9998 !important;
+  }
+
+  .queue-panel {
+    bottom: calc(var(--player-height) + var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px) + 18px) !important;
+  }
+}
+
+/* Small phones: prevent cramped navigation labels and accidental overflow. */
+@media (max-width: 420px) {
+  .sidebar {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+  }
+  .sidebar .nav-button {
+    font-size: 9px !important;
+    letter-spacing: -.1px !important;
+  }
+  .sidebar .nav-button svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+}
+
+/* Respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
+
 </body>
 </html>
