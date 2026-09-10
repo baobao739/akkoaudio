@@ -1,328 +1,493 @@
-(function () {
+(() => {
   "use strict";
 
-  const VERIFY_MIN_MS = 1500;
-
   const THEMES = {
-    charcoal: "#ff7a00",
-    midnight: "#8b5cf6",
-    ocean: "#38bdf8",
-    plum: "#c084fc",
-    dawn: "#f59e0b",
-    forest: "#22c55e",
-    lavender: "#a78bfa",
-    rosewood: "#fb7185",
-    ember: "#f97316",
-    glacier: "#67e8f9",
-    cocoa: "#d6a77a",
-    aurora: "#34d399"
+    charcoal: { bottom: "#1b1c24" },
+    midnight: { bottom: "#141a31" },
+    ocean: { bottom: "#102a39" },
+    plum: { bottom: "#251a2d" },
+    dawn: { bottom: "#352333" },
+    forest: { bottom: "#172c25" },
+    lavender: { bottom: "#2c2a45" },
+    rosewood: { bottom: "#321f2a" },
+    ember: { bottom: "#321e1a" },
+    glacier: { bottom: "#20343d" },
+    cocoa: { bottom: "#2d231f" },
+    aurora: { bottom: "#133b37" }
   };
 
-  function injectStyles() {
-    if (document.getElementById("akkoflac-access-gate-styles")) return;
+  const STYLE = `
+    #akkoflac-verify-overlay,
+    #akkoflac-access-overlay {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      z-index: 2147483000 !important;
+      box-sizing: border-box;
+      isolation: isolate;
+    }
 
-    const style = document.createElement("style");
-    style.id = "akkoflac-access-gate-styles";
+    /* =========================================================
+       FULL SCREEN TERMINAL
+       ========================================================= */
 
-    style.textContent = `
-      html.akkoflac-preverify,
-      html.akkoflac-preverify body {
-        background: var(--preverify-bg, #111214) !important;
-      }
+    #akkoflac-verify-overlay {
+      display: block;
+      background: #050505;
+      color: #d7dce3;
+      font-family:
+        "SFMono-Regular",
+        "Cascadia Code",
+        "Roboto Mono",
+        Consolas,
+        "Liberation Mono",
+        monospace;
+      overflow: hidden;
+      transition:
+        opacity .45s ease,
+        visibility .45s ease;
+    }
 
-      html.akkoflac-preverify body {
-        visibility: hidden !important;
-      }
+    #akkoflac-verify-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
 
-      html.akkoflac-preverify::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        z-index: 2147483646;
-        background: var(--preverify-bg, #111214);
-        visibility: visible;
-      }
+    .akkoflac-terminal {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: #050505;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      overflow: hidden;
+    }
 
-      html.akkoflac-preverify::after {
-        content: "Verifying...";
-        position: fixed;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 2147483647;
-        color: var(--preverify-accent, #ff7a00);
-        font: 600 14px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        letter-spacing: .02em;
-        visibility: visible;
-      }
+    .akkoflac-terminal-bar {
+      height: 36px;
+      min-height: 36px;
+      flex: 0 0 36px;
 
-      #akkoflac-verifying {
-        position: fixed;
-        inset: 0;
-        z-index: 999999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--akkoflac-bg, #111214);
-        color: var(--akkoflac-accent, #ff7a00);
-        font-family:
-          ui-monospace,
-          SFMono-Regular,
-          Menlo,
-          Monaco,
-          Consolas,
-          "Liberation Mono",
-          monospace;
+      display: flex;
+      align-items: center;
+
+      gap: 7px;
+      padding: 0 13px;
+
+      background: #101010;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .akkoflac-terminal-dot {
+      width: 9px;
+      height: 9px;
+      flex: 0 0 9px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.18);
+    }
+
+    .akkoflac-terminal-title {
+      margin-left: 7px;
+
+      color: rgba(255,255,255,.45);
+
+      font-family:
+        "SFMono-Regular",
+        "Cascadia Code",
+        "Roboto Mono",
+        Consolas,
+        monospace;
+
+      font-size: 11px;
+      letter-spacing: .02em;
+    }
+
+    .akkoflac-terminal-output {
+      flex: 1;
+      min-height: 0;
+
+      width: 100%;
+      box-sizing: border-box;
+
+      padding:
+        16px
+        18px
+        32px;
+
+      overflow-y: auto;
+      overflow-x: hidden;
+
+      color: #d7dce3;
+
+      font-family:
+        "SFMono-Regular",
+        "Cascadia Code",
+        "Roboto Mono",
+        Consolas,
+        monospace;
+
+      font-size: clamp(12px, 1.55vw, 14px);
+      line-height: 1.7;
+
+      text-align: left;
+
+      scrollbar-width: thin;
+      scrollbar-color:
+        rgba(255,255,255,.18)
+        transparent;
+    }
+
+    .akkoflac-terminal-line {
+      min-height: 1.7em;
+
+      opacity: 0;
+      transform: translateY(3px);
+
+      animation:
+        akkoTerminalLineIn
+        .18s
+        ease
+        forwards;
+
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    @keyframes akkoTerminalLineIn {
+      to {
         opacity: 1;
-        transition: opacity .3s ease;
-        padding: 24px;
-        box-sizing: border-box;
+        transform: translateY(0);
+      }
+    }
+
+    .akkoflac-terminal-line .muted {
+      color: rgba(255,255,255,.48);
+    }
+
+    .akkoflac-terminal-line .accent {
+      color: var(--accent, #7b8cff);
+    }
+
+    .akkoflac-terminal-line .success {
+      color: #66e39a;
+    }
+
+    .akkoflac-terminal-line .warn {
+      color: #f5c76a;
+    }
+
+    .akkoflac-terminal-line .cursor {
+      display: inline-block;
+
+      width: 7px;
+      height: 1.05em;
+
+      vertical-align: -0.16em;
+
+      margin-left: 3px;
+
+      background:
+        var(--accent, #7b8cff);
+
+      animation:
+        akkoTerminalCursor
+        .8s
+        steps(1,end)
+        infinite;
+    }
+
+    @keyframes akkoTerminalCursor {
+      0%, 48% {
+        opacity: 1;
       }
 
-      #akkoflac-verifying.hidden {
+      49%, 100% {
         opacity: 0;
-        pointer-events: none;
       }
+    }
 
-      .akkoflac-terminal {
-        width: min(760px, 100%);
-        max-height: 80vh;
-        overflow: hidden;
-        border: 1px solid color-mix(
-          in srgb,
-          var(--akkoflac-accent, #ff7a00) 28%,
-          transparent
-        );
-        border-radius: 16px;
-        padding: 22px;
-        box-sizing: border-box;
-        background: rgba(0,0,0,.30);
-        box-shadow:
-          0 20px 70px rgba(0,0,0,.35),
-          inset 0 0 30px rgba(255,255,255,.015);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-      }
+    .akkoflac-terminal-prompt-wrap {
+      display: inline-flex;
+      align-items: center;
+      vertical-align: baseline;
+    }
 
+    .akkoflac-terminal-input {
+      width: 5.5em;
+      min-width: 5.5em;
+
+      margin: 0;
+      padding: 0;
+
+      border: 0;
+      outline: 0;
+
+      background: transparent;
+
+      color:
+        var(--accent, #7b8cff);
+
+      font-family:
+        "SFMono-Regular",
+        "Cascadia Code",
+        "Roboto Mono",
+        Consolas,
+        monospace;
+
+      font-size: inherit;
+      font-weight: 700;
+
+      letter-spacing: .08em;
+      text-transform: uppercase;
+
+      caret-color:
+        var(--accent, #7b8cff);
+    }
+
+    .akkoflac-terminal-input:disabled {
+      opacity: .6;
+    }
+
+    .akkoflac-terminal-success {
+      text-shadow:
+        0 0 22px
+        rgba(102,227,154,.22);
+    }
+
+    /* =========================================================
+       KEEP OLD ACCESS OVERLAY COMPATIBLE
+       ========================================================= */
+
+    #akkoflac-access-overlay {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background:
+        var(--theme-bottom,
+        var(--bg, #121212));
+
+      overflow: auto;
+    }
+
+    #akkoflac-access-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    body.akkoflac-gate-locked .sidebar,
+    body.akkoflac-gate-locked .main,
+    body.akkoflac-gate-locked .bottom-player,
+    body.akkoflac-gate-locked .full-player,
+    body.akkoflac-gate-locked .queue-panel,
+
+    body.akkoflac-awaiting-access .sidebar,
+    body.akkoflac-awaiting-access .main,
+    body.akkoflac-awaiting-access .bottom-player,
+    body.akkoflac-awaiting-access .full-player,
+    body.akkoflac-awaiting-access .queue-panel {
+      pointer-events: none !important;
+      user-select: none !important;
+      visibility: hidden !important;
+    }
+
+    @media (max-width: 600px) {
       .akkoflac-terminal-output {
-        font-size: 13px;
+        padding:
+          14px
+          13px
+          28px;
+
+        font-size: 12px;
         line-height: 1.75;
-        color: rgba(255,255,255,.68);
-        white-space: pre-wrap;
-        word-break: break-word;
       }
 
-      .akkoflac-terminal-line {
-        min-height: 23px;
+      .akkoflac-terminal-bar {
+        height: 34px;
+        min-height: 34px;
+        flex-basis: 34px;
       }
 
-      .akkoflac-terminal-line.success {
-        color: var(--akkoflac-accent, #ff7a00);
+      .akkoflac-terminal-title {
+        font-size: 10px;
       }
+    }
+  `;
 
-      .akkoflac-terminal-line.error {
-        color: #ff6b6b;
-      }
-
-      .akkoflac-terminal-input-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 5px;
-      }
-
-      .akkoflac-terminal-prompt {
-        color: var(--akkoflac-accent, #ff7a00);
-        white-space: nowrap;
-      }
-
-      .akkoflac-terminal-input {
-        flex: 1;
-        min-width: 0;
-        border: 0;
-        outline: 0;
-        padding: 0;
-        margin: 0;
-        background: transparent;
-        color: #fff;
-        font: inherit;
-        caret-color: var(--akkoflac-accent, #ff7a00);
-      }
-
-      .akkoflac-terminal-input::selection {
-        background: var(--akkoflac-accent, #ff7a00);
-        color: #111;
-      }
-
-      body.akkoflac-verifying-lock {
-        overflow: hidden !important;
-      }
-
-      #akkoflac-access-gate {
-        position: fixed;
-        inset: 0;
-        z-index: 1000000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        box-sizing: border-box;
-        background: var(--akkoflac-bg, #111214);
-        color: #fff;
-        font-family:
-          ui-monospace,
-          SFMono-Regular,
-          Menlo,
-          Monaco,
-          Consolas,
-          "Liberation Mono",
-          monospace;
-      }
-
-      .akkoflac-access-terminal {
-        width: min(760px, 100%);
-        border: 1px solid color-mix(
-          in srgb,
-          var(--akkoflac-accent, #ff7a00) 28%,
-          transparent
-        );
-        border-radius: 16px;
-        padding: 22px;
-        box-sizing: border-box;
-        background: rgba(0,0,0,.30);
-        box-shadow:
-          0 20px 70px rgba(0,0,0,.35),
-          inset 0 0 30px rgba(255,255,255,.015);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-      }
-
-      .akkoflac-access-output {
-        font-size: 13px;
-        line-height: 1.75;
-        color: rgba(255,255,255,.7);
-        white-space: pre-wrap;
-        word-break: break-word;
-      }
-
-      .akkoflac-access-input-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 5px;
-      }
-
-      .akkoflac-access-input {
-        flex: 1;
-        min-width: 0;
-        border: 0;
-        outline: 0;
-        background: transparent;
-        color: #fff;
-        padding: 0;
-        margin: 0;
-        font: inherit;
-        caret-color: var(--akkoflac-accent, #ff7a00);
-      }
-
-      .akkoflac-access-prompt {
-        color: var(--akkoflac-accent, #ff7a00);
-        white-space: nowrap;
-      }
-
-      .akkoflac-terminal-cursor {
-        display: inline-block;
-        width: 7px;
-        height: 15px;
-        margin-left: 2px;
-        vertical-align: -2px;
-        background: var(--akkoflac-accent, #ff7a00);
-        animation: akkoflacCursor .9s steps(1) infinite;
-      }
-
-      @keyframes akkoflacCursor {
-        0%, 49% {
-          opacity: 1;
-        }
-
-        50%, 100% {
-          opacity: 0;
-        }
-      }
-
-      @media (max-width: 600px) {
-        #akkoflac-verifying,
-        #akkoflac-access-gate {
-          padding: 14px;
-        }
-
-        .akkoflac-terminal,
-        .akkoflac-access-terminal {
-          padding: 16px;
-          border-radius: 13px;
-        }
-
-        .akkoflac-terminal-output,
-        .akkoflac-access-output,
-        .akkoflac-terminal-input,
-        .akkoflac-access-input {
-          font-size: 12px;
-        }
-      }
-    `;
-
-    document.head.appendChild(style);
-  }
-
-  function clearPreverify() {
-    document.documentElement.classList.remove("akkoflac-preverify");
-  }
-
-  function getSavedTheme() {
-    return localStorage.getItem("akkoflac-theme") || "charcoal";
-  }
-
-  function getSavedAccent() {
-    return (
-      localStorage.getItem("akkoflac-accent") ||
-      THEMES[getSavedTheme()] ||
-      "#ff7a00"
-    );
-  }
-
-  function applySavedColors() {
-    const root = document.documentElement;
-    const accent = getSavedAccent();
-
-    root.style.setProperty("--akkoflac-accent", accent);
-    root.style.setProperty("--preverify-accent", accent);
-
-    const bg =
-      getComputedStyle(document.body).getPropertyValue("--bg") ||
-      getComputedStyle(root).getPropertyValue("--bg") ||
-      "#111214";
-
-    root.style.setProperty(
-      "--preverify-bg",
-      bg.trim() || "#111214"
-    );
-  }
+  const style = document.createElement("style");
+  style.textContent = STYLE;
+  document.head.appendChild(style);
 
   function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  function createVerifyingOverlay() {
-    let overlay = document.getElementById("akkoflac-verifying");
+  function clearPreverify() {
+    document.documentElement.classList.remove(
+      "akkoflac-preverify"
+    );
+  }
 
-    if (overlay) return overlay;
+  function hexToRgb(hex) {
+    const h = String(hex || "#7b8cff").replace("#", "");
 
-    overlay = document.createElement("div");
-    overlay.id = "akkoflac-verifying";
+    const full =
+      h.length === 3
+        ? h.split("").map(c => c + c).join("")
+        : h;
+
+    const n = parseInt(full, 16);
+
+    return {
+      r: (n >> 16) & 255,
+      g: (n >> 8) & 255,
+      b: n & 255
+    };
+  }
+
+  function lightenHex(hex, amount) {
+    const { r, g, b } = hexToRgb(hex);
+
+    const lr =
+      Math.min(
+        255,
+        Math.round(r + (255 - r) * amount)
+      );
+
+    const lg =
+      Math.min(
+        255,
+        Math.round(g + (255 - g) * amount)
+      );
+
+    const lb =
+      Math.min(
+        255,
+        Math.round(b + (255 - b) * amount)
+      );
+
+    return "#" +
+      [lr, lg, lb]
+        .map(v =>
+          v.toString(16).padStart(2, "0")
+        )
+        .join("");
+  }
+
+  function applySavedColors() {
+    const root = document.documentElement;
+
+    const accent =
+      localStorage.getItem("akkoflac-accent") ||
+      "#7b8cff";
+
+    const { r, g, b } = hexToRgb(accent);
+
+    root.style.setProperty(
+      "--accent",
+      accent
+    );
+
+    root.style.setProperty(
+      "--accent-bright",
+      lightenHex(accent, .18)
+    );
+
+    root.style.setProperty(
+      "--accent-soft",
+      `rgba(${r}, ${g}, ${b}, .15)`
+    );
+
+    root.style.setProperty(
+      "--accent-glow",
+      `rgba(${r}, ${g}, ${b}, .35)`
+    );
+
+    const themeName =
+      localStorage.getItem("akkoflac-theme") ||
+      "charcoal";
+
+    const theme =
+      THEMES[themeName] ||
+      THEMES.charcoal;
+
+    root.style.setProperty(
+      "--theme-bottom",
+      theme.bottom
+    );
+
+    root.style.setProperty(
+      "--bg",
+      theme.bottom
+    );
+
+    root.style.setProperty(
+      "--bg-deep",
+      theme.bottom
+    );
+  }
+
+  function lockUI() {
+    document.body.classList.add(
+      "akkoflac-gate-locked",
+      "akkoflac-awaiting-access"
+    );
+
+    document.body.style.overflow = "hidden";
+  }
+
+  function unlockUI() {
+    document.body.classList.remove(
+      "akkoflac-gate-locked",
+      "akkoflac-awaiting-access"
+    );
+
+    document.body.style.overflow = "";
+  }
+
+  function createTerminal() {
+    const overlay =
+      document.createElement("div");
+
+    overlay.id =
+      "akkoflac-verify-overlay";
+
+    overlay.setAttribute(
+      "aria-live",
+      "polite"
+    );
 
     overlay.innerHTML = `
       <div class="akkoflac-terminal">
-        <div class="akkoflac-terminal-output"></div>
+
+        <div class="akkoflac-terminal-bar">
+          <span class="akkoflac-terminal-dot"></span>
+          <span class="akkoflac-terminal-dot"></span>
+          <span class="akkoflac-terminal-dot"></span>
+
+          <span class="akkoflac-terminal-title">
+            AkkoAudio Terminal
+          </span>
+        </div>
+
+        <div
+          class="akkoflac-terminal-output"
+          id="akkoflac-terminal-output"
+        ></div>
+
       </div>
     `;
 
@@ -331,422 +496,599 @@
     return overlay;
   }
 
-  function addTerminalLine(output, text, className = "") {
-    const line = document.createElement("div");
+  async function typeTerminalLine(
+    output,
+    text,
+    kind = "muted",
+    speed = 10
+  ) {
+    const line =
+      document.createElement("div");
 
     line.className =
-      "akkoflac-terminal-line" +
-      (className ? " " + className : "");
+      "akkoflac-terminal-line";
 
-    line.textContent = text;
+    const span =
+      document.createElement("span");
+
+    span.className = kind;
+
+    const cursor =
+      document.createElement("span");
+
+    cursor.className = "cursor";
+
+    line.appendChild(span);
+    line.appendChild(cursor);
 
     output.appendChild(line);
+
+    output.scrollTop =
+      output.scrollHeight;
+
+    for (const character of text) {
+      span.textContent += character;
+
+      output.scrollTop =
+        output.scrollHeight;
+
+      const randomSpeed =
+        speed +
+        Math.random() * 7;
+
+      await sleep(randomSpeed);
+    }
+
+    cursor.remove();
+
+    await sleep(
+      100 +
+      Math.random() * 150
+    );
 
     return line;
   }
 
-  async function runTerminalVerification() {
-    const overlay = createVerifyingOverlay();
-    const output = overlay.querySelector(".akkoflac-terminal-output");
+  function addTerminalLine(
+    output,
+    text,
+    kind = "muted"
+  ) {
+    const line =
+      document.createElement("div");
 
-    output.innerHTML = "";
+    line.className =
+      "akkoflac-terminal-line";
 
-    addTerminalLine(
-      output,
-      "[system] AkkoAudio secure access verification"
-    );
+    const span =
+      document.createElement("span");
 
-    await sleep(280);
+    span.className = kind;
+    span.textContent = text;
 
-    addTerminalLine(
-      output,
-      "[network] connecting to AkkoAudio cloud..."
-    );
+    line.appendChild(span);
+    output.appendChild(line);
 
-    await sleep(330);
+    output.scrollTop =
+      output.scrollHeight;
 
-    addTerminalLine(
-      output,
-      "[network] connection established"
-    );
-
-    await sleep(260);
-
-    addTerminalLine(
-      output,
-      "[auth] checking active session..."
-    );
-
-    await sleep(300);
-
-    addTerminalLine(
-      output,
-      "[security] checking access status..."
-    );
-
-    await sleep(250);
-
-    const accessPromise = checkAccess();
-
-    const hasAccess = await accessPromise;
-
-    await sleep(250);
-
-    if (hasAccess) {
-      addTerminalLine(
-        output,
-        "[success] verification successful",
-        "success"
-      );
-
-      await sleep(1500);
-
-      hideVerifying();
-      return true;
-    }
-
-    addTerminalLine(
-      output,
-      "[auth] no active access session",
-      "error"
-    );
-
-    await sleep(350);
-
-    addTerminalLine(
-      output,
-      "[security] access code required"
-    );
-
-    await sleep(300);
-
-    hideVerifying();
-
-    createGate();
-
-    return false;
+    return line;
   }
 
-  function showVerifying() {
-    clearPreverify();
-    injectStyles();
-    applySavedColors();
+  async function showVerifying() {
+    if (
+      document.getElementById(
+        "akkoflac-verify-overlay"
+      )
+    ) {
+      return;
+    }
 
-    document.body.classList.add(
-      "akkoflac-verifying-lock"
+    applySavedColors();
+    lockUI();
+
+    const overlay =
+      createTerminal();
+
+    const output =
+      overlay.querySelector(
+        "#akkoflac-terminal-output"
+      );
+
+    await typeTerminalLine(
+      output,
+      "[system] initializing AkkoAudio secure terminal...",
+      "muted",
+      8
     );
 
-    const overlay = createVerifyingOverlay();
+    await typeTerminalLine(
+      output,
+      "[system] loading verification module...",
+      "muted",
+      8
+    );
 
-    overlay.classList.remove("hidden");
+    await typeTerminalLine(
+      output,
+      "[network] connecting to AkkoAudio cloud...",
+      "muted",
+      8
+    );
+
+    await typeTerminalLine(
+      output,
+      "[network] connection established",
+      "muted",
+      8
+    );
+
+    await typeTerminalLine(
+      output,
+      "[auth] checking active session...",
+      "muted",
+      8
+    );
+
+    await typeTerminalLine(
+      output,
+      "[security] checking session credentials...",
+      "muted",
+      8
+    );
+
+    await typeTerminalLine(
+      output,
+      "[database] checking access status...",
+      "muted",
+      8
+    );
+
+    await typeTerminalLine(
+      output,
+      "[security] checking code state...",
+      "muted",
+      8
+    );
+
+    await typeTerminalLine(
+      output,
+      "[verification] waiting for server response...",
+      "accent",
+      8
+    );
+
+    return overlay;
+  }
+
+  async function showVerificationSuccess() {
+    const overlay =
+      document.getElementById(
+        "akkoflac-verify-overlay"
+      );
+
+    if (!overlay) return;
+
+    const output =
+      overlay.querySelector(
+        "#akkoflac-terminal-output"
+      );
+
+    if (!output) return;
+
+    await typeTerminalLine(
+      output,
+      "[success] verification successful",
+      "success",
+      9
+    );
+
+    await typeTerminalLine(
+      output,
+      "[system] access granted",
+      "success",
+      9
+    );
+
+    await typeTerminalLine(
+      output,
+      "[system] launching AkkoAudio...",
+      "muted",
+      9
+    );
+
+    await sleep(1500);
   }
 
   function hideVerifying() {
     const overlay =
-      document.getElementById("akkoflac-verifying");
-
-    if (overlay) {
-      overlay.classList.add("hidden");
-
-      setTimeout(() => {
-        overlay.remove();
-      }, 350);
-    }
-
-    document.body.classList.remove(
-      "akkoflac-verifying-lock"
-    );
+      document.getElementById(
+        "akkoflac-verify-overlay"
+      );
 
     clearPreverify();
+
+    if (!overlay) return;
+
+    overlay.classList.add("hidden");
+
+    setTimeout(() => {
+      overlay.remove();
+    }, 500);
   }
 
-  async function checkAccess() {
-    try {
-      const response = await fetch(
-        "/.netlify/functions/access-status",
-        {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store"
+  function createGate(opts = {}) {
+    clearPreverify();
+
+    const old =
+      document.getElementById(
+        "akkoflac-verify-overlay"
+      );
+
+    if (old) old.remove();
+
+    applySavedColors();
+    lockUI();
+
+    const revoked =
+      !!opts.revoked;
+
+    const overlay =
+      createTerminal();
+
+    const output =
+      overlay.querySelector(
+        "#akkoflac-terminal-output"
+      );
+
+    let promptInput = null;
+    let promptLine = null;
+    let submitting = false;
+
+    function showPrompt() {
+      if (promptLine) {
+        promptLine.remove();
+      }
+
+      promptLine =
+        document.createElement("div");
+
+      promptLine.className =
+        "akkoflac-terminal-line";
+
+      const label =
+        document.createElement("span");
+
+      label.className = "accent";
+      label.textContent =
+        "ACCESS CODE: ";
+
+      const wrap =
+        document.createElement("span");
+
+      wrap.className =
+        "akkoflac-terminal-prompt-wrap";
+
+      promptLine.appendChild(label);
+      promptLine.appendChild(wrap);
+
+      output.appendChild(promptLine);
+
+      promptInput =
+        document.createElement("input");
+
+      promptInput.type = "text";
+      promptInput.maxLength = 5;
+      promptInput.autocomplete = "off";
+      promptInput.autocapitalize =
+        "characters";
+      promptInput.spellcheck = false;
+
+      promptInput.className =
+        "akkoflac-terminal-input";
+
+      promptInput.setAttribute(
+        "aria-label",
+        "Access code"
+      );
+
+      promptInput.setAttribute(
+        "inputmode",
+        "text"
+      );
+
+      wrap.appendChild(promptInput);
+
+      promptInput.addEventListener(
+        "input",
+        () => {
+          promptInput.value =
+            promptInput.value
+              .replace(
+                /[^a-zA-Z0-9]/g,
+                ""
+              )
+              .slice(0, 5)
+              .toUpperCase();
         }
       );
 
-      if (!response.ok) return false;
-
-      const data = await response.json();
-
-      return (
-        data &&
-        (
-          data.active === true ||
-          data.valid === true ||
-          data.access === true
-        )
-      );
-    } catch (error) {
-      console.error(
-        "Access check failed:",
-        error
+      promptInput.addEventListener(
+        "keydown",
+        event => {
+          if (
+            event.key === "Enter" &&
+            !submitting
+          ) {
+            redeem(
+              promptInput.value
+                .trim()
+                .toUpperCase()
+            );
+          }
+        }
       );
 
-      return false;
+      setTimeout(() => {
+        if (promptInput) {
+          promptInput.focus();
+        }
+      }, 40);
+
+      output.scrollTop =
+        output.scrollHeight;
     }
-  }
 
-  function createGate() {
-    clearPreverify();
-    injectStyles();
-    applySavedColors();
-
-    const oldGate =
-      document.getElementById(
-        "akkoflac-access-gate"
+    (async () => {
+      await typeTerminalLine(
+        output,
+        "[auth] no active access session...",
+        "muted",
+        8
       );
 
-    if (oldGate) oldGate.remove();
-
-    document.body.classList.add(
-      "akkoflac-verifying-lock"
-    );
-
-    const gate = document.createElement("div");
-
-    gate.id = "akkoflac-access-gate";
-
-    gate.innerHTML = `
-      <div class="akkoflac-access-terminal">
-        <div class="akkoflac-access-output">
-          <div>[system] AkkoAudio secure access terminal</div>
-          <div>[security] access code required</div>
-          <div>[terminal] enter your access code below</div>
-
-          <div class="akkoflac-access-input-row">
-            <span class="akkoflac-access-prompt">
-              ACCESS CODE:
-            </span>
-
-            <input
-              id="akkoflac-access-code"
-              class="akkoflac-access-input"
-              type="text"
-              autocomplete="off"
-              autocapitalize="characters"
-              spellcheck="false"
-              aria-label="Access code"
-            />
-
-            <span class="akkoflac-terminal-cursor"></span>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(gate);
-
-    const input =
-      gate.querySelector(
-        "#akkoflac-access-code"
+      await typeTerminalLine(
+        output,
+        "[security] access code required",
+        "muted",
+        8
       );
 
-    const output =
-      gate.querySelector(
-        ".akkoflac-access-output"
+      if (revoked) {
+        await typeTerminalLine(
+          output,
+          "[security] previous access code has been revoked",
+          "warn",
+          8
+        );
+      }
+
+      await typeTerminalLine(
+        output,
+        "[terminal] enter your access code below",
+        "accent",
+        8
       );
 
-    input.focus();
+      showPrompt();
+    })();
 
-    async function submitCode() {
-      const code = input.value.trim();
+    async function redeem(code) {
+      if (submitting) return;
 
-      if (!code) return;
-
-      input.disabled = true;
-
-      const row =
-        gate.querySelector(
-          ".akkoflac-access-input-row"
+      if (code.length !== 5) {
+        addTerminalLine(
+          output,
+          "[error] access code must be 5 characters",
+          "warn"
         );
 
-      row.insertAdjacentHTML(
-        "afterend",
-        `<div>[auth] validating access code...</div>`
+        if (promptInput) {
+          promptInput.focus();
+        }
+
+        return;
+      }
+
+      submitting = true;
+
+      if (promptInput) {
+        promptInput.disabled = true;
+      }
+
+      await typeTerminalLine(
+        output,
+        "[auth] validating access code...",
+        "muted",
+        8
       );
 
-      await sleep(300);
-
-      row.insertAdjacentHTML(
-        "afterend",
-        `<div>[database] checking code status...</div>`
+      await typeTerminalLine(
+        output,
+        "[database] checking code status...",
+        "muted",
+        8
       );
 
       try {
-        const response = await fetch(
-          "/.netlify/functions/verify-code",
-          {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              code
-            })
-          }
-        );
+        const response =
+          await fetch(
+            "/.netlify/functions/verify-code",
+            {
+              method: "POST",
 
-        let data = {};
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
 
-        try {
-          data = await response.json();
-        } catch (_) {}
+              credentials: "include",
+
+              body: JSON.stringify({
+                code
+              })
+            }
+          );
+
+        const data =
+          await response
+            .json()
+            .catch(() => ({}));
 
         if (
-          response.ok &&
-          data.valid !== false &&
-          data.success !== false
+          !response.ok ||
+          !data.valid
         ) {
-          row.remove();
+          const reason =
+            String(
+              data.reason ||
+              data.error ||
+              ""
+            ).toLowerCase();
 
-          addTerminalLine(
+          const isRevoked =
+            reason.includes("revok");
+
+          await typeTerminalLine(
             output,
-            "[success] verification successful",
-            "success"
+            isRevoked
+              ? "[security] this access code has been revoked"
+              : "[error] invalid access code",
+            "warn",
+            8
           );
 
-          addTerminalLine(
+          await typeTerminalLine(
             output,
-            "[system] access granted"
+            "[terminal] try another code...",
+            "muted",
+            8
           );
 
-          await sleep(1500);
+          submitting = false;
 
-          gate.remove();
-
-          document.body.classList.remove(
-            "akkoflac-verifying-lock"
-          );
-
-          clearPreverify();
+          showPrompt();
 
           return;
         }
 
-        const message =
-          String(
-            data.message ||
-            data.error ||
-            ""
-          ).toLowerCase();
+        await typeTerminalLine(
+          output,
+          "[success] verification successful",
+          "success",
+          8
+        );
 
-        row.remove();
+        await typeTerminalLine(
+          output,
+          "[system] access granted",
+          "success",
+          8
+        );
 
-        if (
-          message.includes("revok") ||
-          message.includes("disabled") ||
-          message.includes("inactive") ||
-          message.includes("expired")
-        ) {
-          addTerminalLine(
-            output,
-            "[security] this access code has been revoked",
-            "error"
-          );
+        await typeTerminalLine(
+          output,
+          "[system] launching AkkoAudio...",
+          "muted",
+          8
+        );
 
-          addTerminalLine(
-            output,
-            "[terminal] enter another access code"
-          );
-        } else {
-          addTerminalLine(
-            output,
-            "[error] invalid access code",
-            "error"
-          );
+        await sleep(1500);
 
-          addTerminalLine(
-            output,
-            "[terminal] try another code"
-          );
-        }
+        overlay.classList.add(
+          "hidden"
+        );
 
-        addAccessPrompt(output);
+        unlockUI();
+
+        setTimeout(() => {
+          overlay.remove();
+        }, 500);
 
       } catch (error) {
-        row.remove();
-
-        addTerminalLine(
+        await typeTerminalLine(
           output,
-          "[error] unable to contact verification server",
-          "error"
+          "[network] connection failed — try again",
+          "warn",
+          8
         );
 
-        addTerminalLine(
-          output,
-          "[terminal] check your connection and try again"
-        );
+        submitting = false;
 
-        addAccessPrompt(output);
+        showPrompt();
       }
     }
+  }
 
-    function addAccessPrompt(output) {
-      const oldPrompt =
-        output.querySelector(
-          ".akkoflac-access-input-row"
-        );
-
-      if (oldPrompt) oldPrompt.remove();
-
-      const row =
-        document.createElement("div");
-
-      row.className =
-        "akkoflac-access-input-row";
-
-      row.innerHTML = `
-        <span class="akkoflac-access-prompt">
-          ACCESS CODE:
-        </span>
-
-        <input
-          class="akkoflac-access-input"
-          type="text"
-          autocomplete="off"
-          autocapitalize="characters"
-          spellcheck="false"
-        />
-
-        <span class="akkoflac-terminal-cursor"></span>
-      `;
-
-      output.appendChild(row);
-
-      const newInput =
-        row.querySelector(
-          ".akkoflac-access-input"
-        );
-
-      newInput.focus();
-
-      newInput.addEventListener(
-        "keydown",
-        event => {
-          if (event.key === "Enter") {
-            input.value = newInput.value;
-            submitCode();
+  async function checkAccess() {
+    try {
+      const response =
+        await fetch(
+          "/.netlify/functions/access-status",
+          {
+            credentials: "include"
           }
-        }
-      );
+        );
+
+      const data =
+        await response.json();
+
+      return {
+        valid: !!data.valid,
+        reason:
+          data.reason ||
+          (
+            data.valid
+              ? "ok"
+              : "none"
+          )
+      };
+
+    } catch {
+      return {
+        valid: false,
+        reason: "error"
+      };
+    }
+  }
+
+  async function runVerifyThenGate() {
+    if (
+      runVerifyThenGate._running
+    ) {
+      return;
     }
 
-    input.addEventListener(
-      "keydown",
-      event => {
-        if (event.key === "Enter") {
-          submitCode();
-        }
-      }
-    );
+    runVerifyThenGate._running =
+      true;
+
+    const verification =
+      showVerifying();
+
+    const statusPromise =
+      checkAccess();
+
+    await verification;
+
+    const status =
+      await statusPromise;
+
+    if (status.valid) {
+      await showVerificationSuccess();
+
+      hideVerifying();
+
+      unlockUI();
+
+      return;
+    }
+
+    hideVerifying();
+
+    createGate({
+      revoked:
+        status.reason === "revoked"
+    });
   }
 
   function isOnboardingDone() {
@@ -757,29 +1099,125 @@
     );
   }
 
-  async function start() {
-    injectStyles();
-    applySavedColors();
+  function start() {
+    document.body.classList.add(
+      "akkoflac-awaiting-access"
+    );
 
-    if (!isOnboardingDone()) {
-      clearPreverify();
+    if (isOnboardingDone()) {
+      runVerifyThenGate();
       return;
     }
 
-    showVerifying();
+    const onboarding =
+      document.getElementById(
+        "onboarding"
+      );
 
-    await runTerminalVerification();
+    const afterOnboarding = () => {
+      if (!isOnboardingDone()) {
+        return;
+      }
+
+      const hidden =
+        !onboarding ||
+        onboarding.classList.contains(
+          "hidden"
+        );
+
+      if (!hidden) return;
+
+      observer.disconnect();
+
+      runVerifyThenGate();
+    };
+
+    const observer =
+      new MutationObserver(
+        afterOnboarding
+      );
+
+    if (onboarding) {
+      observer.observe(
+        onboarding,
+        {
+          attributes: true,
+          attributeFilter: [
+            "class",
+            "style"
+          ]
+        }
+      );
+    }
+
+    window.addEventListener(
+      "storage",
+      event => {
+        if (
+          event.key ===
+            "akkoflac-onboarded" &&
+          event.newValue === "1"
+        ) {
+          afterOnboarding();
+        }
+      }
+    );
+
+    let pollId = null;
+
+    const startPoll = () => {
+      if (pollId) return;
+
+      pollId =
+        setInterval(() => {
+          if (document.hidden) {
+            return;
+          }
+
+          afterOnboarding();
+
+          if (isOnboardingDone()) {
+            clearInterval(pollId);
+            pollId = null;
+          }
+        }, 400);
+    };
+
+    const stopPoll = () => {
+      if (pollId) {
+        clearInterval(pollId);
+        pollId = null;
+      }
+    };
+
+    document.addEventListener(
+      "visibilitychange",
+      () => {
+        if (document.hidden) {
+          stopPoll();
+        } else {
+          startPoll();
+        }
+      }
+    );
+
+    if (!document.hidden) {
+      startPoll();
+    }
+
+    afterOnboarding();
   }
 
   if (
-    document.readyState === "loading"
+    document.readyState ===
+    "loading"
   ) {
     document.addEventListener(
       "DOMContentLoaded",
-      start,
-      { once: true }
+      start
     );
   } else {
     start();
   }
+
 })();
