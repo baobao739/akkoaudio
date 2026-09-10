@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERIFY_MIN_MS = 3000;
+  const VERIFY_MIN_MS = 1500;
 
   const THEMES = {
     charcoal:  { bottom: "#1b1c24" },
@@ -19,6 +19,7 @@
   };
 
   const STYLE = `
+    /* Full-screen gates — always above sidebar/player */
     #akkoflac-verify-overlay,
     #akkoflac-access-overlay {
       position: fixed !important;
@@ -192,6 +193,8 @@
       80% { transform: translateX(6px); }
     }
 
+    /* Hide + lock main player UI while gated */
+
     body.akkoflac-gate-locked .sidebar,
     body.akkoflac-gate-locked .main,
     body.akkoflac-gate-locked .bottom-player,
@@ -254,11 +257,20 @@
   }
 
   function showVerifying() {
-    if (document.getElementById("akkoflac-verify-overlay")) return;
     applySavedColors();
     lockUI();
 
-    const overlay = document.createElement("div");
+    let overlay = document.getElementById("akkoflac-verify-overlay");
+    if (overlay) {
+      overlay.classList.remove("hidden");
+      overlay.style.display = "flex";
+      overlay.style.visibility = "visible";
+      overlay.style.opacity = "1";
+      overlay.setAttribute("aria-busy", "true");
+      return;
+    }
+
+    overlay = document.createElement("div");
     overlay.id = "akkoflac-verify-overlay";
     overlay.setAttribute("aria-live", "polite");
     overlay.setAttribute("aria-busy", "true");
@@ -278,7 +290,11 @@
     setTimeout(() => el.remove(), 500);
   }
 
+  /**
+   * @param {{ revoked?: boolean }} opts
+   */
   function createGate(opts = {}) {
+    // Replace any existing gate
     const existing = document.getElementById("akkoflac-access-overlay");
     if (existing) existing.remove();
 
@@ -357,6 +373,7 @@
     setTimeout(() => input.focus(), 150);
   }
 
+  /** @returns {Promise<{ valid: boolean, reason?: string }>} */
   async function checkAccess() {
     try {
       const response = await fetch("/.netlify/functions/access-status", { credentials: "include" });
@@ -387,11 +404,13 @@
 
     hideVerifying();
 
+    // Still valid → unlock player
     if (status.valid) {
       unlockUI();
       return;
     }
 
+    // Every visit: if revoked (or no access), show code screen
     createGate({ revoked: status.reason === "revoked" });
   }
 
@@ -400,13 +419,23 @@
   }
 
   function start() {
-    document.body.classList.add("akkoflac-awaiting-access");
+    // Always cover player chrome until access is confirmed on this visit
+    document.body.classList.add("akkoflac-awaiting-access", "akkoflac-gate-locked");
 
+    // Returning user (already finished onboarding) → verifying every visit
     if (isOnboardingDone()) {
       runVerifyThenGate();
       return;
     }
 
+    // First-time: hide early verify shell so onboarding is visible
+    const early = document.getElementById("akkoflac-verify-overlay");
+    if (early) {
+      early.classList.add("hidden");
+      early.style.display = "none";
+    }
+
+    // First-time: wait for onboarding, then verify
     const onboarding = document.getElementById("onboarding");
 
     const afterOnboarding = () => {
