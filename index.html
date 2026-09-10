@@ -2067,7 +2067,7 @@ body::after {
 .lyrics-track {
     will-change: transform;
     transform: translate3d(0, 0, 0);
-    transition: transform 0.72s cubic-bezier(0.22, 0.61, 0.36, 1);
+    transition: transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
     padding: 4vh 0 58vh;
 }
 
@@ -2088,9 +2088,9 @@ body::after {
     opacity: 0.9;
     will-change: color, opacity, filter;
     transition:
-        color 0.55s cubic-bezier(0.25, 0.1, 0.25, 1),
-        opacity 0.55s cubic-bezier(0.25, 0.1, 0.25, 1),
-        filter 0.55s cubic-bezier(0.25, 0.1, 0.25, 1);
+        color 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+        filter 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Current — accent, settles into place */
@@ -4121,7 +4121,7 @@ button.full-like.liked svg {
 /* Keep lyric geometry stable. Hiding old lines by changing height/margin
    was making the track's offset change underneath the smooth transform. */
 .lyrics-track {
-    transition: transform 0.78s cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+    transition: transform 0.95s cubic-bezier(0.16, 1, 0.3, 1) !important;
     will-change: transform;
     transform: translate3d(0, 0, 0);
 }
@@ -4183,6 +4183,61 @@ button.full-like.liked svg {
     }
 }
 </style>
+</style>
+<style>
+
+/* Song-card typography + marquee inset */
+.song-card > .song-title,
+.song-card > .song-artist {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+.song-card > .song-title {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+}
+.song-card > .song-artist {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+}
+.song-card .song-title.marquee {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    box-sizing: border-box !important;
+}
+.song-card .song-title.marquee .marquee-track {
+    max-width: calc(100% - 8px) !important;
+    margin-left: 4px !important;
+    margin-right: 4px !important;
+}
+</style>
+
+<style id="akko-lyrics-smoother-past">
+/* Apple-Music-style lyric positioning: two past lines remain visible. */
+.lyric-line.past-second {
+    color: rgba(255,255,255,0.18) !important;
+    opacity: 0.22 !important;
+    filter: blur(2.8px) !important;
+    visibility: visible !important;
+    height: auto !important;
+    margin-bottom: clamp(28px, 4.2vh, 48px) !important;
+    transform: none !important;
+    pointer-events: none;
+}
+
+.lyric-line.past {
+    visibility: visible !important;
+    opacity: 0.52 !important;
+    filter: blur(1.2px) !important;
+}
+
+@media (max-width: 760px) {
+    .lyric-line.past-second {
+        opacity: 0.20 !important;
+        filter: blur(2.4px) !important;
+    }
+}
 </style>
 </head>
 
@@ -7795,10 +7850,14 @@ function updateLyrics(time) {
             return;
         }
 
-        if (index < activeIndex - 1) {
-            // Visually hidden, but it keeps its exact layout height/margins.
+        if (index < activeIndex - 2) {
+            // Keep older lyrics in the layout so the track never jumps.
             element.classList.add("offscreen");
+        } else if (index === activeIndex - 2) {
+            // Second past line: only a faint peek near the very top.
+            element.classList.add("past-second");
         } else if (index === activeIndex - 1) {
+            // First past line: readable but softly faded.
             element.classList.add("past");
         } else if (index === activeIndex) {
             element.classList.add("active");
@@ -7817,7 +7876,7 @@ function updateLyrics(time) {
         if (!line) return;
 
         const viewportHeight = Math.max(1, lyricsContainer.clientHeight);
-        const anchorRatio = activeIndex < 0 ? 0.06 : 0.14;
+        const anchorRatio = activeIndex < 0 ? 0.06 : 0.32;
         const anchor = viewportHeight * anchorRatio;
         const desired = line.offsetTop - anchor;
         const maxOffset = Math.max(0, track.offsetHeight - viewportHeight * 0.4);
@@ -7836,6 +7895,6 @@ if ("ResizeObserver" in window) {
 }
 
 </script>
-
+<script src="access-gate.js"></script>
 </body>
 </html>
