@@ -2048,7 +2048,7 @@ body::after {
 .lyrics-track {
     will-change: transform;
     transform: translate3d(0, 0, 0);
-    transition: transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+    transition: transform 0.72s cubic-bezier(0.22, 0.61, 0.36, 1);
     padding: 4vh 0 58vh;
 }
 
@@ -2064,15 +2064,14 @@ body::after {
     letter-spacing: -1.1px;
     overflow-wrap: anywhere;
     word-break: break-word;
-    transform: translate3d(0, 10px, 0);
+    transform: none;
     transform-origin: left center;
     opacity: 0.9;
-    will-change: color, opacity, filter, transform;
+    will-change: color, opacity, filter;
     transition:
-        color 0.7s cubic-bezier(0.25, 0.1, 0.25, 1),
-        opacity 0.7s cubic-bezier(0.25, 0.1, 0.25, 1),
-        filter 0.7s cubic-bezier(0.25, 0.1, 0.25, 1),
-        transform 0.85s cubic-bezier(0.22, 0.61, 0.36, 1);
+        color 0.55s cubic-bezier(0.25, 0.1, 0.25, 1),
+        opacity 0.55s cubic-bezier(0.25, 0.1, 0.25, 1),
+        filter 0.55s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 /* Current — accent, settles into place */
@@ -2111,10 +2110,12 @@ body::after {
     filter: blur(4px);
     visibility: hidden;
     pointer-events: none;
-    height: 0 !important;
-    margin: 0 !important;
-    overflow: hidden;
-    transform: translate3d(0, -8px, 0);
+    /* Keep every line's layout height. Collapsing lines to 0px was
+       causing the lyrics track to jump whenever the active line changed. */
+    height: auto !important;
+    margin-bottom: clamp(28px, 4.2vh, 48px) !important;
+    overflow: visible;
+    transform: none !important;
 }
 
 .lyric-line.pause {
@@ -4069,6 +4070,93 @@ button.full-like.liked svg {
 
 </style>
 
+<style id="akko-smooth-marquee-lyrics-fix">
+/* =========================================================
+   SMOOTH MARQUEE + LYRIC MOTION FIX
+   ========================================================= */
+
+/* The marquee must be allowed to animate without the site's global
+   transform transition interfering with the animation. */
+.mini-title.marquee .marquee-track,
+.full-title.marquee .marquee-track,
+.song-title.marquee .marquee-track,
+.track-row-title.marquee .marquee-track,
+.queue-item-title.marquee .marquee-track,
+.featured-title.marquee .marquee-track {
+    transition: none !important;
+    animation-timing-function: linear !important;
+    animation-iteration-count: infinite !important;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translate3d(0, 0, 0);
+}
+
+/* Keep lyric geometry stable. Hiding old lines by changing height/margin
+   was making the track's offset change underneath the smooth transform. */
+.lyrics-track {
+    transition: transform 0.78s cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+}
+
+.lyric-line {
+    transition:
+        color 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
+        opacity 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
+        filter 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+}
+
+.lyric-line.offscreen,
+.lyric-line.fade-past {
+    /* IMPORTANT: never collapse lyric lines, because that moves every
+       later line and makes the lyric scroll visibly jump. */
+    height: auto !important;
+    min-height: 0 !important;
+    margin-bottom: clamp(28px, 4.2vh, 48px) !important;
+    visibility: hidden;
+    opacity: 0 !important;
+    pointer-events: none;
+    transform: none !important;
+}
+
+@media (max-width: 760px) {
+    .lyric-line.offscreen,
+    .lyric-line.fade-past {
+        margin-bottom: clamp(10px, 1.6vh, 16px) !important;
+    }
+}
+<style id="akko-compact-settings-themes">
+/* Compact theme picker in Settings only. Onboarding keeps its larger layout. */
+#settingsPage #themeRow {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 4px;
+}
+#settingsPage #themeRow .theme-option {
+    gap: 5px;
+    padding: 7px 5px;
+    min-height: 62px;
+    border-radius: 12px;
+    font-size: 10px;
+}
+#settingsPage #themeRow .theme-preview {
+    width: 100%;
+    height: 28px;
+    border-radius: 8px;
+}
+@media (max-width: 760px) {
+    #settingsPage #themeRow {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 7px;
+    }
+}
+@media (max-width: 420px) {
+    #settingsPage #themeRow {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+</style>
+</style>
 </head>
 
 <body>
@@ -6165,17 +6253,17 @@ function setMarqueeTitle(el, text, mode = "mini") {
     single.textContent = text || "";
     el.appendChild(single);
 
-    // Let layout settle, then only animate when the title actually overflows.
     requestAnimationFrame(() => {
         if (el.scrollWidth <= el.clientWidth + 2) return;
 
+        // This gap MUST match the CSS margin between the two copies.
         const gap = mode === "full" ? 60 : 46;
         const copyWidth = single.getBoundingClientRect().width;
-        const shift = Math.ceil(copyWidth + gap);
+        // Keep the real sub-pixel width. Rounding this value can create a
+        // tiny one-pixel snap when the infinite animation restarts.
+        const shift = copyWidth + gap;
 
         const copy = single.cloneNode(true);
-        el.querySelector(".marquee-track")?.remove();
-
         const track = document.createElement("span");
         track.className = "marquee-track";
         track.append(single, copy);
@@ -6185,7 +6273,7 @@ function setMarqueeTitle(el, text, mode = "mini") {
 
         const speed = mode === "full" ? 42 : 34;
         const duration = Math.max(mode === "full" ? 9 : 8, shift / speed + 2.4);
-        el.style.setProperty("--marquee-duration", `${duration.toFixed(2)}s`);
+        el.style.setProperty("--marquee-duration", `${duration.toFixed(3)}s`);
     });
 }
 
@@ -6195,7 +6283,6 @@ function initSongTitleMarquee(root = document) {
         const source = el.querySelector('.marquee-copy');
         if (!source) return;
 
-        // Reset any previous marquee state before measuring.
         el.classList.remove('marquee');
         el.style.removeProperty('--marquee-shift');
         el.style.removeProperty('--marquee-duration');
@@ -6207,7 +6294,7 @@ function initSongTitleMarquee(root = document) {
 
             const gap = 48;
             const copyWidth = source.getBoundingClientRect().width;
-            const shift = Math.ceil(copyWidth + gap);
+            const shift = copyWidth + gap;
             const copy = source.cloneNode(true);
             const track = document.createElement('span');
             track.className = 'marquee-track';
@@ -6218,7 +6305,7 @@ function initSongTitleMarquee(root = document) {
 
             const speed = 38;
             const duration = Math.max(8, shift / speed + 2.4);
-            el.style.setProperty('--marquee-duration', `${duration.toFixed(2)}s`);
+            el.style.setProperty('--marquee-duration', `${duration.toFixed(3)}s`);
         });
     });
 }
@@ -7655,6 +7742,7 @@ function updateLyrics(time) {
         else break;
     }
 
+    // Only reposition when the active lyric actually changes.
     if (lastActiveIndex !== null && activeIndex === lastActiveIndex) return;
     lastActiveIndex = activeIndex;
 
@@ -7665,18 +7753,12 @@ function updateLyrics(time) {
     if (!track || !elements.length) return;
 
     elements.forEach((element, index) => {
-        if (element._fadeTimer) {
-            clearTimeout(element._fadeTimer);
-            element._fadeTimer = null;
-        }
-
         element.classList.remove(
             "active", "next", "next-next", "next-third", "next-fourth",
             "upcoming", "past", "fade-past", "offscreen"
         );
 
         if (activeIndex < 0) {
-            // First lyric sits at the top as "next" until it becomes active
             if (index === 0) element.classList.add("next");
             else if (index === 1) element.classList.add("next-next");
             else element.classList.add("upcoming");
@@ -7684,10 +7766,9 @@ function updateLyrics(time) {
         }
 
         if (index < activeIndex - 1) {
-            // Older than the single past line — hide
+            // Visually hidden, but it keeps its exact layout height/margins.
             element.classList.add("offscreen");
         } else if (index === activeIndex - 1) {
-            // Only one past lyric
             element.classList.add("past");
         } else if (index === activeIndex) {
             element.classList.add("active");
@@ -7700,19 +7781,21 @@ function updateLyrics(time) {
         }
     });
 
-    // Step track so active line is near the TOP (Apple-style), past sits just above
     requestAnimationFrame(() => {
         const focusIndex = activeIndex < 0 ? 0 : activeIndex;
         const line = elements[focusIndex];
         if (!line) return;
+
         const viewportHeight = Math.max(1, lyricsContainer.clientHeight);
-        // Active near top band
         const anchorRatio = activeIndex < 0 ? 0.06 : 0.14;
         const anchor = viewportHeight * anchorRatio;
         const desired = line.offsetTop - anchor;
         const maxOffset = Math.max(0, track.offsetHeight - viewportHeight * 0.4);
         const offset = Math.min(Math.max(0, desired), maxOffset);
-        track.style.transform = "translate3d(0, " + (-offset) + "px, 0)";
+
+        // The CSS transition handles the movement; do not collapse/reflow
+        // lyrics while this transform is travelling to the new position.
+        track.style.transform = `translate3d(0, ${-offset}px, 0)`;
     });
 }
 
