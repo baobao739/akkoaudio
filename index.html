@@ -3458,29 +3458,6 @@ button.full-like.liked svg {
     stroke: none !important;
     filter: none !important;
 }
-
-/* Boot lock — never flash player before verifying */
-body.akkoflac-awaiting-access .sidebar,
-body.akkoflac-awaiting-access .main,
-body.akkoflac-awaiting-access .bottom-player,
-body.akkoflac-awaiting-access .queue-panel,
-body.akkoflac-awaiting-access .full-player,
-body.akkoflac-gate-locked .sidebar,
-body.akkoflac-gate-locked .main,
-body.akkoflac-gate-locked .bottom-player,
-body.akkoflac-gate-locked .queue-panel,
-body.akkoflac-gate-locked .full-player {
-    visibility: hidden !important;
-    pointer-events: none !important;
-    opacity: 0 !important;
-}
-body.akkoflac-awaiting-access #onboarding:not(.hidden),
-body.akkoflac-gate-locked #onboarding:not(.hidden) {
-    visibility: visible !important;
-    pointer-events: auto !important;
-    opacity: 1 !important;
-}
-
 </style>
 
 <style id="akko-mobile-dock-fix">
@@ -4037,29 +4014,9 @@ body.akkoflac-gate-locked #onboarding:not(.hidden) {
 }
 </style>
 
-
-<script>
-/* Lock before paint of main UI */
-(function(){
-  try {
-    document.documentElement.classList.add('akkoflac-boot');
-    if (document.body) document.body.classList.add('akkoflac-awaiting-access');
-    else document.addEventListener('DOMContentLoaded', function(){
-      document.body.classList.add('akkoflac-awaiting-access');
-    });
-  } catch(e) {}
-})();
-</script>
 </head>
 
-<body class="akkoflac-awaiting-access">
-
-<div id="akkoflac-verify-overlay" aria-live="polite" aria-busy="true" style="position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:26px;padding:24px;background:var(--theme-bottom,var(--bg,#12141e));">
-  <div class="akkoflac-verify-spinner" aria-hidden="true" style="width:48px;height:48px;border-radius:50%;border:3px solid color-mix(in srgb,var(--accent,#7b8cff) 22%,transparent);border-top-color:var(--accent,#7b8cff);animation:akkoVerifySpin .85s linear infinite;"></div>
-  <div class="akkoflac-verify-text" style="color:var(--accent,#7b8cff);font-size:clamp(22px,4vw,28px);font-weight:720;">Verifying<span class="akkoflac-verify-dots"></span></div>
-</div>
-<style>@keyframes akkoVerifySpin{to{transform:rotate(360deg)}}</style>
-
+<body>
 
 <!-- Visual-only ambient layer -->
 <div class="app-atmosphere" aria-hidden="true">
