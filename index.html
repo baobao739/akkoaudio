@@ -9208,5 +9208,34 @@ button:active,
 }
 </style>
 
+
+<style id="akko-brighter-upcoming-lyrics">
+/* Brighter upcoming lyrics, darker past lyrics */
+.lyric-line:not(.active):not(.current):not(.past),
+.lyrics .lyric-line:not(.active):not(.current):not(.past),
+.lyrics-container .lyric-line:not(.active):not(.current):not(.past),
+.lyric-line.upcoming {
+  color: rgba(190, 190, 198, 0.78) !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.lyric-line.past,
+.lyrics .lyric-line.past,
+.lyrics-container .lyric-line.past {
+  color: rgba(105, 105, 116, 0.42) !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.lyric-line.active,
+.lyric-line.current,
+.lyrics .lyric-line.active,
+.lyrics-container .lyric-line.active {
+  opacity: 1 !important;
+  filter: none !important;
+}
+</style>
+
 </body>
 </html>
