@@ -3681,6 +3681,43 @@ select:focus-visible,
         bottom: calc(var(--mobile-nav-height) + 8px) !important;
     }
 }
+
+/* FINAL EDGELESS GLASS + MOBILE NAV FIX */
+*, *::before, *::after { box-sizing: border-box; }
+.glass, .glass-strong, .topbar, .featured, .credits-card, .settings-card,
+.bottom-player, .queue-panel, .focus-panel, .modal, .search-box,
+.search-box input, .sidebar, .main-content, .page-view, .song-card,
+.track-row, .nav-button, button, input, textarea, select, .theme-option,
+.accent-swatch {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.glass, .glass-strong, .topbar, .featured, .credits-card, .settings-card,
+.bottom-player, .queue-panel, .focus-panel, .modal, .search-box,
+.sidebar, .song-card, .track-row, .theme-option, .accent-swatch {
+  background-clip: padding-box;
+}
+button:focus, button:focus-visible, a:focus, a:focus-visible,
+input:focus, input:focus-visible, textarea:focus, select:focus {
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+@media (min-width: 769px) {
+  .sidebar { left: 8px !important; margin-left: 0 !important; }
+}
+@media (max-width: 768px) {
+  .sidebar { left: 8px !important; right: 8px !important; width: auto !important; }
+  .mobile-nav, .bottom-nav, .mobile-tab-bar, .nav-tabs {
+    position: fixed !important;
+    top: auto !important;
+    bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+    left: 10px !important;
+    right: 10px !important;
+    z-index: 9999 !important;
+  }
+  body { padding-bottom: 92px !important; }
+}
 </style>
 
 <style id="akko-mobile-dock-fix">
