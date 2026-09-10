@@ -1,24 +1,8 @@
 (() => {
   "use strict";
 
-  const THEMES = {
-    charcoal: { bottom: "#1b1c24" },
-    midnight: { bottom: "#141a31" },
-    ocean: { bottom: "#102a39" },
-    plum: { bottom: "#251a2d" },
-    dawn: { bottom: "#352333" },
-    forest: { bottom: "#172c25" },
-    lavender: { bottom: "#2c2a45" },
-    rosewood: { bottom: "#321f2a" },
-    ember: { bottom: "#321e1a" },
-    glacier: { bottom: "#20343d" },
-    cocoa: { bottom: "#2d231f" },
-    aurora: { bottom: "#133b37" }
-  };
-
   const STYLE = `
-    #akkoflac-verify-overlay,
-    #akkoflac-access-overlay {
+    #akkoflac-verify-overlay {
       position: fixed !important;
       inset: 0 !important;
       width: 100vw !important;
@@ -26,418 +10,327 @@
       height: 100dvh !important;
       margin: 0 !important;
       padding: 0 !important;
-      z-index: 2147483000 !important;
-      box-sizing: border-box;
-      isolation: isolate;
-    }
+      z-index: 2147483647 !important;
 
-    /* =========================================================
-       FULL SCREEN TERMINAL
-       ========================================================= */
+      display: block !important;
 
-    #akkoflac-verify-overlay {
-      display: block;
-      background: #050505;
-      color: #d7dce3;
+      background: #000 !important;
+      color: #c7c7c7 !important;
+
       font-family:
-        "SFMono-Regular",
-        "Cascadia Code",
-        "Roboto Mono",
         Consolas,
-        "Liberation Mono",
-        monospace;
-      overflow: hidden;
-      transition:
-        opacity .45s ease,
-        visibility .45s ease;
-    }
+        "Cascadia Mono",
+        "Courier New",
+        monospace !important;
 
-    #akkoflac-verify-overlay.hidden {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
+      overflow: hidden !important;
     }
 
     .akkoflac-terminal {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      background: #050505;
-      border: 0;
-      border-radius: 0;
-      box-shadow: none;
-      overflow: hidden;
+      position: fixed !important;
+      inset: 0 !important;
+
+      width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+
+      display: flex !important;
+      flex-direction: column !important;
+
+      background: #000 !important;
+
+      border: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+
+      overflow: hidden !important;
     }
+
+    /*
+      Windows Command Prompt-style title bar
+    */
 
     .akkoflac-terminal-bar {
-      height: 36px;
-      min-height: 36px;
-      flex: 0 0 36px;
+      height: 30px !important;
+      min-height: 30px !important;
+      flex: 0 0 30px !important;
 
-      display: flex;
-      align-items: center;
+      display: flex !important;
+      align-items: center !important;
 
-      gap: 7px;
-      padding: 0 13px;
+      padding: 0 10px !important;
 
-      background: #101010;
-      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: #101010 !important;
+      border-bottom: 1px solid #242424 !important;
 
-      user-select: none;
-      -webkit-user-select: none;
-    }
+      font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif !important;
 
-    .akkoflac-terminal-dot {
-      width: 9px;
-      height: 9px;
-      flex: 0 0 9px;
-      border-radius: 50%;
-      background: rgba(255,255,255,.18);
+      box-sizing: border-box !important;
+
+      user-select: none !important;
+      -webkit-user-select: none !important;
     }
 
     .akkoflac-terminal-title {
-      margin-left: 7px;
-
-      color: rgba(255,255,255,.45);
-
-      font-family:
-        "SFMono-Regular",
-        "Cascadia Code",
-        "Roboto Mono",
-        Consolas,
-        monospace;
-
-      font-size: 11px;
-      letter-spacing: .02em;
+      color: #d8d8d8 !important;
+      font-size: 12px !important;
+      line-height: 30px !important;
     }
 
+    .akkoflac-terminal-controls {
+      margin-left: auto !important;
+
+      height: 100% !important;
+
+      display: flex !important;
+      align-items: center !important;
+      gap: 18px !important;
+
+      color: #bdbdbd !important;
+      font-size: 12px !important;
+    }
+
+    .akkoflac-terminal-control {
+      width: 12px !important;
+      text-align: center !important;
+      opacity: .8 !important;
+    }
+
+    /*
+      REAL terminal area
+    */
+
     .akkoflac-terminal-output {
-      flex: 1;
-      min-height: 0;
+      flex: 1 !important;
+      min-height: 0 !important;
 
-      width: 100%;
-      box-sizing: border-box;
+      width: 100% !important;
+      height: calc(100% - 30px) !important;
 
-      padding:
-        16px
-        18px
-        32px;
+      box-sizing: border-box !important;
 
-      overflow-y: auto;
-      overflow-x: hidden;
+      padding: 10px 12px 30px 12px !important;
 
-      color: #d7dce3;
+      background: #000 !important;
+
+      color: #c7c7c7 !important;
 
       font-family:
-        "SFMono-Regular",
-        "Cascadia Code",
-        "Roboto Mono",
         Consolas,
-        monospace;
+        "Cascadia Mono",
+        "Courier New",
+        monospace !important;
 
-      font-size: clamp(12px, 1.55vw, 14px);
-      line-height: 1.7;
+      font-size: 14px !important;
+      line-height: 1.5 !important;
 
-      text-align: left;
+      text-align: left !important;
 
-      scrollbar-width: thin;
-      scrollbar-color:
-        rgba(255,255,255,.18)
-        transparent;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+
+      white-space: pre-wrap !important;
+      word-break: break-word !important;
+
+      scrollbar-width: none !important;
+    }
+
+    .akkoflac-terminal-output::-webkit-scrollbar {
+      display: none !important;
     }
 
     .akkoflac-terminal-line {
-      min-height: 1.7em;
+      display: block !important;
 
-      opacity: 0;
-      transform: translateY(3px);
+      min-height: 21px !important;
+
+      margin: 0 !important;
+      padding: 0 !important;
+
+      opacity: 1 !important;
+
+      background: transparent !important;
+
+      color: #c7c7c7 !important;
+
+      font-family:
+        Consolas,
+        "Cascadia Mono",
+        "Courier New",
+        monospace !important;
+
+      font-size: 14px !important;
+      line-height: 21px !important;
+
+      text-align: left !important;
+
+      white-space: pre-wrap !important;
+    }
+
+    .akkoflac-terminal-line.system {
+      color: #c7c7c7 !important;
+    }
+
+    .akkoflac-terminal-line.success {
+      color: #c7c7c7 !important;
+    }
+
+    .akkoflac-terminal-line.error {
+      color: #c7c7c7 !important;
+    }
+
+    /*
+      Prompt + input are literally on the same line.
+      There is NO pill, card, box, border, etc.
+    */
+
+    .akkoflac-terminal-prompt {
+      display: inline !important;
+
+      margin: 0 !important;
+      padding: 0 !important;
+
+      color: #c7c7c7 !important;
+
+      font-family:
+        Consolas,
+        "Cascadia Mono",
+        "Courier New",
+        monospace !important;
+
+      font-size: 14px !important;
+      line-height: 21px !important;
+
+      white-space: pre !important;
+    }
+
+    .akkoflac-terminal-input-wrap {
+      display: inline !important;
+
+      margin: 0 !important;
+      padding: 0 !important;
+
+      border: 0 !important;
+      outline: 0 !important;
+
+      background: transparent !important;
+    }
+
+    .akkoflac-terminal-input {
+      display: inline !important;
+
+      width: 5ch !important;
+      min-width: 5ch !important;
+      max-width: 5ch !important;
+
+      height: 21px !important;
+
+      margin: 0 !important;
+      padding: 0 !important;
+
+      border: 0 !important;
+      border-radius: 0 !important;
+      outline: 0 !important;
+
+      background: transparent !important;
+      box-shadow: none !important;
+
+      color: #c7c7c7 !important;
+
+      font-family:
+        Consolas,
+        "Cascadia Mono",
+        "Courier New",
+        monospace !important;
+
+      font-size: 14px !important;
+      font-weight: 400 !important;
+
+      line-height: 21px !important;
+
+      letter-spacing: 0 !important;
+
+      caret-color: #fff !important;
+
+      appearance: none !important;
+      -webkit-appearance: none !important;
+
+      text-transform: uppercase !important;
+
+      vertical-align: baseline !important;
+
+      outline-offset: 0 !important;
+    }
+
+    /*
+      Fake terminal caret when the input isn't focused.
+      It sits EXACTLY after the prompt/input text.
+    */
+
+    .akkoflac-terminal-caret {
+      display: inline-block !important;
+
+      width: 8px !important;
+      height: 17px !important;
+
+      margin: 0 !important;
+      padding: 0 !important;
+
+      vertical-align: -3px !important;
+
+      background: #c7c7c7 !important;
 
       animation:
-        akkoTerminalLineIn
-        .18s
-        ease
-        forwards;
-
-      white-space: pre-wrap;
-      word-break: break-word;
+        akkoCaretBlink
+        1s
+        steps(1, end)
+        infinite !important;
     }
 
-    @keyframes akkoTerminalLineIn {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .akkoflac-terminal-line .muted {
-      color: rgba(255,255,255,.48);
-    }
-
-    .akkoflac-terminal-line .accent {
-      color: var(--accent, #7b8cff);
-    }
-
-    .akkoflac-terminal-line .success {
-      color: #66e39a;
-    }
-
-    .akkoflac-terminal-line .warn {
-      color: #f5c76a;
-    }
-
-    .akkoflac-terminal-line .cursor {
-      display: inline-block;
-
-      width: 7px;
-      height: 1.05em;
-
-      vertical-align: -0.16em;
-
-      margin-left: 3px;
-
-      background:
-        var(--accent, #7b8cff);
-
-      animation:
-        akkoTerminalCursor
-        .8s
-        steps(1,end)
-        infinite;
-    }
-
-    @keyframes akkoTerminalCursor {
-      0%, 48% {
+    @keyframes akkoCaretBlink {
+      0%,
+      49% {
         opacity: 1;
       }
 
-      49%, 100% {
+      50%,
+      100% {
         opacity: 0;
       }
     }
 
-    .akkoflac-terminal-prompt-wrap {
-      display: inline-flex;
-      align-items: center;
-      vertical-align: baseline;
-    }
-
-    .akkoflac-terminal-input {
-      width: 5.5em;
-      min-width: 5.5em;
-
-      margin: 0;
-      padding: 0;
-
-      border: 0;
-      outline: 0;
-
-      background: transparent;
-
-      color:
-        var(--accent, #7b8cff);
-
-      font-family:
-        "SFMono-Regular",
-        "Cascadia Code",
-        "Roboto Mono",
-        Consolas,
-        monospace;
-
-      font-size: inherit;
-      font-weight: 700;
-
-      letter-spacing: .08em;
-      text-transform: uppercase;
-
-      caret-color:
-        var(--accent, #7b8cff);
-    }
-
-    .akkoflac-terminal-input:disabled {
-      opacity: .6;
-    }
-
-    .akkoflac-terminal-success {
-      text-shadow:
-        0 0 22px
-        rgba(102,227,154,.22);
-    }
-
-    /* =========================================================
-       KEEP OLD ACCESS OVERLAY COMPATIBLE
-       ========================================================= */
-
-    #akkoflac-access-overlay {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      background:
-        var(--theme-bottom,
-        var(--bg, #121212));
-
-      overflow: auto;
-    }
-
-    #akkoflac-access-overlay.hidden {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    body.akkoflac-gate-locked .sidebar,
-    body.akkoflac-gate-locked .main,
-    body.akkoflac-gate-locked .bottom-player,
-    body.akkoflac-gate-locked .full-player,
-    body.akkoflac-gate-locked .queue-panel,
-
-    body.akkoflac-awaiting-access .sidebar,
-    body.akkoflac-awaiting-access .main,
-    body.akkoflac-awaiting-access .bottom-player,
-    body.akkoflac-awaiting-access .full-player,
-    body.akkoflac-awaiting-access .queue-panel {
-      pointer-events: none !important;
-      user-select: none !important;
-      visibility: hidden !important;
-    }
-
     @media (max-width: 600px) {
       .akkoflac-terminal-output {
-        padding:
-          14px
-          13px
-          28px;
-
-        font-size: 12px;
-        line-height: 1.75;
+        padding: 8px 9px 24px 9px !important;
+        font-size: 13px !important;
       }
 
-      .akkoflac-terminal-bar {
-        height: 34px;
-        min-height: 34px;
-        flex-basis: 34px;
+      .akkoflac-terminal-line,
+      .akkoflac-terminal-prompt,
+      .akkoflac-terminal-input {
+        font-size: 13px !important;
+        line-height: 20px !important;
       }
 
-      .akkoflac-terminal-title {
-        font-size: 10px;
+      .akkoflac-terminal-input {
+        height: 20px !important;
       }
     }
   `;
 
   const style = document.createElement("style");
+  style.id = "akkoflac-terminal-style";
   style.textContent = STYLE;
-  document.head.appendChild(style);
+
+  if (!document.getElementById("akkoflac-terminal-style")) {
+    document.head.appendChild(style);
+  }
 
   function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  function clearPreverify() {
-    document.documentElement.classList.remove(
-      "akkoflac-preverify"
-    );
-  }
-
-  function hexToRgb(hex) {
-    const h = String(hex || "#7b8cff").replace("#", "");
-
-    const full =
-      h.length === 3
-        ? h.split("").map(c => c + c).join("")
-        : h;
-
-    const n = parseInt(full, 16);
-
-    return {
-      r: (n >> 16) & 255,
-      g: (n >> 8) & 255,
-      b: n & 255
-    };
-  }
-
-  function lightenHex(hex, amount) {
-    const { r, g, b } = hexToRgb(hex);
-
-    const lr =
-      Math.min(
-        255,
-        Math.round(r + (255 - r) * amount)
-      );
-
-    const lg =
-      Math.min(
-        255,
-        Math.round(g + (255 - g) * amount)
-      );
-
-    const lb =
-      Math.min(
-        255,
-        Math.round(b + (255 - b) * amount)
-      );
-
-    return "#" +
-      [lr, lg, lb]
-        .map(v =>
-          v.toString(16).padStart(2, "0")
-        )
-        .join("");
-  }
-
-  function applySavedColors() {
-    const root = document.documentElement;
-
-    const accent =
-      localStorage.getItem("akkoflac-accent") ||
-      "#7b8cff";
-
-    const { r, g, b } = hexToRgb(accent);
-
-    root.style.setProperty(
-      "--accent",
-      accent
-    );
-
-    root.style.setProperty(
-      "--accent-bright",
-      lightenHex(accent, .18)
-    );
-
-    root.style.setProperty(
-      "--accent-soft",
-      `rgba(${r}, ${g}, ${b}, .15)`
-    );
-
-    root.style.setProperty(
-      "--accent-glow",
-      `rgba(${r}, ${g}, ${b}, .35)`
-    );
-
-    const themeName =
-      localStorage.getItem("akkoflac-theme") ||
-      "charcoal";
-
-    const theme =
-      THEMES[themeName] ||
-      THEMES.charcoal;
-
-    root.style.setProperty(
-      "--theme-bottom",
-      theme.bottom
-    );
-
-    root.style.setProperty(
-      "--bg",
-      theme.bottom
-    );
-
-    root.style.setProperty(
-      "--bg-deep",
-      theme.bottom
-    );
   }
 
   function lockUI() {
@@ -458,29 +351,40 @@
     document.body.style.overflow = "";
   }
 
+  function removeOverlay() {
+    const old = document.getElementById(
+      "akkoflac-verify-overlay"
+    );
+
+    if (old) {
+      old.remove();
+    }
+  }
+
   function createTerminal() {
+    removeOverlay();
+
     const overlay =
       document.createElement("div");
 
     overlay.id =
       "akkoflac-verify-overlay";
 
-    overlay.setAttribute(
-      "aria-live",
-      "polite"
-    );
-
     overlay.innerHTML = `
       <div class="akkoflac-terminal">
 
         <div class="akkoflac-terminal-bar">
-          <span class="akkoflac-terminal-dot"></span>
-          <span class="akkoflac-terminal-dot"></span>
-          <span class="akkoflac-terminal-dot"></span>
 
-          <span class="akkoflac-terminal-title">
-            AkkoAudio Terminal
-          </span>
+          <div class="akkoflac-terminal-title">
+            Command Prompt - AkkoAudio
+          </div>
+
+          <div class="akkoflac-terminal-controls">
+            <span class="akkoflac-terminal-control">—</span>
+            <span class="akkoflac-terminal-control">□</span>
+            <span class="akkoflac-terminal-control">×</span>
+          </div>
+
         </div>
 
         <div
@@ -496,11 +400,10 @@
     return overlay;
   }
 
-  async function typeTerminalLine(
+  async function typeLine(
     output,
     text,
-    kind = "muted",
-    speed = 10
+    delay = 12
   ) {
     const line =
       document.createElement("div");
@@ -508,51 +411,26 @@
     line.className =
       "akkoflac-terminal-line";
 
-    const span =
-      document.createElement("span");
-
-    span.className = kind;
-
-    const cursor =
-      document.createElement("span");
-
-    cursor.className = "cursor";
-
-    line.appendChild(span);
-    line.appendChild(cursor);
-
     output.appendChild(line);
 
-    output.scrollTop =
-      output.scrollHeight;
-
-    for (const character of text) {
-      span.textContent += character;
+    for (const char of text) {
+      line.textContent += char;
 
       output.scrollTop =
         output.scrollHeight;
 
-      const randomSpeed =
-        speed +
-        Math.random() * 7;
-
-      await sleep(randomSpeed);
+      await sleep(
+        delay +
+        Math.random() * 5
+      );
     }
 
-    cursor.remove();
-
-    await sleep(
-      100 +
-      Math.random() * 150
-    );
-
-    return line;
+    await sleep(80);
   }
 
-  function addTerminalLine(
+  function addLine(
     output,
-    text,
-    kind = "muted"
+    text
   ) {
     const line =
       document.createElement("div");
@@ -560,13 +438,8 @@
     line.className =
       "akkoflac-terminal-line";
 
-    const span =
-      document.createElement("span");
+    line.textContent = text;
 
-    span.className = kind;
-    span.textContent = text;
-
-    line.appendChild(span);
     output.appendChild(line);
 
     output.scrollTop =
@@ -576,15 +449,6 @@
   }
 
   async function showVerifying() {
-    if (
-      document.getElementById(
-        "akkoflac-verify-overlay"
-      )
-    ) {
-      return;
-    }
-
-    applySavedColors();
     lockUI();
 
     const overlay =
@@ -595,67 +459,68 @@
         "#akkoflac-terminal-output"
       );
 
-    await typeTerminalLine(
+    await typeLine(
       output,
-      "[system] initializing AkkoAudio secure terminal...",
-      "muted",
-      8
+      "Microsoft Windows [Version 10.0.26100.1]"
     );
 
-    await typeTerminalLine(
+    await typeLine(
       output,
-      "[system] loading verification module...",
-      "muted",
-      8
+      "(c) Microsoft Corporation. All rights reserved."
     );
 
-    await typeTerminalLine(
+    await sleep(300);
+
+    addLine(output, "");
+
+    await typeLine(
       output,
-      "[network] connecting to AkkoAudio cloud...",
-      "muted",
-      8
+      "C:\\AkkoAudio> akkoauth.exe --verify"
     );
 
-    await typeTerminalLine(
+    await typeLine(
       output,
-      "[network] connection established",
-      "muted",
-      8
+      ""
     );
 
-    await typeTerminalLine(
+    await typeLine(
       output,
-      "[auth] checking active session...",
-      "muted",
-      8
+      "[system] initializing secure access check..."
     );
 
-    await typeTerminalLine(
+    await typeLine(
       output,
-      "[security] checking session credentials...",
-      "muted",
-      8
+      "[network] connecting to AkkoAudio cloud..."
     );
 
-    await typeTerminalLine(
+    await typeLine(
       output,
-      "[database] checking access status...",
-      "muted",
-      8
+      "[network] connection established"
     );
 
-    await typeTerminalLine(
+    await typeLine(
       output,
-      "[security] checking code state...",
-      "muted",
-      8
+      "[auth] checking access session..."
     );
 
-    await typeTerminalLine(
+    await typeLine(
       output,
-      "[verification] waiting for server response...",
-      "accent",
-      8
+      "[auth] validating session credentials..."
+    );
+
+    await typeLine(
+      output,
+      "[database] checking access status..."
+    );
+
+    await typeLine(
+      output,
+      "[security] checking code state..."
+    );
+
+    await typeLine(
+      output,
+      "[verification] waiting for server response..."
     );
 
     return overlay;
@@ -676,58 +541,41 @@
 
     if (!output) return;
 
-    await typeTerminalLine(
+    await typeLine(
       output,
-      "[success] verification successful",
-      "success",
-      9
+      "[OK] access session verified."
     );
 
-    await typeTerminalLine(
+    await typeLine(
       output,
-      "[system] access granted",
-      "success",
-      9
+      "[OK] credentials accepted."
     );
 
-    await typeTerminalLine(
+    await typeLine(
       output,
-      "[system] launching AkkoAudio...",
-      "muted",
-      9
+      ""
+    );
+
+    await typeLine(
+      output,
+      "C:\\AkkoAudio> launch.exe"
     );
 
     await sleep(1500);
+
+    overlay.style.transition =
+      "opacity .35s ease";
+
+    overlay.style.opacity = "0";
+
+    await sleep(400);
+
+    overlay.remove();
+
+    unlockUI();
   }
 
-  function hideVerifying() {
-    const overlay =
-      document.getElementById(
-        "akkoflac-verify-overlay"
-      );
-
-    clearPreverify();
-
-    if (!overlay) return;
-
-    overlay.classList.add("hidden");
-
-    setTimeout(() => {
-      overlay.remove();
-    }, 500);
-  }
-
-  function createGate(opts = {}) {
-    clearPreverify();
-
-    const old =
-      document.getElementById(
-        "akkoflac-verify-overlay"
-      );
-
-    if (old) old.remove();
-
-    applySavedColors();
+  function showGate(opts = {}) {
     lockUI();
 
     const revoked =
@@ -741,173 +589,237 @@
         "#akkoflac-terminal-output"
       );
 
-    let promptInput = null;
-    let promptLine = null;
-    let submitting = false;
+    addLine(
+      output,
+      "Microsoft Windows [Version 10.0.26100.1]"
+    );
 
-    function showPrompt() {
-      if (promptLine) {
-        promptLine.remove();
-      }
+    addLine(
+      output,
+      "(c) Microsoft Corporation. All rights reserved."
+    );
 
-      promptLine =
-        document.createElement("div");
+    addLine(output, "");
 
-      promptLine.className =
-        "akkoflac-terminal-line";
+    addLine(
+      output,
+      "C:\\AkkoAudio> akkoauth.exe --login"
+    );
 
-      const label =
-        document.createElement("span");
+    addLine(
+      output,
+      ""
+    );
 
-      label.className = "accent";
-      label.textContent =
-        "ACCESS CODE: ";
+    addLine(
+      output,
+      "[auth] no active access session."
+    );
 
-      const wrap =
-        document.createElement("span");
+    addLine(
+      output,
+      "[security] access code required."
+    );
 
-      wrap.className =
-        "akkoflac-terminal-prompt-wrap";
-
-      promptLine.appendChild(label);
-      promptLine.appendChild(wrap);
-
-      output.appendChild(promptLine);
-
-      promptInput =
-        document.createElement("input");
-
-      promptInput.type = "text";
-      promptInput.maxLength = 5;
-      promptInput.autocomplete = "off";
-      promptInput.autocapitalize =
-        "characters";
-      promptInput.spellcheck = false;
-
-      promptInput.className =
-        "akkoflac-terminal-input";
-
-      promptInput.setAttribute(
-        "aria-label",
-        "Access code"
+    if (revoked) {
+      addLine(
+        output,
+        "[security] previous access code has been revoked."
       );
-
-      promptInput.setAttribute(
-        "inputmode",
-        "text"
-      );
-
-      wrap.appendChild(promptInput);
-
-      promptInput.addEventListener(
-        "input",
-        () => {
-          promptInput.value =
-            promptInput.value
-              .replace(
-                /[^a-zA-Z0-9]/g,
-                ""
-              )
-              .slice(0, 5)
-              .toUpperCase();
-        }
-      );
-
-      promptInput.addEventListener(
-        "keydown",
-        event => {
-          if (
-            event.key === "Enter" &&
-            !submitting
-          ) {
-            redeem(
-              promptInput.value
-                .trim()
-                .toUpperCase()
-            );
-          }
-        }
-      );
-
-      setTimeout(() => {
-        if (promptInput) {
-          promptInput.focus();
-        }
-      }, 40);
-
-      output.scrollTop =
-        output.scrollHeight;
     }
 
-    (async () => {
-      await typeTerminalLine(
-        output,
-        "[auth] no active access session...",
-        "muted",
-        8
-      );
+    addLine(
+      output,
+      ""
+    );
 
-      await typeTerminalLine(
-        output,
-        "[security] access code required",
-        "muted",
-        8
-      );
+    addLine(
+      output,
+      "C:\\AkkoAudio> "
+    );
 
-      if (revoked) {
-        await typeTerminalLine(
-          output,
-          "[security] previous access code has been revoked",
-          "warn",
-          8
-        );
+    /*
+      The actual input is inserted directly after
+      C:\AkkoAudio> with no box around it.
+    */
+
+    const commandLine =
+      output.lastElementChild;
+
+    commandLine.textContent =
+      "C:\\AkkoAudio> ";
+
+    const input =
+      document.createElement("input");
+
+    input.className =
+      "akkoflac-terminal-input";
+
+    input.type = "text";
+    input.maxLength = 5;
+    input.autocomplete = "off";
+    input.autocapitalize =
+      "characters";
+    input.spellcheck = false;
+
+    input.setAttribute(
+      "inputmode",
+      "text"
+    );
+
+    input.setAttribute(
+      "aria-label",
+      "Access code"
+    );
+
+    commandLine.appendChild(input);
+
+    let caret =
+      document.createElement("span");
+
+    caret.className =
+      "akkoflac-terminal-caret";
+
+    commandLine.appendChild(caret);
+
+    let submitting = false;
+
+    function focusInput() {
+      if (!input.disabled) {
+        input.focus();
+
+        requestAnimationFrame(() => {
+          try {
+            input.setSelectionRange(
+              input.value.length,
+              input.value.length
+            );
+          } catch {}
+        });
       }
+    }
 
-      await typeTerminalLine(
-        output,
-        "[terminal] enter your access code below",
-        "accent",
-        8
-      );
+    input.addEventListener(
+      "input",
+      () => {
+        input.value =
+          input.value
+            .replace(
+              /[^a-zA-Z0-9]/g,
+              ""
+            )
+            .toUpperCase()
+            .slice(0, 5);
 
-      showPrompt();
-    })();
+        if (caret) {
+          caret.remove();
+          caret = null;
+        }
+
+        output.scrollTop =
+          output.scrollHeight;
+      }
+    );
+
+    input.addEventListener(
+      "blur",
+      () => {
+        if (submitting) return;
+
+        if (!caret) {
+          caret =
+            document.createElement(
+              "span"
+            );
+
+          caret.className =
+            "akkoflac-terminal-caret";
+
+          commandLine.appendChild(
+            caret
+          );
+        }
+      }
+    );
+
+    input.addEventListener(
+      "focus",
+      () => {
+        if (caret) {
+          caret.remove();
+          caret = null;
+        }
+      }
+    );
+
+    input.addEventListener(
+      "keydown",
+      event => {
+        if (
+          event.key === "Enter" &&
+          !submitting
+        ) {
+          event.preventDefault();
+
+          redeem(
+            input.value
+              .trim()
+              .toUpperCase()
+          );
+        }
+      }
+    );
 
     async function redeem(code) {
       if (submitting) return;
 
       if (code.length !== 5) {
-        addTerminalLine(
+        addLine(
           output,
-          "[error] access code must be 5 characters",
-          "warn"
+          "The access code must be 5 characters."
         );
 
-        if (promptInput) {
-          promptInput.focus();
-        }
+        addLine(
+          output,
+          ""
+        );
+
+        addLine(
+          output,
+          "C:\\AkkoAudio> "
+        );
+
+        input.value = "";
+
+        setTimeout(
+          focusInput,
+          30
+        );
 
         return;
       }
 
       submitting = true;
+      input.disabled = true;
 
-      if (promptInput) {
-        promptInput.disabled = true;
+      if (caret) {
+        caret.remove();
+        caret = null;
       }
 
-      await typeTerminalLine(
+      addLine(
         output,
-        "[auth] validating access code...",
-        "muted",
-        8
+        ""
       );
 
-      await typeTerminalLine(
+      await typeLine(
         output,
-        "[database] checking code status...",
-        "muted",
-        8
+        "[auth] validating access code..."
+      );
+
+      await typeLine(
+        output,
+        "[database] checking code status..."
       );
 
       try {
@@ -946,78 +858,140 @@
               ""
             ).toLowerCase();
 
-          const isRevoked =
+          const revoked =
             reason.includes("revok");
 
-          await typeTerminalLine(
+          await typeLine(
             output,
-            isRevoked
-              ? "[security] this access code has been revoked"
-              : "[error] invalid access code",
-            "warn",
-            8
+            revoked
+              ? "[security] access code has been revoked."
+              : "[error] invalid access code."
           );
 
-          await typeTerminalLine(
+          await typeLine(
             output,
-            "[terminal] try another code...",
-            "muted",
-            8
+            ""
           );
+
+          await typeLine(
+            output,
+            revoked
+              ? "[security] please use a different access code."
+              : "[auth] authentication failed."
+          );
+
+          await typeLine(
+            output,
+            ""
+          );
+
+          addLine(
+            output,
+            "C:\\AkkoAudio> "
+          );
+
+          input.value = "";
+          input.disabled = false;
 
           submitting = false;
 
-          showPrompt();
+          setTimeout(
+            focusInput,
+            30
+          );
 
           return;
         }
 
-        await typeTerminalLine(
+        await typeLine(
           output,
-          "[success] verification successful",
-          "success",
-          8
+          "[OK] access code accepted."
         );
 
-        await typeTerminalLine(
+        await typeLine(
           output,
-          "[system] access granted",
-          "success",
-          8
+          "[OK] authentication successful."
         );
 
-        await typeTerminalLine(
+        await typeLine(
           output,
-          "[system] launching AkkoAudio...",
-          "muted",
-          8
+          ""
+        );
+
+        await typeLine(
+          output,
+          "C:\\AkkoAudio> launch.exe"
         );
 
         await sleep(1500);
 
-        overlay.classList.add(
-          "hidden"
-        );
+        overlay.style.transition =
+          "opacity .35s ease";
+
+        overlay.style.opacity = "0";
+
+        await sleep(400);
+
+        overlay.remove();
 
         unlockUI();
 
-        setTimeout(() => {
-          overlay.remove();
-        }, 500);
-
       } catch (error) {
-        await typeTerminalLine(
+        await typeLine(
           output,
-          "[network] connection failed — try again",
-          "warn",
-          8
+          "[error] unable to connect to authentication server."
         );
+
+        await typeLine(
+          output,
+          "[network] please try again."
+        );
+
+        addLine(
+          output,
+          ""
+        );
+
+        addLine(
+          output,
+          "C:\\AkkoAudio> "
+        );
+
+        input.value = "";
+        input.disabled = false;
 
         submitting = false;
 
-        showPrompt();
+        setTimeout(
+          focusInput,
+          30
+        );
       }
     }
+
+    /*
+      Clicking anywhere in the terminal focuses the
+      access-code input, just like a command prompt.
+    */
+
+    overlay.addEventListener(
+      "click",
+      event => {
+        if (
+          event.target === overlay ||
+          event.target.closest(
+            ".akkoflac-terminal-output"
+          )
+        ) {
+          focusInput();
+        }
+      }
+    );
+
+    setTimeout(
+      focusInput,
+      100
+    );
   }
 
   async function checkAccess() {
@@ -1026,15 +1000,20 @@
         await fetch(
           "/.netlify/functions/access-status",
           {
-            credentials: "include"
+            method: "GET",
+            credentials: "include",
+            cache: "no-store"
           }
         );
 
       const data =
-        await response.json();
+        await response
+          .json()
+          .catch(() => ({}));
 
       return {
         valid: !!data.valid,
+
         reason:
           data.reason ||
           (
@@ -1054,44 +1033,36 @@
 
   async function runVerifyThenGate() {
     if (
-      runVerifyThenGate._running
+      runVerifyThenGate.running
     ) {
       return;
     }
 
-    runVerifyThenGate._running =
+    runVerifyThenGate.running =
       true;
-
-    const verification =
-      showVerifying();
 
     const statusPromise =
       checkAccess();
 
-    await verification;
+    await showVerifying();
 
     const status =
       await statusPromise;
 
     if (status.valid) {
       await showVerificationSuccess();
+    } else {
+      removeOverlay();
 
-      hideVerifying();
-
-      unlockUI();
-
-      return;
+      showGate({
+        revoked:
+          status.reason ===
+          "revoked"
+      });
     }
-
-    hideVerifying();
-
-    createGate({
-      revoked:
-        status.reason === "revoked"
-    });
   }
 
-  function isOnboardingDone() {
+  function onboardingFinished() {
     return (
       localStorage.getItem(
         "akkoflac-onboarded"
@@ -1100,11 +1071,7 @@
   }
 
   function start() {
-    document.body.classList.add(
-      "akkoflac-awaiting-access"
-    );
-
-    if (isOnboardingDone()) {
+    if (onboardingFinished()) {
       runVerifyThenGate();
       return;
     }
@@ -1114,98 +1081,50 @@
         "onboarding"
       );
 
-    const afterOnboarding = () => {
-      if (!isOnboardingDone()) {
-        return;
-      }
-
-      const hidden =
-        !onboarding ||
-        onboarding.classList.contains(
-          "hidden"
-        );
-
-      if (!hidden) return;
-
-      observer.disconnect();
-
+    if (!onboarding) {
       runVerifyThenGate();
-    };
+      return;
+    }
 
     const observer =
-      new MutationObserver(
-        afterOnboarding
-      );
-
-    if (onboarding) {
-      observer.observe(
-        onboarding,
-        {
-          attributes: true,
-          attributeFilter: [
-            "class",
-            "style"
-          ]
-        }
-      );
-    }
-
-    window.addEventListener(
-      "storage",
-      event => {
+      new MutationObserver(() => {
         if (
-          event.key ===
-            "akkoflac-onboarded" &&
-          event.newValue === "1"
+          onboardingFinished() &&
+          onboarding.classList.contains(
+            "hidden"
+          )
         ) {
-          afterOnboarding();
+          observer.disconnect();
+
+          runVerifyThenGate();
         }
+      });
+
+    observer.observe(
+      onboarding,
+      {
+        attributes: true,
+        attributeFilter: [
+          "class",
+          "style"
+        ]
       }
     );
 
-    let pollId = null;
+    const poll =
+      setInterval(() => {
+        if (
+          onboardingFinished() &&
+          onboarding.classList.contains(
+            "hidden"
+          )
+        ) {
+          clearInterval(poll);
+          observer.disconnect();
 
-    const startPoll = () => {
-      if (pollId) return;
-
-      pollId =
-        setInterval(() => {
-          if (document.hidden) {
-            return;
-          }
-
-          afterOnboarding();
-
-          if (isOnboardingDone()) {
-            clearInterval(pollId);
-            pollId = null;
-          }
-        }, 400);
-    };
-
-    const stopPoll = () => {
-      if (pollId) {
-        clearInterval(pollId);
-        pollId = null;
-      }
-    };
-
-    document.addEventListener(
-      "visibilitychange",
-      () => {
-        if (document.hidden) {
-          stopPoll();
-        } else {
-          startPoll();
+          runVerifyThenGate();
         }
-      }
-    );
-
-    if (!document.hidden) {
-      startPoll();
-    }
-
-    afterOnboarding();
+      }, 300);
   }
 
   if (
