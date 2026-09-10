@@ -380,6 +380,7 @@
 
   function hexToRgb(hex) {
     const h = hex.replace("#", "");
+
     const full = h.length === 3
       ? h.split("").map(c => c + c).join("")
       : h;
@@ -425,7 +426,11 @@
 
     const { r, g, b } = hexToRgb(accent);
 
-    root.style.setProperty("--accent", accent);
+    root.style.setProperty(
+      "--accent",
+      accent
+    );
+
     root.style.setProperty(
       "--accent-bright",
       lightenHex(accent, 0.18)
@@ -453,21 +458,44 @@
       "--theme-bottom",
       theme.bottom
     );
+
+    root.style.setProperty(
+      "--bg",
+      theme.bottom
+    );
+
+    root.style.setProperty(
+      "--bg-deep",
+      theme.bottom
+    );
   }
 
   function lockUI() {
-    document.body.classList.add("akkoflac-gate-locked");
-    document.body.classList.add("akkoflac-awaiting-access");
+    document.body.classList.add(
+      "akkoflac-gate-locked"
+    );
+
+    document.body.classList.add(
+      "akkoflac-awaiting-access"
+    );
   }
 
   function unlockUI() {
-    document.body.classList.remove("akkoflac-gate-locked");
-    document.body.classList.remove("akkoflac-awaiting-access");
+    document.body.classList.remove(
+      "akkoflac-gate-locked"
+    );
+
+    document.body.classList.remove(
+      "akkoflac-awaiting-access"
+    );
+
     clearPreverify();
   }
 
   function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve =>
+      setTimeout(resolve, ms)
+    );
   }
 
   async function checkAccess() {
@@ -487,7 +515,9 @@
         };
       }
 
-      const data = await response.json().catch(() => ({}));
+      const data =
+        await response.json()
+          .catch(() => ({}));
 
       return {
         valid: !!data.valid,
@@ -502,10 +532,14 @@
   }
 
   function createTerminalOverlay() {
-    const overlay = document.createElement("div");
+    const overlay =
+      document.createElement("div");
 
-    overlay.className = "akkoflac-terminal-overlay";
-    overlay.id = "akkoflac-start-terminal";
+    overlay.className =
+      "akkoflac-terminal-overlay";
+
+    overlay.id =
+      "akkoflac-start-terminal";
 
     overlay.innerHTML = `
       <div class="akkoflac-terminal-window">
@@ -514,6 +548,7 @@
             <span class="akkoflac-terminal-dot"></span>
             <span class="akkoflac-terminal-dot"></span>
             <span class="akkoflac-terminal-dot"></span>
+
             <span class="akkoflac-terminal-title">
               AkkoAudio Authentication Terminal
             </span>
@@ -524,23 +559,31 @@
       </div>
     `;
 
-    document.body.appendChild(overlay);
+    document.body.appendChild(
+      overlay
+    );
 
     return {
       overlay,
-      output: overlay.querySelector(
-        ".akkoflac-terminal-output"
-      )
+      output:
+        overlay.querySelector(
+          ".akkoflac-terminal-output"
+        )
     };
   }
 
   function showVerifying() {
     let overlay =
-      document.getElementById("akkoflac-verify-overlay");
+      document.getElementById(
+        "akkoflac-verify-overlay"
+      );
 
     if (!overlay) {
-      overlay = document.createElement("div");
-      overlay.id = "akkoflac-verify-overlay";
+      overlay =
+        document.createElement("div");
+
+      overlay.id =
+        "akkoflac-verify-overlay";
 
       overlay.innerHTML = `
         <div style="
@@ -557,19 +600,27 @@
         </div>
       `;
 
-      document.body.appendChild(overlay);
+      document.body.appendChild(
+        overlay
+      );
     }
 
-    overlay.classList.remove("hidden");
+    overlay.classList.remove(
+      "hidden"
+    );
 
     return overlay;
   }
 
   function showVerificationSuccess() {
     const overlay =
-      document.getElementById("akkoflac-verify-overlay");
+      document.getElementById(
+        "akkoflac-verify-overlay"
+      );
 
-    if (!overlay) return;
+    if (!overlay) {
+      return;
+    }
 
     overlay.innerHTML = `
       <div style="
@@ -590,17 +641,23 @@
 
   function createGate() {
     let overlay =
-      document.getElementById("akkoflac-access-overlay");
+      document.getElementById(
+        "akkoflac-access-overlay"
+      );
 
     if (overlay) {
       overlay.remove();
     }
 
-    overlay = document.createElement("div");
-    overlay.id = "akkoflac-access-overlay";
+    overlay =
+      document.createElement("div");
+
+    overlay.id =
+      "akkoflac-access-overlay";
 
     overlay.innerHTML = `
       <div class="akkoflac-access-box">
+
         <h1 class="akkoflac-access-title">
           AkkoAudio
         </h1>
@@ -624,10 +681,13 @@
         </button>
 
         <div class="akkoflac-access-error"></div>
+
       </div>
     `;
 
-    document.body.appendChild(overlay);
+    document.body.appendChild(
+      overlay
+    );
 
     return overlay;
   }
@@ -715,7 +775,8 @@
       el.className =
         "akkoflac-terminal-line";
 
-      el.innerHTML = "&nbsp;";
+      el.innerHTML =
+        "&nbsp;";
 
       output.appendChild(el);
 
@@ -742,20 +803,34 @@
       const input =
         document.createElement("input");
 
-      input.type = "text";
-      input.autocomplete = "off";
-      input.autocapitalize = "characters";
-      input.spellcheck = false;
-      input.maxLength = maxLength;
+      input.type =
+        "text";
+
+      input.autocomplete =
+        "off";
+
+      input.autocapitalize =
+        "characters";
+
+      input.spellcheck =
+        false;
+
+      input.maxLength =
+        maxLength;
+
       input.className =
         "akkoflac-terminal-input";
-      input.inputMode = "text";
+
+      input.inputMode =
+        "text";
+
       input.setAttribute(
         "aria-label",
         label.trim()
       );
 
       row.appendChild(input);
+
       output.appendChild(row);
 
       output.scrollTop =
@@ -827,7 +902,8 @@
           }
 
           if (entry !== "AKKO") {
-            entryInput.disabled = true;
+            entryInput.disabled =
+              true;
 
             await typeLine(
               "[error] type AKKO to enter AkkoAudio",
@@ -841,7 +917,8 @@
             return;
           }
 
-          entryInput.disabled = true;
+          entryInput.disabled =
+            true;
 
           await typeLine(
             "[input] AKKO",
@@ -912,87 +989,74 @@
             return;
           }
 
-          input.disabled = true;
+          input.disabled =
+            true;
 
           await typeLine(
             "[input] " + code,
             "accent"
           );
 
+          /*
+           * ACCESS CODE VERIFICATION
+           *
+           * Only the requested checks are shown.
+           * Each one is separated by a pause.
+           */
+
           await typeLine(
-            "[auth] validating code...",
+            "[auth] checking code access...",
             "muted"
           );
 
+          await sleep(350);
+
           await typeLine(
-            "[database] checking code status...",
+            "[security] verifying eligible code...",
             "muted"
           );
+
+          await sleep(450);
+
+          await typeLine(
+            "[verification] running final auth check...",
+            "muted"
+          );
+
+          await sleep(550);
+
+          let response;
+          let data;
 
           try {
-            const response =
+            response =
               await fetch(
                 "/.netlify/functions/verify-code",
                 {
                   method: "POST",
+
                   headers: {
                     "Content-Type":
                       "application/json"
                   },
-                  credentials: "include",
-                  body: JSON.stringify({
-                    code
-                  })
+
+                  credentials:
+                    "include",
+
+                  body:
+                    JSON.stringify({
+                      code
+                    })
                 }
               );
 
-            const data =
+            data =
               await response
                 .json()
-                .catch(() => ({}));
+                .catch(
+                  () => ({})
+                );
 
-            if (
-              !response.ok ||
-              !data.valid
-            ) {
-              const isRevoked =
-                String(
-                  data.reason ||
-                  data.error ||
-                  ""
-                )
-                  .toLowerCase()
-                  .includes("revok");
-
-              await typeLine(
-                isRevoked
-                  ? "[security] this access code has been revoked"
-                  : "[error] invalid access code",
-                "warn"
-              );
-
-              await typeLine(
-                "[terminal] try another code...",
-                "muted"
-              );
-
-              await blankLine();
-
-              // Keep every previous line.
-              // Nothing is cleared or replaced.
-              await showAccessPrompt(
-                isRevoked
-              );
-
-              return;
-            }
-
-            await typeLine(
-              "[success] verification successful",
-              "success"
-            );
-
-            await showEntryPrompt();
           } catch {
             await typeLine(
               "[network] connection failed — try again",
@@ -1004,10 +1068,70 @@
             await showAccessPrompt(
               false
             );
+
+            return;
           }
+
+          await typeLine(
+            "[verification] response received...",
+            "accent"
+          );
+
+          await sleep(450);
+
+          if (
+            !response.ok ||
+            !data.valid
+          ) {
+            const isRevoked =
+              String(
+                data.reason ||
+                data.error ||
+                ""
+              )
+                .toLowerCase()
+                .includes("revok");
+
+            await typeLine(
+              isRevoked
+                ? "[error] INVALID ACCESS CODE"
+                : "[error] INVALID ACCESS CODE",
+              "warn"
+            );
+
+            await sleep(180);
+
+            await blankLine();
+
+            /*
+             * Keep all previous terminal history.
+             * The terminal is never cleared.
+             */
+
+            await showAccessPrompt(
+              isRevoked
+            );
+
+            return;
+          }
+
+          await typeLine(
+            "[success] ACCESS CODE VERIFIED",
+            "success"
+          );
+
+          await sleep(250);
+
+          await blankLine();
+
+          await showEntryPrompt();
         }
       );
     }
+
+    /*
+     * TERMINAL HEADER
+     */
 
     await typeLine(
       "AkkoAudio [Version 1.07]",
@@ -1020,6 +1144,10 @@
     );
 
     await blankLine();
+
+    /*
+     * INITIAL TERMINAL SETUP
+     */
 
     await typeLine(
       "[system] initializing authentication terminal...",
@@ -1038,12 +1166,15 @@
 
     await blankLine();
 
+    /*
+     * START PROMPT
+     */
+
     await typeLine(
       "[auth] type START to begin authentication",
       "accent"
     );
 
-    // Exactly one blank line before the START prompt.
     await blankLine();
 
     const showStartPrompt =
@@ -1060,7 +1191,8 @@
             }
 
             if (value !== "START") {
-              input.disabled = true;
+              input.disabled =
+                true;
 
               await typeLine(
                 "[error] type START to begin authentication",
@@ -1074,7 +1206,8 @@
               return;
             }
 
-            input.disabled = true;
+            input.disabled =
+              true;
 
             await typeLine(
               "[input] START",
@@ -1083,157 +1216,37 @@
 
             await blankLine();
 
+            /*
+             * EXACT START VERIFICATION FLOW
+             */
+
             await typeLine(
-              "[auth] authentication started...",
+              "[auth] checking authentication...",
               "muted"
             );
 
-            await sleep(120);
+            await sleep(500);
 
             await typeLine(
-              "[system] waking dormant audio modules...",
+              "[security] verifying eligible access code...",
               "muted"
             );
 
+            await sleep(550);
+
             await typeLine(
-              "[system] locating AkkoAudio core...",
+              "[verification] running final auth check...",
               "muted"
             );
 
-            await typeLine(
-              "[core] core response received...",
-              "muted"
-            );
+            await sleep(650);
 
             await typeLine(
-              "[network] establishing secure handshake...",
-              "muted"
-            );
-
-            await typeLine(
-              "[network] handshake accepted...",
-              "muted"
-            );
-
-            await typeLine(
-              "[cache] reading local session cache...",
-              "muted"
-            );
-
-            await typeLine(
-              "[cache] session fragments detected...",
-              "muted"
-            );
-
-            await typeLine(
-              "[cache] rebuilding authorization state...",
-              "muted"
-            );
-
-            await typeLine(
-              "[audio] scanning music engine...",
-              "muted"
-            );
-
-            await typeLine(
-              "[audio] checking playback permissions...",
-              "muted"
-            );
-
-            await typeLine(
-              "[audio] checking queue integrity...",
-              "muted"
-            );
-
-            await typeLine(
-              "[lyrics] checking lyric subsystem...",
-              "muted"
-            );
-
-            await typeLine(
-              "[theme] loading interface preferences...",
-              "muted"
-            );
-
-            await typeLine(
-              "[storage] reading local configuration...",
-              "muted"
-            );
-
-            await typeLine(
-              "[storage] configuration response received...",
-              "muted"
-            );
-
-            await typeLine(
-              "[security] generating verification token...",
-              "muted"
-            );
-
-            await typeLine(
-              "[security] token generated...",
-              "muted"
-            );
-
-            await typeLine(
-              "[security] comparing authorization signatures...",
-              "muted"
-            );
-
-            await typeLine(
-              "[security] signature scan complete...",
-              "muted"
-            );
-
-            await typeLine(
-              "[system] checking terminal integrity...",
-              "muted"
-            );
-
-            await typeLine(
-              "[system] terminal integrity confirmed...",
-              "muted"
-            );
-
-            await typeLine(
-              "[system] checking authorization cache...",
-              "muted"
-            );
-
-            await typeLine(
-              "[system] authorization cache synchronized...",
-              "muted"
-            );
-
-            await typeLine(
-              "[security] validating session fingerprint...",
-              "muted"
-            );
-
-            await typeLine(
-              "[security] fingerprint accepted...",
-              "muted"
-            );
-
-            await typeLine(
-              "[scan] checking authorization...",
-              "muted"
-            );
-
-            await typeLine(
-              "[scan] checking session integrity...",
-              "muted"
-            );
-
-            await typeLine(
-              "[scan] checking access permissions...",
-              "muted"
-            );
-
-            await typeLine(
-              "[verification] contacting AkkoAudio authorization service...",
+              "[verification] response received...",
               "accent"
             );
+
+            await sleep(450);
 
             const status =
               await checkAccess();
@@ -1244,19 +1257,25 @@
                 "success"
               );
 
-              await sleep(180);
+              await sleep(250);
+
+              await blankLine();
 
               await showEntryPrompt();
+
             } else {
               await typeLine(
                 "[error] NOT VERIFIED — access authorization required",
                 "warn"
               );
 
-              await sleep(180);
+              await sleep(250);
+
+              await blankLine();
 
               await showAccessPrompt(
-                status.reason === "revoked"
+                status.reason ===
+                  "revoked"
               );
             }
           }
@@ -1351,23 +1370,32 @@
         return;
       }
 
-      pollId = setInterval(() => {
-        if (document.hidden) {
-          return;
-        }
+      pollId =
+        setInterval(() => {
+          if (document.hidden) {
+            return;
+          }
 
-        afterOnboarding();
+          afterOnboarding();
 
-        if (isOnboardingDone()) {
-          clearInterval(pollId);
-          pollId = null;
-        }
-      }, 400);
+          if (
+            isOnboardingDone()
+          ) {
+            clearInterval(
+              pollId
+            );
+
+            pollId = null;
+          }
+        }, 400);
     };
 
     const stopPoll = () => {
       if (pollId) {
-        clearInterval(pollId);
+        clearInterval(
+          pollId
+        );
+
         pollId = null;
       }
     };
