@@ -4012,6 +4012,61 @@ button.full-like.liked svg {
 .full-player.open .full-cover-wrap .cover-layer {
     pointer-events: none !important;
 }
+
+/* =========================================================
+   DOCK + SONG CARD PLAY BUTTON REFINEMENTS
+   ========================================================= */
+
+/* Song-card play button: keep the button dark/glass so the
+   play triangle can use the selected accent color. */
+.play-overlay {
+    background: color-mix(in srgb, var(--theme-panel) 88%, rgba(0,0,0,0.35));
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
+}
+
+.play-overlay svg {
+    color: var(--accent);
+    fill: var(--accent);
+}
+
+/* Give every transport control its own breathing room so
+   the circles/icons never visually overlap. */
+.bottom-player .player-controls {
+    gap: 9px;
+}
+
+.bottom-player .player-controls .control {
+    margin: 0;
+}
+
+/* Remove unnecessary trailing/right-side space from the dock. */
+.bottom-player {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.bottom-player .player-trailing {
+    margin-left: 0;
+    padding: 0;
+}
+
+@media (max-width: 760px) {
+    .bottom-player .player-controls {
+        gap: 7px !important;
+        justify-content: center;
+    }
+
+    .bottom-player {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    .bottom-player .player-trailing {
+        margin-left: 0 !important;
+    }
+}
+
 </style>
 
 </head>
