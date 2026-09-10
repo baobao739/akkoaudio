@@ -11,65 +11,39 @@
       margin: 0 !important;
       padding: 0 !important;
       z-index: 2147483647 !important;
-
       display: block !important;
-
       background: #000 !important;
       color: #c7c7c7 !important;
-
-      font-family:
-        Consolas,
-        "Cascadia Mono",
-        "Courier New",
-        monospace !important;
-
+      font-family: Consolas, "Cascadia Mono", "Courier New", monospace !important;
       overflow: hidden !important;
     }
 
     .akkoflac-terminal {
       position: fixed !important;
       inset: 0 !important;
-
       width: 100vw !important;
       height: 100vh !important;
       height: 100dvh !important;
-
       display: flex !important;
       flex-direction: column !important;
-
       background: #000 !important;
-
       border: 0 !important;
       border-radius: 0 !important;
       box-shadow: none !important;
-
       overflow: hidden !important;
     }
-
-    /*
-      Windows Command Prompt-style title bar
-    */
 
     .akkoflac-terminal-bar {
       height: 30px !important;
       min-height: 30px !important;
       flex: 0 0 30px !important;
-
       display: flex !important;
       align-items: center !important;
-
       padding: 0 10px !important;
-
       background: #101010 !important;
       border-bottom: 1px solid #242424 !important;
-
-      font-family:
-        "Segoe UI",
-        Arial,
-        sans-serif !important;
-
+      font-family: "Segoe UI", Arial, sans-serif !important;
       box-sizing: border-box !important;
-
       user-select: none !important;
       -webkit-user-select: none !important;
     }
@@ -82,13 +56,10 @@
 
     .akkoflac-terminal-controls {
       margin-left: auto !important;
-
       height: 100% !important;
-
       display: flex !important;
       align-items: center !important;
       gap: 18px !important;
-
       color: #bdbdbd !important;
       font-size: 12px !important;
     }
@@ -99,205 +70,96 @@
       opacity: .8 !important;
     }
 
-    /*
-      REAL terminal area
-    */
-
     .akkoflac-terminal-output {
       flex: 1 !important;
       min-height: 0 !important;
-
       width: 100% !important;
       height: calc(100% - 30px) !important;
-
       box-sizing: border-box !important;
-
       padding: 10px 12px 30px 12px !important;
-
       background: #000 !important;
-
       color: #c7c7c7 !important;
-
-      font-family:
-        Consolas,
-        "Cascadia Mono",
-        "Courier New",
-        monospace !important;
-
+      font-family: Consolas, "Cascadia Mono", "Courier New", monospace !important;
       font-size: 14px !important;
       line-height: 1.5 !important;
-
       text-align: left !important;
-
       overflow-x: hidden !important;
       overflow-y: auto !important;
-
       white-space: pre-wrap !important;
       word-break: break-word !important;
-
-      scrollbar-width: none !important;
-    }
-
-    .akkoflac-terminal-output::-webkit-scrollbar {
-      display: none !important;
+      scrollbar-width: thin !important;
+      -webkit-overflow-scrolling: touch !important;
     }
 
     .akkoflac-terminal-line {
       display: block !important;
-
       min-height: 21px !important;
-
       margin: 0 !important;
       padding: 0 !important;
-
       opacity: 1 !important;
-
       background: transparent !important;
-
       color: #c7c7c7 !important;
-
-      font-family:
-        Consolas,
-        "Cascadia Mono",
-        "Courier New",
-        monospace !important;
-
+      font-family: Consolas, "Cascadia Mono", "Courier New", monospace !important;
       font-size: 14px !important;
       line-height: 21px !important;
-
       text-align: left !important;
-
       white-space: pre-wrap !important;
     }
 
-    .akkoflac-terminal-line.system {
-      color: #c7c7c7 !important;
-    }
-
-    .akkoflac-terminal-line.success {
-      color: #c7c7c7 !important;
-    }
-
-    .akkoflac-terminal-line.error {
-      color: #c7c7c7 !important;
-    }
-
-    /*
-      Prompt + input are literally on the same line.
-      There is NO pill, card, box, border, etc.
-    */
-
     .akkoflac-terminal-prompt {
       display: inline !important;
-
       margin: 0 !important;
       padding: 0 !important;
-
       color: #c7c7c7 !important;
-
-      font-family:
-        Consolas,
-        "Cascadia Mono",
-        "Courier New",
-        monospace !important;
-
+      font-family: Consolas, "Cascadia Mono", "Courier New", monospace !important;
       font-size: 14px !important;
       line-height: 21px !important;
-
       white-space: pre !important;
-    }
-
-    .akkoflac-terminal-input-wrap {
-      display: inline !important;
-
-      margin: 0 !important;
-      padding: 0 !important;
-
-      border: 0 !important;
-      outline: 0 !important;
-
-      background: transparent !important;
     }
 
     .akkoflac-terminal-input {
       display: inline !important;
-
       width: 5ch !important;
       min-width: 5ch !important;
       max-width: 5ch !important;
-
       height: 21px !important;
-
       margin: 0 !important;
       padding: 0 !important;
-
       border: 0 !important;
       border-radius: 0 !important;
       outline: 0 !important;
-
       background: transparent !important;
       box-shadow: none !important;
-
       color: #c7c7c7 !important;
-
-      font-family:
-        Consolas,
-        "Cascadia Mono",
-        "Courier New",
-        monospace !important;
-
+      font-family: Consolas, "Cascadia Mono", "Courier New", monospace !important;
       font-size: 14px !important;
       font-weight: 400 !important;
-
       line-height: 21px !important;
-
       letter-spacing: 0 !important;
-
       caret-color: #fff !important;
-
       appearance: none !important;
       -webkit-appearance: none !important;
-
       text-transform: uppercase !important;
-
       vertical-align: baseline !important;
-
-      outline-offset: 0 !important;
     }
-
-    /*
-      Fake terminal caret when the input isn't focused.
-      It sits EXACTLY after the prompt/input text.
-    */
 
     .akkoflac-terminal-caret {
       display: inline-block !important;
-
       width: 8px !important;
       height: 17px !important;
-
       margin: 0 !important;
       padding: 0 !important;
-
       vertical-align: -3px !important;
-
       background: #c7c7c7 !important;
-
-      animation:
-        akkoCaretBlink
-        1s
-        steps(1, end)
-        infinite !important;
+      animation: akkoCaretBlink 1s steps(1, end) infinite !important;
     }
 
     @keyframes akkoCaretBlink {
-      0%,
-      49% {
+      0%, 49% {
         opacity: 1;
       }
 
-      50%,
-      100% {
+      50%, 100% {
         opacity: 0;
       }
     }
@@ -364,11 +226,9 @@
   function createTerminal() {
     removeOverlay();
 
-    const overlay =
-      document.createElement("div");
+    const overlay = document.createElement("div");
 
-    overlay.id =
-      "akkoflac-verify-overlay";
+    overlay.id = "akkoflac-verify-overlay";
 
     overlay.innerHTML = `
       <div class="akkoflac-terminal">
@@ -376,7 +236,7 @@
         <div class="akkoflac-terminal-bar">
 
           <div class="akkoflac-terminal-title">
-            Command Prompt - AkkoAudio
+            AkkoAudio
           </div>
 
           <div class="akkoflac-terminal-controls">
@@ -405,8 +265,7 @@
     text,
     delay = 12
   ) {
-    const line =
-      document.createElement("div");
+    const line = document.createElement("div");
 
     line.className =
       "akkoflac-terminal-line";
@@ -426,6 +285,11 @@
     }
 
     await sleep(80);
+
+    output.scrollTop =
+      output.scrollHeight;
+
+    return line;
   }
 
   function addLine(
@@ -461,17 +325,20 @@
 
     await typeLine(
       output,
-      "Microsoft Windows [Version 10.0.26100.1]"
+      "AkkoAudio [Version 1.07]"
     );
 
     await typeLine(
       output,
-      "(c) Microsoft Corporation. All rights reserved."
+      "AkkoAudio. All rights reserved."
     );
 
     await sleep(300);
 
-    addLine(output, "");
+    addLine(
+      output,
+      ""
+    );
 
     await typeLine(
       output,
@@ -591,15 +458,18 @@
 
     addLine(
       output,
-      "Microsoft Windows [Version 10.0.26100.1]"
+      "AkkoAudio [Version 1.07]"
     );
 
     addLine(
       output,
-      "(c) Microsoft Corporation. All rights reserved."
+      "AkkoAudio. All rights reserved."
     );
 
-    addLine(output, "");
+    addLine(
+      output,
+      ""
+    );
 
     addLine(
       output,
@@ -633,150 +503,172 @@
       ""
     );
 
-    addLine(
-      output,
-      "C:\\AkkoAudio> "
-    );
-
-    /*
-      The actual input is inserted directly after
-      C:\AkkoAudio> with no box around it.
-    */
-
-    const commandLine =
-      output.lastElementChild;
-
-    commandLine.textContent =
-      "C:\\AkkoAudio> ";
-
-    const input =
-      document.createElement("input");
-
-    input.className =
-      "akkoflac-terminal-input";
-
-    input.type = "text";
-    input.maxLength = 5;
-    input.autocomplete = "off";
-    input.autocapitalize =
-      "characters";
-    input.spellcheck = false;
-
-    input.setAttribute(
-      "inputmode",
-      "text"
-    );
-
-    input.setAttribute(
-      "aria-label",
-      "Access code"
-    );
-
-    commandLine.appendChild(input);
-
-    let caret =
-      document.createElement("span");
-
-    caret.className =
-      "akkoflac-terminal-caret";
-
-    commandLine.appendChild(caret);
-
+    let activeInput = null;
+    let activeCaret = null;
     let submitting = false;
 
-    function focusInput() {
-      if (!input.disabled) {
-        input.focus();
+    function addPrompt() {
+      const commandLine =
+        document.createElement("div");
 
-        requestAnimationFrame(() => {
+      commandLine.className =
+        "akkoflac-terminal-line";
+
+      commandLine.textContent =
+        "C:\\AkkoAudio> ";
+
+      output.appendChild(
+        commandLine
+      );
+
+      const input =
+        document.createElement("input");
+
+      input.className =
+        "akkoflac-terminal-input";
+
+      input.type = "text";
+      input.maxLength = 5;
+      input.autocomplete = "off";
+      input.autocapitalize =
+        "characters";
+      input.spellcheck = false;
+
+      input.setAttribute(
+        "inputmode",
+        "text"
+      );
+
+      input.setAttribute(
+        "aria-label",
+        "Access code"
+      );
+
+      commandLine.appendChild(
+        input
+      );
+
+      let caret =
+        document.createElement("span");
+
+      caret.className =
+        "akkoflac-terminal-caret";
+
+      commandLine.appendChild(
+        caret
+      );
+
+      activeInput = input;
+      activeCaret = caret;
+
+      input.addEventListener(
+        "input",
+        () => {
+          input.value =
+            input.value
+              .replace(
+                /[^a-zA-Z0-9]/g,
+                ""
+              )
+              .toUpperCase()
+              .slice(0, 5);
+
+          if (caret) {
+            caret.remove();
+            caret = null;
+            activeCaret = null;
+          }
+
+          output.scrollTop =
+            output.scrollHeight;
+        }
+      );
+
+      input.addEventListener(
+        "focus",
+        () => {
+          if (caret) {
+            caret.remove();
+            caret = null;
+            activeCaret = null;
+          }
+        }
+      );
+
+      input.addEventListener(
+        "blur",
+        () => {
+          if (submitting) return;
+
+          if (!caret) {
+            caret =
+              document.createElement(
+                "span"
+              );
+
+            caret.className =
+              "akkoflac-terminal-caret";
+
+            commandLine.appendChild(
+              caret
+            );
+
+            activeCaret = caret;
+          }
+        }
+      );
+
+      input.addEventListener(
+        "keydown",
+        event => {
+          if (
+            event.key === "Enter" &&
+            !submitting
+          ) {
+            event.preventDefault();
+
+            redeem(
+              input.value
+                .trim()
+                .toUpperCase(),
+              input,
+              caret
+            );
+          }
+        }
+      );
+
+      output.scrollTop =
+        output.scrollHeight;
+
+      setTimeout(
+        () => {
+          input.focus();
+
           try {
             input.setSelectionRange(
               input.value.length,
               input.value.length
             );
           } catch {}
-        });
-      }
+        },
+        30
+      );
+
+      return input;
     }
 
-    input.addEventListener(
-      "input",
-      () => {
-        input.value =
-          input.value
-            .replace(
-              /[^a-zA-Z0-9]/g,
-              ""
-            )
-            .toUpperCase()
-            .slice(0, 5);
-
-        if (caret) {
-          caret.remove();
-          caret = null;
-        }
-
-        output.scrollTop =
-          output.scrollHeight;
-      }
-    );
-
-    input.addEventListener(
-      "blur",
-      () => {
-        if (submitting) return;
-
-        if (!caret) {
-          caret =
-            document.createElement(
-              "span"
-            );
-
-          caret.className =
-            "akkoflac-terminal-caret";
-
-          commandLine.appendChild(
-            caret
-          );
-        }
-      }
-    );
-
-    input.addEventListener(
-      "focus",
-      () => {
-        if (caret) {
-          caret.remove();
-          caret = null;
-        }
-      }
-    );
-
-    input.addEventListener(
-      "keydown",
-      event => {
-        if (
-          event.key === "Enter" &&
-          !submitting
-        ) {
-          event.preventDefault();
-
-          redeem(
-            input.value
-              .trim()
-              .toUpperCase()
-          );
-        }
-      }
-    );
-
-    async function redeem(code) {
+    async function redeem(
+      code,
+      input,
+      caret
+    ) {
       if (submitting) return;
 
       if (code.length !== 5) {
         addLine(
           output,
-          "The access code must be 5 characters."
+          "[error] access code must be 5 characters."
         );
 
         addLine(
@@ -784,33 +676,25 @@
           ""
         );
 
-        addLine(
-          output,
-          "C:\\AkkoAudio> "
-        );
+        submitting = false;
 
-        input.value = "";
+        if (input) {
+          input.value = "";
+          input.disabled = true;
+        }
 
-        setTimeout(
-          focusInput,
-          30
-        );
+        addPrompt();
 
         return;
       }
 
       submitting = true;
+
       input.disabled = true;
 
       if (caret) {
         caret.remove();
-        caret = null;
       }
-
-      addLine(
-        output,
-        ""
-      );
 
       await typeLine(
         output,
@@ -845,7 +729,9 @@
         const data =
           await response
             .json()
-            .catch(() => ({}));
+            .catch(
+              () => ({})
+            );
 
         if (
           !response.ok ||
@@ -859,7 +745,9 @@
             ).toLowerCase();
 
           const revoked =
-            reason.includes("revok");
+            reason.includes(
+              "revok"
+            );
 
           await typeLine(
             output,
@@ -870,35 +758,19 @@
 
           await typeLine(
             output,
-            ""
-          );
-
-          await typeLine(
-            output,
             revoked
               ? "[security] please use a different access code."
               : "[auth] authentication failed."
           );
 
-          await typeLine(
+          addLine(
             output,
             ""
           );
 
-          addLine(
-            output,
-            "C:\\AkkoAudio> "
-          );
-
-          input.value = "";
-          input.disabled = false;
-
           submitting = false;
 
-          setTimeout(
-            focusInput,
-            30
-          );
+          addPrompt();
 
           return;
         }
@@ -928,7 +800,8 @@
         overlay.style.transition =
           "opacity .35s ease";
 
-        overlay.style.opacity = "0";
+        overlay.style.opacity =
+          "0";
 
         await sleep(400);
 
@@ -952,27 +825,11 @@
           ""
         );
 
-        addLine(
-          output,
-          "C:\\AkkoAudio> "
-        );
-
-        input.value = "";
-        input.disabled = false;
-
         submitting = false;
 
-        setTimeout(
-          focusInput,
-          30
-        );
+        addPrompt();
       }
     }
-
-    /*
-      Clicking anywhere in the terminal focuses the
-      access-code input, just like a command prompt.
-    */
 
     overlay.addEventListener(
       "click",
@@ -983,15 +840,17 @@
             ".akkoflac-terminal-output"
           )
         ) {
-          focusInput();
+          if (
+            activeInput &&
+            !activeInput.disabled
+          ) {
+            activeInput.focus();
+          }
         }
       }
     );
 
-    setTimeout(
-      focusInput,
-      100
-    );
+    addPrompt();
   }
 
   async function checkAccess() {
@@ -1009,10 +868,13 @@
       const data =
         await response
           .json()
-          .catch(() => ({}));
+          .catch(
+            () => ({})
+          );
 
       return {
-        valid: !!data.valid,
+        valid:
+          !!data.valid,
 
         reason:
           data.reason ||
@@ -1071,7 +933,9 @@
   }
 
   function start() {
-    if (onboardingFinished()) {
+    if (
+      onboardingFinished()
+    ) {
       runVerifyThenGate();
       return;
     }
@@ -1087,18 +951,20 @@
     }
 
     const observer =
-      new MutationObserver(() => {
-        if (
-          onboardingFinished() &&
-          onboarding.classList.contains(
-            "hidden"
-          )
-        ) {
-          observer.disconnect();
+      new MutationObserver(
+        () => {
+          if (
+            onboardingFinished() &&
+            onboarding.classList.contains(
+              "hidden"
+            )
+          ) {
+            observer.disconnect();
 
-          runVerifyThenGate();
+            runVerifyThenGate();
+          }
         }
-      });
+      );
 
     observer.observe(
       onboarding,
@@ -1112,19 +978,25 @@
     );
 
     const poll =
-      setInterval(() => {
-        if (
-          onboardingFinished() &&
-          onboarding.classList.contains(
-            "hidden"
-          )
-        ) {
-          clearInterval(poll);
-          observer.disconnect();
+      setInterval(
+        () => {
+          if (
+            onboardingFinished() &&
+            onboarding.classList.contains(
+              "hidden"
+            )
+          ) {
+            clearInterval(
+              poll
+            );
 
-          runVerifyThenGate();
-        }
-      }, 300);
+            observer.disconnect();
+
+            runVerifyThenGate();
+          }
+        },
+        300
+      );
   }
 
   if (
