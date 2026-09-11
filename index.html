@@ -8875,13 +8875,16 @@ const lyricMotion = {
     targetY: 0,
     raf: 0,
     startTs: 0,
-    duration: 1100,     // longer glide = silkier line changes
+    duration: 1250,
     activeIndex: null,
     animating: false,
     ease(t) {
-        // quint ease-out — premium soft landing, still responsive
-        const u = 1 - t;
-        return 1 - u * u * u * u * u;
+        // smootherstep-ish ease-out: no harsh acceleration, buttery settle
+        // blend of quint out + slight ease both ends
+        const x = t * t * t * (t * (t * 6 - 15) + 10); // smootherstep 0..1
+        // bias toward ease-out so it doesn't feel sluggish at the start
+        const out = 1 - Math.pow(1 - t, 4);
+        return out * 0.65 + x * 0.35;
     }
 };
 
@@ -8942,9 +8945,9 @@ function setLyricScrollTarget(offsetPx, instant = false) {
         return;
     }
 
-    // Distance-based duration: small steps settle quicker, big jumps stay silky
+    // Distance-based duration — always long enough to feel continuous
     const dist = Math.abs(targetY - lyricMotion.y);
-    lyricMotion.duration = Math.min(1400, Math.max(720, 520 + dist * 1.15));
+    lyricMotion.duration = Math.min(1600, Math.max(900, 700 + dist * 1.35));
 
     // Retarget mid-animation from the live position (no snap)
     lyricMotion.fromY = lyricMotion.y;
@@ -8961,9 +8964,9 @@ function computeLyricOffset(activeIndex, elements, track) {
     if (!line) return 0;
 
     const viewportHeight = Math.max(1, lyricsContainer.clientHeight);
-    // Apple Music: active line sits in the upper portion of the panel.
-    // First line starts near the top; later lines lock to ~28% down.
-    const anchorRatio = (activeIndex <= 0) ? 0.04 : 0.28;
+    // Keep active lyrics high in the box (near the top).
+    // First line almost flush top; later lines still upper, not mid-panel.
+    const anchorRatio = 0.11; // fixed slot — upcoming always slides up
     const anchor = viewportHeight * anchorRatio;
     const desired = line.offsetTop - anchor;
     const maxOffset = Math.max(0, track.offsetHeight - viewportHeight * 0.35);
@@ -10038,6 +10041,180 @@ button:active,
   #lyricsContainer .lyric-line {
     transition: color 0.2s linear, opacity 0.2s linear !important;
   }
+}
+</style>
+
+
+<style id="akko-lyrics-bigger-no-glow-clip">
+/* Bigger lyrics column / panel */
+.full-content {
+  grid-template-columns: minmax(280px, 38%) minmax(0, 62%) !important;
+  gap: clamp(16px, 3vw, 48px) !important;
+}
+
+.lyrics-panel {
+  height: 100% !important;
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  overflow: visible !important;
+}
+
+#lyricsContainer {
+  flex: 1 1 auto !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  /* Room above so accent glow is not clipped by the mask/edge */
+  padding: 28px 8px 0 0 !important;
+  overflow: hidden !important;
+  /* Soft mask: top stays mostly solid so active-line glow survives */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 8%,
+    #000 50%,
+    rgba(0,0,0,0.92) 68%,
+    rgba(0,0,0,0.5) 84%,
+    transparent 100%
+  ) !important;
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 8%,
+    #000 50%,
+    rgba(0,0,0,0.92) 68%,
+    rgba(0,0,0,0.5) 84%,
+    transparent 100%
+  ) !important;
+}
+
+/* Only a very gentle top fade once past lines exist — don't eat the glow */
+#lyricsContainer.has-past-lyrics {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.35) 0%,
+    rgba(0,0,0,0.75) 4%,
+    #000 10%,
+    #000 50%,
+    rgba(0,0,0,0.92) 68%,
+    rgba(0,0,0,0.5) 84%,
+    transparent 100%
+  ) !important;
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.35) 0%,
+    rgba(0,0,0,0.75) 4%,
+    #000 10%,
+    #000 50%,
+    rgba(0,0,0,0.92) 68%,
+    rgba(0,0,0,0.5) 84%,
+    transparent 100%
+  ) !important;
+}
+
+.lyrics-track {
+  /* Extra top space so first/active line + glow sit inside the solid mask zone */
+  padding: 12px 0 75vh !important;
+}
+
+/* Active glow — kept, but not so huge it needs a giant box */
+#lyricsContainer .lyric-line.active {
+  color: var(--accent-bright) !important;
+  -webkit-text-fill-color: var(--accent-bright) !important;
+  text-shadow:
+    0 0 18px color-mix(in srgb, var(--accent) 45%, transparent),
+    0 0 36px color-mix(in srgb, var(--accent) 22%, transparent) !important;
+  /* slight padding via shadow, no clip */
+  overflow: visible !important;
+}
+
+@media (max-width: 760px) {
+  .full-content {
+    grid-template-columns: 1fr !important;
+  }
+  .lyrics-panel {
+    height: min(68svh, 640px) !important;
+    min-height: 380px !important;
+  }
+  #lyricsContainer {
+    padding-top: 22px !important;
+  }
+}
+
+@media (min-width: 1100px) {
+  .full-content {
+    grid-template-columns: minmax(300px, 36%) minmax(0, 64%) !important;
+  }
+}
+</style>
+
+
+<style id="akko-lyrics-slide-up-no-scale">
+/* No enlargement — size stays constant; motion is pure upward slide */
+#lyricsContainer .lyric-line {
+  transform: none !important;
+  transition:
+    color 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    text-shadow 0.85s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+#lyricsContainer .lyric-line.active {
+  color: var(--accent-bright) !important;
+  -webkit-text-fill-color: var(--accent-bright) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
+  text-shadow:
+    0 0 18px color-mix(in srgb, var(--accent) 42%, transparent),
+    0 0 36px color-mix(in srgb, var(--accent) 18%, transparent) !important;
+}
+
+#lyricsContainer .lyric-line.next {
+  color: rgba(255, 255, 255, 0.55) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.55) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
+  text-shadow: none !important;
+}
+
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third,
+#lyricsContainer .lyric-line.upcoming {
+  color: rgba(255, 255, 255, 0.28) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.28) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
+  text-shadow: none !important;
+}
+
+#lyricsContainer .lyric-line.past {
+  color: rgba(255, 255, 255, 0.22) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.22) !important;
+  filter: blur(0.8px) !important;
+  transform: none !important;
+  text-shadow: none !important;
+}
+
+#lyricsContainer .lyric-line.past-second {
+  color: rgba(255, 255, 255, 0.12) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.12) !important;
+  filter: blur(1.5px) !important;
+  transform: none !important;
+  text-shadow: none !important;
+}
+
+#lyricsContainer .lyric-line.offscreen {
+  opacity: 0 !important;
+  filter: blur(2px) !important;
+  transform: none !important;
+}
+
+.lyrics-track {
+  transition: none !important;
+  will-change: transform !important;
 }
 </style>
 
