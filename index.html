@@ -7547,7 +7547,7 @@ function playSongNow(song) {
 
     updateSongUI();
 
-    currentLyrics = []; lyricsContainer.classList.add('lyrics-idle'); lyricsContainer.classList.remove('has-past-lyrics'); if (typeof lyricMotion !== 'undefined') { lyricMotion.y = 0; lyricMotion.fromY = 0; lyricMotion.targetY = 0; lyricMotion.activeIndex = null; lyricMotion.animating = false; if (lyricMotion.raf) { cancelAnimationFrame(lyricMotion.raf); lyricMotion.raf = 0; } }
+    currentLyrics = []; lyricsContainer.classList.add('lyrics-idle'); lyricsContainer.classList.remove('has-past-lyrics'); if (typeof lyricMotion !== 'undefined') { lyricMotion.y = 0; lyricMotion.targetY = 0; lyricMotion.activeIndex = null; lyricMotion.lastTs = 0; if (lyricMotion.raf) { cancelAnimationFrame(lyricMotion.raf); lyricMotion.raf = 0; } lyricMotion.running = false; }
     lastActiveIndex = null;
     lyricsContainer.innerHTML = "";
     loadLyrics(song.lyrics);
@@ -7899,7 +7899,7 @@ function parseLRC(text) {
    ========================================================= */
 
 async function loadLyrics(path) {
-    currentLyrics = []; lyricsContainer.classList.add('lyrics-idle'); lyricsContainer.classList.remove('has-past-lyrics'); if (typeof lyricMotion !== 'undefined') { lyricMotion.y = 0; lyricMotion.fromY = 0; lyricMotion.targetY = 0; lyricMotion.activeIndex = null; lyricMotion.animating = false; if (lyricMotion.raf) { cancelAnimationFrame(lyricMotion.raf); lyricMotion.raf = 0; } }
+    currentLyrics = []; lyricsContainer.classList.add('lyrics-idle'); lyricsContainer.classList.remove('has-past-lyrics'); if (typeof lyricMotion !== 'undefined') { lyricMotion.y = 0; lyricMotion.targetY = 0; lyricMotion.activeIndex = null; lyricMotion.lastTs = 0; if (lyricMotion.raf) { cancelAnimationFrame(lyricMotion.raf); lyricMotion.raf = 0; } lyricMotion.running = false; }
     lastActiveIndex = null;
 
     lyricsContainer.innerHTML = "";
@@ -8424,6 +8424,7 @@ function lyricSyncLoop() {
 }
 audio.addEventListener("play", () => {
     if (!lyricRafId) lyricRafId = requestAnimationFrame(lyricSyncLoop);
+    if (typeof ensureLyricMotionLoop === "function") ensureLyricMotionLoop();
 });
 audio.addEventListener("pause", () => {
     if (lyricRafId) {
@@ -8862,30 +8863,21 @@ async function initialize() {
 initialize();
 
 /* =========================================================
-   APPLE MUSIC–STYLE LYRICS
-   - Active line locks to a fixed vertical slot
-   - Ease-out scroll (no spring bounce / float)
-   - Past lines fade + soft blur above
-   - Upcoming lines stay readable below
+   HIGH-FPS FLUID LYRICS
+   Continuous exponential smoothing every frame (no stepped
+   CSS transitions, no glow). Retargets mid-slide cleanly.
    ========================================================= */
 
 const lyricMotion = {
     y: 0,
-    fromY: 0,
     targetY: 0,
     raf: 0,
-    startTs: 0,
-    duration: 1250,
+    lastTs: 0,
     activeIndex: null,
-    animating: false,
-    ease(t) {
-        // smootherstep-ish ease-out: no harsh acceleration, buttery settle
-        // blend of quint out + slight ease both ends
-        const x = t * t * t * (t * (t * 6 - 15) + 10); // smootherstep 0..1
-        // bias toward ease-out so it doesn't feel sluggish at the start
-        const out = 1 - Math.pow(1 - t, 4);
-        return out * 0.65 + x * 0.35;
-    }
+    // Higher = snappier. ~7–9 = fluid high-fps settle without float.
+    // Frame-rate independent exponential smoothing factor.
+    smooth: 9.2,
+    running: false
 };
 
 function getLyricTrack() {
@@ -8895,66 +8887,66 @@ function getLyricTrack() {
 function applyLyricTransform(y) {
     const track = getLyricTrack();
     if (!track) return;
+    // Sub-pixel GPU transform — avoid layout, avoid CSS transition fights
     track.style.transition = "none";
-    track.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0)`;
+    track.style.transform = "translate3d(0," + y.toFixed(3) + "px,0)";
 }
 
 function lyricMotionStep(ts) {
     lyricMotion.raf = 0;
-    if (!lyricsContainer) return;
+    if (!lyricsContainer) {
+        lyricMotion.running = false;
+        return;
+    }
 
-    if (!lyricMotion.startTs) lyricMotion.startTs = ts;
-    const elapsed = ts - lyricMotion.startTs;
-    const t = Math.min(1, elapsed / lyricMotion.duration);
-    const e = lyricMotion.ease(t);
+    if (!lyricMotion.lastTs) lyricMotion.lastTs = ts;
+    let dt = (ts - lyricMotion.lastTs) / 1000;
+    // Clamp only extreme tab-throttle spikes; keep normal 60/120hz honest
+    if (dt > 0.05) dt = 0.05;
+    if (dt < 0.001) dt = 0.001;
+    lyricMotion.lastTs = ts;
 
-    lyricMotion.y = lyricMotion.fromY + (lyricMotion.targetY - lyricMotion.fromY) * e;
+    const dy = lyricMotion.targetY - lyricMotion.y;
+    // Exponential ease toward target — buttery at 60/120fps, retarget-safe
+    const alpha = 1 - Math.exp(-lyricMotion.smooth * dt);
+    lyricMotion.y += dy * alpha;
+
+    // Snap when microscopic to kill residual micro-jitter
+    if (Math.abs(lyricMotion.targetY - lyricMotion.y) < 0.02) {
+        lyricMotion.y = lyricMotion.targetY;
+    }
+
     applyLyricTransform(lyricMotion.y);
 
-    if (t < 1) {
-        lyricMotion.animating = true;
+    const still =
+        Math.abs(lyricMotion.targetY - lyricMotion.y) > 0.02 ||
+        !audio.paused;
+
+    if (still) {
         lyricMotion.raf = requestAnimationFrame(lyricMotionStep);
     } else {
-        lyricMotion.y = lyricMotion.targetY;
-        applyLyricTransform(lyricMotion.y);
-        lyricMotion.animating = false;
-        lyricMotion.startTs = 0;
+        lyricMotion.running = false;
+        lyricMotion.lastTs = 0;
+    }
+}
+
+function ensureLyricMotionLoop() {
+    if (!lyricMotion.raf) {
+        lyricMotion.lastTs = 0;
+        lyricMotion.running = true;
+        lyricMotion.raf = requestAnimationFrame(lyricMotionStep);
     }
 }
 
 function setLyricScrollTarget(offsetPx, instant = false) {
     const targetY = -Math.max(0, offsetPx);
-
-    // Already there
-    if (!instant && Math.abs(targetY - lyricMotion.targetY) < 0.5 && Math.abs(lyricMotion.y - targetY) < 0.5) {
-        return;
-    }
-
     lyricMotion.targetY = targetY;
 
     if (instant) {
-        if (lyricMotion.raf) {
-            cancelAnimationFrame(lyricMotion.raf);
-            lyricMotion.raf = 0;
-        }
-        lyricMotion.fromY = targetY;
         lyricMotion.y = targetY;
-        lyricMotion.animating = false;
-        lyricMotion.startTs = 0;
         applyLyricTransform(targetY);
-        return;
     }
-
-    // Distance-based duration — always long enough to feel continuous
-    const dist = Math.abs(targetY - lyricMotion.y);
-    lyricMotion.duration = Math.min(1600, Math.max(900, 700 + dist * 1.35));
-
-    // Retarget mid-animation from the live position (no snap)
-    lyricMotion.fromY = lyricMotion.y;
-    lyricMotion.startTs = 0;
-    if (!lyricMotion.raf) {
-        lyricMotion.raf = requestAnimationFrame(lyricMotionStep);
-    }
+    ensureLyricMotionLoop();
 }
 
 function computeLyricOffset(activeIndex, elements, track) {
@@ -8964,12 +8956,11 @@ function computeLyricOffset(activeIndex, elements, track) {
     if (!line) return 0;
 
     const viewportHeight = Math.max(1, lyricsContainer.clientHeight);
-    // Keep active lyrics high in the box (near the top).
-    // First line almost flush top; later lines still upper, not mid-panel.
-    const anchorRatio = 0.11; // fixed slot — upcoming always slides up
+    // Fixed Apple-like slot — upcoming always glides UP into it
+    const anchorRatio = 0.22;
     const anchor = viewportHeight * anchorRatio;
     const desired = line.offsetTop - anchor;
-    const maxOffset = Math.max(0, track.offsetHeight - viewportHeight * 0.35);
+    const maxOffset = Math.max(0, track.offsetHeight - viewportHeight * 0.30);
     return Math.min(Math.max(0, desired), maxOffset);
 }
 
@@ -8978,8 +8969,10 @@ function refreshLyricViewport() {
     const track = getLyricTrack();
     const elements = Array.from(lyricsContainer.querySelectorAll(".lyric-line"));
     if (!track || !elements.length) return;
-    const offset = computeLyricOffset(lyricMotion.activeIndex ?? -1, elements, track);
-    setLyricScrollTarget(offset, true);
+    setLyricScrollTarget(
+        computeLyricOffset(lyricMotion.activeIndex ?? -1, elements, track),
+        true
+    );
 }
 
 function updateLyrics(time) {
@@ -9011,7 +9004,6 @@ function updateLyrics(time) {
 
     lastActiveIndex = activeIndex;
     lyricMotion.activeIndex = activeIndex;
-
     lyricsContainer.classList.toggle("has-past-lyrics", activeIndex >= 1);
 
     elements.forEach((element, index) => {
@@ -9044,12 +9036,16 @@ function updateLyrics(time) {
         }
     });
 
+    // Double-rAF so layout is committed before measuring offsetTop
     requestAnimationFrame(() => {
-        const offset = computeLyricOffset(activeIndex, elements, track);
-        // Only snap on seek / first paint — otherwise glide like Apple Music
-        const instant = hard;
-        setLyricScrollTarget(offset, instant);
-        lyricsContainer.classList.remove("is-seeking");
+        requestAnimationFrame(() => {
+            const els = Array.from(lyricsContainer.querySelectorAll(".lyric-line"));
+            const tr = getLyricTrack();
+            if (!tr || !els.length) return;
+            const offset = computeLyricOffset(activeIndex, els, tr);
+            setLyricScrollTarget(offset, hard);
+            lyricsContainer.classList.remove("is-seeking");
+        });
     });
 }
 
@@ -9058,8 +9054,10 @@ window.addEventListener("resize", () => {
     const track = getLyricTrack();
     const elements = Array.from(lyricsContainer.querySelectorAll(".lyric-line"));
     if (!track || !elements.length) return;
-    const offset = computeLyricOffset(lyricMotion.activeIndex ?? -1, elements, track);
-    setLyricScrollTarget(offset, true);
+    setLyricScrollTarget(
+        computeLyricOffset(lyricMotion.activeIndex ?? -1, elements, track),
+        true
+    );
 }, { passive: true });
 
 if ("ResizeObserver" in window && lyricsContainer) {
@@ -9068,10 +9066,13 @@ if ("ResizeObserver" in window && lyricsContainer) {
         const track = getLyricTrack();
         const elements = Array.from(lyricsContainer.querySelectorAll(".lyric-line"));
         if (!track || !elements.length) return;
-        const offset = computeLyricOffset(lyricMotion.activeIndex ?? -1, elements, track);
-        setLyricScrollTarget(offset, true);
+        setLyricScrollTarget(
+            computeLyricOffset(lyricMotion.activeIndex ?? -1, elements, track),
+            true
+        );
     }).observe(lyricsContainer);
 }
+
 
 </script>
 
@@ -9711,102 +9712,7 @@ button:active,
 </style>
 
 
-<style id="akko-lyrics-butter-smooth-final">
-/* Hide any leftover "Lyrics" label */
-.lyrics-heading { display: none !important; }
-
-/* Bigger lyrics area on desktop focus mode */
-.full-content {
-  grid-template-columns: minmax(300px, 42%) minmax(0, 58%) !important;
-}
-.lyrics-panel {
-  height: 100% !important;
-  min-height: 0 !important;
-  flex: 1 1 auto !important;
-}
-#lyricsContainer {
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  height: 100% !important;
-  padding: 0 !important;
-}
-
-/* Butter-smooth track scroll */
-.lyrics-track {
-  transition: transform 1.35s cubic-bezier(0.22, 1, 0.36, 1) !important;
-  padding: 0 0 65vh !important;
-  will-change: transform !important;
-}
-
-/* Line state changes also ease softly */
-#lyricsContainer .lyric-line {
-  transition:
-    color 0.95s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.95s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.95s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.95s cubic-bezier(0.22, 1, 0.36, 1) !important;
-}
-
-/* First lyric sits flush at the top of the box */
-#lyricsContainer:not(.has-past-lyrics) {
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    #000 0%,
-    #000 58%,
-    rgba(0,0,0,0.9) 74%,
-    rgba(0,0,0,0.5) 88%,
-    transparent 100%
-  ) !important;
-  mask-image: linear-gradient(
-    to bottom,
-    #000 0%,
-    #000 58%,
-    rgba(0,0,0,0.9) 74%,
-    rgba(0,0,0,0.5) 88%,
-    transparent 100%
-  ) !important;
-}
-
-/* Soft top fade only after past lyrics exist */
-#lyricsContainer.has-past-lyrics {
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0,0,0,0.28) 5%,
-    #000 14%,
-    #000 58%,
-    rgba(0,0,0,0.9) 74%,
-    rgba(0,0,0,0.5) 88%,
-    transparent 100%
-  ) !important;
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(0,0,0,0.28) 5%,
-    #000 14%,
-    #000 58%,
-    rgba(0,0,0,0.9) 74%,
-    rgba(0,0,0,0.5) 88%,
-    transparent 100%
-  ) !important;
-}
-
-@media (max-width: 760px) {
-  .lyrics-panel {
-    height: min(60svh, 560px) !important;
-    min-height: 340px !important;
-  }
-  .full-content {
-    grid-template-columns: 1fr !important;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lyrics-track {
-    transition: none !important;
-  }
-}
-</style>
+<!-- akko-lyrics-butter-smooth-final superseded by akko-apple-focus-layout-final -->
 
 
 <style id="akko-lyrics-ultra-butter">
@@ -10045,107 +9951,7 @@ button:active,
 </style>
 
 
-<style id="akko-lyrics-bigger-no-glow-clip">
-/* Bigger lyrics column / panel */
-.full-content {
-  grid-template-columns: minmax(280px, 38%) minmax(0, 62%) !important;
-  gap: clamp(16px, 3vw, 48px) !important;
-}
-
-.lyrics-panel {
-  height: 100% !important;
-  min-height: 0 !important;
-  flex: 1 1 auto !important;
-  overflow: visible !important;
-}
-
-#lyricsContainer {
-  flex: 1 1 auto !important;
-  height: 100% !important;
-  min-height: 0 !important;
-  /* Room above so accent glow is not clipped by the mask/edge */
-  padding: 28px 8px 0 0 !important;
-  overflow: hidden !important;
-  /* Soft mask: top stays mostly solid so active-line glow survives */
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    #000 0%,
-    #000 8%,
-    #000 50%,
-    rgba(0,0,0,0.92) 68%,
-    rgba(0,0,0,0.5) 84%,
-    transparent 100%
-  ) !important;
-  mask-image: linear-gradient(
-    to bottom,
-    #000 0%,
-    #000 8%,
-    #000 50%,
-    rgba(0,0,0,0.92) 68%,
-    rgba(0,0,0,0.5) 84%,
-    transparent 100%
-  ) !important;
-}
-
-/* Only a very gentle top fade once past lines exist — don't eat the glow */
-#lyricsContainer.has-past-lyrics {
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    rgba(0,0,0,0.35) 0%,
-    rgba(0,0,0,0.75) 4%,
-    #000 10%,
-    #000 50%,
-    rgba(0,0,0,0.92) 68%,
-    rgba(0,0,0,0.5) 84%,
-    transparent 100%
-  ) !important;
-  mask-image: linear-gradient(
-    to bottom,
-    rgba(0,0,0,0.35) 0%,
-    rgba(0,0,0,0.75) 4%,
-    #000 10%,
-    #000 50%,
-    rgba(0,0,0,0.92) 68%,
-    rgba(0,0,0,0.5) 84%,
-    transparent 100%
-  ) !important;
-}
-
-.lyrics-track {
-  /* Extra top space so first/active line + glow sit inside the solid mask zone */
-  padding: 12px 0 75vh !important;
-}
-
-/* Active glow — kept, but not so huge it needs a giant box */
-#lyricsContainer .lyric-line.active {
-  color: var(--accent-bright) !important;
-  -webkit-text-fill-color: var(--accent-bright) !important;
-  text-shadow:
-    0 0 18px color-mix(in srgb, var(--accent) 45%, transparent),
-    0 0 36px color-mix(in srgb, var(--accent) 22%, transparent) !important;
-  /* slight padding via shadow, no clip */
-  overflow: visible !important;
-}
-
-@media (max-width: 760px) {
-  .full-content {
-    grid-template-columns: 1fr !important;
-  }
-  .lyrics-panel {
-    height: min(68svh, 640px) !important;
-    min-height: 380px !important;
-  }
-  #lyricsContainer {
-    padding-top: 22px !important;
-  }
-}
-
-@media (min-width: 1100px) {
-  .full-content {
-    grid-template-columns: minmax(300px, 36%) minmax(0, 64%) !important;
-  }
-}
-</style>
+<!-- akko-lyrics-bigger-no-glow-clip superseded by akko-apple-focus-layout-final -->
 
 
 <style id="akko-lyrics-slide-up-no-scale">
@@ -10215,6 +10021,98 @@ button:active,
 .lyrics-track {
   transition: none !important;
   will-change: transform !important;
+}
+</style>
+
+
+<style id="akko-lyrics-fluid-fps-final">
+/* High-FPS fluid lyrics — no glow, pure motion + color */
+
+.lyrics-track {
+  transition: none !important;
+  will-change: transform !important;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  perspective: 1000px;
+}
+
+#lyricsContainer {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  contain: layout style;
+}
+
+#lyricsContainer .lyric-line {
+  transform: none !important;
+  text-shadow: none !important;
+  filter: none !important;
+  will-change: color, opacity !important;
+  transition:
+    color 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  backface-visibility: hidden;
+}
+
+/* Current = accent only, zero glow */
+#lyricsContainer .lyric-line.active {
+  color: var(--accent-bright) !important;
+  -webkit-text-fill-color: var(--accent-bright) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+
+#lyricsContainer .lyric-line.next {
+  color: rgba(255, 255, 255, 0.55) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.55) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third,
+#lyricsContainer .lyric-line.upcoming {
+  color: rgba(255, 255, 255, 0.28) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.28) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+
+#lyricsContainer .lyric-line.past {
+  color: rgba(255, 255, 255, 0.22) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.22) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+
+#lyricsContainer .lyric-line.past-second {
+  color: rgba(255, 255, 255, 0.12) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.12) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+
+#lyricsContainer .lyric-line.offscreen {
+  opacity: 0 !important;
+  filter: none !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #lyricsContainer .lyric-line {
+    transition: color 0.15s linear, opacity 0.15s linear !important;
+  }
 }
 </style>
 
