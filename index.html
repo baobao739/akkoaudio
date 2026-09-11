@@ -8874,9 +8874,9 @@ const lyricMotion = {
     raf: 0,
     lastTs: 0,
     activeIndex: null,
-    // Higher = snappier. ~7–9 = fluid high-fps settle without float.
+    // Lower = silkier per-line step. ~5–6 = long fluid settle each advance.
     // Frame-rate independent exponential smoothing factor.
-    smooth: 9.2,
+    smooth: 5.4,
     running: false
 };
 
@@ -8912,7 +8912,7 @@ function lyricMotionStep(ts) {
     lyricMotion.y += dy * alpha;
 
     // Snap when microscopic to kill residual micro-jitter
-    if (Math.abs(lyricMotion.targetY - lyricMotion.y) < 0.02) {
+    if (Math.abs(lyricMotion.targetY - lyricMotion.y) < 0.04) {
         lyricMotion.y = lyricMotion.targetY;
     }
 
@@ -10113,6 +10113,86 @@ button:active,
   #lyricsContainer .lyric-line {
     transition: color 0.15s linear, opacity 0.15s linear !important;
   }
+}
+</style>
+
+
+<style id="akko-lyrics-past-blur-strong-steps">
+/* Past lyrics: STRONG blur. Motion is one-by-one upward steps. */
+
+#lyricsContainer .lyric-line {
+  transform: none !important;
+  text-shadow: none !important;
+  will-change: color, opacity, filter !important;
+  transition:
+    color 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.85s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* Current — accent, sharp, no glow */
+#lyricsContainer .lyric-line.active {
+  color: var(--accent-bright) !important;
+  -webkit-text-fill-color: var(--accent-bright) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+
+/* Upcoming ladder — clear steps below */
+#lyricsContainer .lyric-line.next {
+  color: rgba(255, 255, 255, 0.55) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.55) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third,
+#lyricsContainer .lyric-line.upcoming {
+  color: rgba(255, 255, 255, 0.28) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.28) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* PAST — strong blur */
+#lyricsContainer .lyric-line.past {
+  color: rgba(255, 255, 255, 0.28) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.28) !important;
+  opacity: 1 !important;
+  filter: blur(3.2px) !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+
+/* Older past — even stronger blur */
+#lyricsContainer .lyric-line.past-second {
+  color: rgba(255, 255, 255, 0.16) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.16) !important;
+  opacity: 1 !important;
+  filter: blur(5.5px) !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+
+#lyricsContainer .lyric-line.offscreen {
+  opacity: 0 !important;
+  filter: blur(7px) !important;
+  text-shadow: none !important;
+  transform: none !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+}
+
+.lyrics-track {
+  transition: none !important;
+  will-change: transform !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
 }
 </style>
 
