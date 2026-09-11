@@ -6889,17 +6889,19 @@ function loadImageForPalette(src) {
 }
 
 async function updateFocusPalette(song) {
-    if (!song?.cover) return;
+    const paletteSrc = window.__akkoGlobalCoverSrc || song?.cover;
+    if (!paletteSrc) return;
 
     try {
-        const image = await loadImageForPalette(song.cover);
+        const image = await loadImageForPalette(paletteSrc);
         const palette = await extractFocusPalette(image);
         if (palette?.length) animateFocusPalette(palette);
     } catch (_) {
         // Retry shortly after cover crossfade paints
         setTimeout(async () => {
             try {
-                const image = await loadImageForPalette(song.cover);
+                const retrySrc = window.__akkoGlobalCoverSrc || song?.cover;
+                const image = await loadImageForPalette(retrySrc);
                 const palette = await extractFocusPalette(image);
                 if (palette?.length) animateFocusPalette(palette);
             } catch (__) {}
@@ -9336,6 +9338,22 @@ button:active,
 }
 </style>
 
+
+<!-- Ensure Focus Mode palette extraction uses covers/any.JPG when available. -->
+<script id="akko-global-cover-palette-final">
+(() => {
+    "use strict";
+    const globalSrc = "covers/any.JPG";
+    const probe = new Image();
+    probe.onload = () => {
+        window.__akkoGlobalCoverSrc = globalSrc;
+        if (typeof window.updateFocusPalette === "function" && window.currentSong) {
+            window.updateFocusPalette(window.currentSong);
+        }
+    };
+    probe.src = globalSrc + "?paletteProbe=" + Date.now();
+})();
+</script>
 </body>
 </html>
 
