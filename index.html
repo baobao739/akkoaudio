@@ -10485,5 +10485,34 @@ button:active,
 }
 </style>
 
+
+<style id="akko-lyrics-size-spacing">
+/* Bigger type + more vertical room between lines */
+
+#lyricsContainer .lyric-line {
+  font-size: clamp(32px, 4.2vw, 58px) !important;
+  line-height: 1.22 !important;
+  letter-spacing: -0.035em !important;
+  font-weight: 700 !important;
+  margin: 0 0 clamp(36px, 5.2vh, 64px) !important;
+  max-width: 16ch !important;
+}
+
+@media (max-width: 760px) {
+  #lyricsContainer .lyric-line {
+    font-size: clamp(28px, 8.5vw, 42px) !important;
+    margin: 0 0 clamp(28px, 4.2vh, 44px) !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (min-width: 1400px) {
+  #lyricsContainer .lyric-line {
+    font-size: clamp(36px, 3.6vw, 64px) !important;
+    margin: 0 0 clamp(40px, 5.5vh, 72px) !important;
+  }
+}
+</style>
+
 </body>
 </html>
