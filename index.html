@@ -6889,19 +6889,17 @@ function loadImageForPalette(src) {
 }
 
 async function updateFocusPalette(song) {
-    const paletteSrc = window.__akkoGlobalCoverSrc || song?.cover;
-    if (!paletteSrc) return;
+    if (!song?.cover) return;
 
     try {
-        const image = await loadImageForPalette(paletteSrc);
+        const image = await loadImageForPalette(song.cover);
         const palette = await extractFocusPalette(image);
         if (palette?.length) animateFocusPalette(palette);
     } catch (_) {
         // Retry shortly after cover crossfade paints
         setTimeout(async () => {
             try {
-                const retrySrc = window.__akkoGlobalCoverSrc || song?.cover;
-                const image = await loadImageForPalette(retrySrc);
+                const image = await loadImageForPalette(song.cover);
                 const palette = await extractFocusPalette(image);
                 if (palette?.length) animateFocusPalette(palette);
             } catch (__) {}
@@ -7211,12 +7209,9 @@ function crossfadePair(pair, newSrc, useBgHiddenClass = false) {
 }
 
 function crossfadeAllCovers(newSrc) {
-    // Use the optional global cover everywhere, including Focus Mode.
-    // The override script sets this only when covers/any.JPG exists.
-    const resolvedSrc = window.__akkoGlobalCoverSrc || newSrc;
-    crossfadePair(coverLayers.mini, resolvedSrc, false);
-    crossfadePair(coverLayers.full, resolvedSrc, false);
-    crossfadePair(coverLayers.bg, resolvedSrc, true);
+    crossfadePair(coverLayers.mini, newSrc, false);
+    crossfadePair(coverLayers.full, newSrc, false);
+    crossfadePair(coverLayers.bg, newSrc, true);
 }
 
 function setMarqueeTitle(el, text, mode = "mini") {
@@ -9339,124 +9334,37 @@ button:active,
 </style>
 
 
-<!-- Ensure Focus Mode palette extraction uses covers/any.JPG when available. -->
-<script id="akko-global-cover-palette-final">
+<script id="akko-any-cover-minimal">
 (() => {
-    "use strict";
-    const globalSrc = "covers/any.JPG";
-    const probe = new Image();
-    probe.onload = () => {
-        window.__akkoGlobalCoverSrc = globalSrc;
-        if (typeof window.updateFocusPalette === "function" && window.currentSong) {
-            window.updateFocusPalette(window.currentSong);
-        }
-    };
-    probe.src = globalSrc + "?paletteProbe=" + Date.now();
+  "use strict";
+  const override = "covers/any.JPG";
+  const probe = new Image();
+  let available = false;
+
+  function useOverride(img) {
+    if (!available || !img || img.tagName !== "IMG") return;
+    if (img.dataset.akkoAnyCover === "1") return;
+    const src = img.getAttribute("src") || "";
+    if (!src || src === override || src.startsWith("data:") || src.startsWith("blob:")) return;
+    img.dataset.akkoOriginalCover = src;
+    img.dataset.akkoAnyCover = "1";
+    img.src = override;
+  }
+
+  function scan(root = document) {
+    if (root.nodeType === 1 && root.tagName === "IMG") useOverride(root);
+    root.querySelectorAll?.("img").forEach(useOverride);
+  }
+
+  probe.onload = () => {
+    available = true;
+    scan();
+    new MutationObserver(() => scan()).observe(document.body, { childList: true, subtree: true });
+  };
+  probe.onerror = () => {};
+  probe.src = override;
 })();
 </script>
+
 </body>
 </html>
-
-
-<style id="akko-next-lyric-final-verified">
-/* Final lyric hierarchy: active > immediate next > other upcoming */
-#lyricsContainer .lyric-line.next {
-  color: #e8e8ee !important;
-  -webkit-text-fill-color: #e8e8ee !important;
-  opacity: 1 !important;
-  filter: none !important;
-  font-weight: 700 !important;
-}
-
-#lyricsContainer .lyric-line.next-next,
-#lyricsContainer .lyric-line.next-third,
-#lyricsContainer .lyric-line.upcoming {
-  color: #c9c9d1 !important;
-  -webkit-text-fill-color: #c9c9d1 !important;
-  opacity: 1 !important;
-  filter: none !important;
-  font-weight: 600 !important;
-}
-
-#lyricsContainer .lyric-line.past {
-  color: #858590 !important;
-  -webkit-text-fill-color: #858590 !important;
-  opacity: .72 !important;
-  filter: blur(.35px) !important;
-}
-
-#lyricsContainer .lyric-line.past-second {
-  color: #686873 !important;
-  -webkit-text-fill-color: #686873 !important;
-  opacity: .42 !important;
-  filter: blur(1.1px) !important;
-}
-
-#lyricsContainer {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.45) 7%, #000 18%, #000 62%, rgba(0,0,0,.88) 76%, rgba(0,0,0,.48) 89%, transparent 100%) !important;
-  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.45) 7%, #000 18%, #000 62%, rgba(0,0,0,.88) 76%, rgba(0,0,0,.48) 89%, transparent 100%) !important;
-}
-</style>
-
-
-<!-- Optional global cover override: add covers/any.JPG to use it for every song. -->
-<script id="akko-any-cover-override">
-(() => {
-    "use strict";
-
-    const GLOBAL_COVER = "covers/any.JPG";
-    let globalCoverAvailable = false;
-
-    function applyGlobalCover(img) {
-        if (!globalCoverAvailable || !img || img.tagName !== "IMG") return;
-
-        const original = img.dataset.akkoOriginalCover || img.getAttribute("src") || "";
-        if (!original || original === GLOBAL_COVER) return;
-
-        img.dataset.akkoOriginalCover = original;
-        img.dataset.akkoGlobalCoverApplied = "true";
-        img.onerror = () => {
-            img.onerror = null;
-            img.src = img.dataset.akkoOriginalCover || original;
-        };
-        img.src = GLOBAL_COVER;
-    }
-
-    function applyToAllCovers(root = document) {
-        if (!globalCoverAvailable) return;
-        root.querySelectorAll?.("img").forEach(applyGlobalCover);
-    }
-
-    const probe = new Image();
-    probe.onload = () => {
-        globalCoverAvailable = true;
-        window.__akkoGlobalCoverSrc = GLOBAL_COVER;
-        applyToAllCovers();
-
-        // Refresh the currently displayed covers, including Focus Mode.
-        const currentSong = typeof getCurrentSong === "function" ? getCurrentSong() : null;
-        if (currentSong && typeof crossfadeAllCovers === "function") {
-            crossfadeAllCovers(currentSong.cover);
-        }
-    };
-    probe.onerror = () => {
-        globalCoverAvailable = false;
-        window.__akkoGlobalCoverSrc = "";
-    };
-    probe.src = GLOBAL_COVER;
-
-    const observer = new MutationObserver((mutations) => {
-        if (!globalCoverAvailable) return;
-        for (const mutation of mutations) {
-            mutation.addedNodes.forEach((node) => {
-                if (node.nodeType === 1) {
-                    if (node.tagName === "IMG") applyGlobalCover(node);
-                    applyToAllCovers(node);
-                }
-            });
-        }
-    });
-
-    observer.observe(document.documentElement, { childList: true, subtree: true });
-})();
-</script>
