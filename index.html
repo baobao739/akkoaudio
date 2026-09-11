@@ -7209,12 +7209,9 @@ function crossfadePair(pair, newSrc, useBgHiddenClass = false) {
 }
 
 function crossfadeAllCovers(newSrc) {
-    // Use the optional global cover everywhere, including Focus Mode.
-    // The override script sets this only when covers/any.JPG exists.
-    const resolvedSrc = window.__akkoGlobalCoverSrc || newSrc;
-    crossfadePair(coverLayers.mini, resolvedSrc, false);
-    crossfadePair(coverLayers.full, resolvedSrc, false);
-    crossfadePair(coverLayers.bg, resolvedSrc, true);
+    crossfadePair(coverLayers.mini, newSrc, false);
+    crossfadePair(coverLayers.full, newSrc, false);
+    crossfadePair(coverLayers.bg, newSrc, true);
 }
 
 function setMarqueeTitle(el, text, mode = "mini") {
@@ -9379,66 +9376,3 @@ button:active,
   mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.45) 7%, #000 18%, #000 62%, rgba(0,0,0,.88) 76%, rgba(0,0,0,.48) 89%, transparent 100%) !important;
 }
 </style>
-
-
-<!-- Optional global cover override: add covers/any.JPG to use it for every song. -->
-<script id="akko-any-cover-override">
-(() => {
-    "use strict";
-
-    const GLOBAL_COVER = "covers/any.JPG";
-    let globalCoverAvailable = false;
-
-    function applyGlobalCover(img) {
-        if (!globalCoverAvailable || !img || img.tagName !== "IMG") return;
-
-        const original = img.dataset.akkoOriginalCover || img.getAttribute("src") || "";
-        if (!original || original === GLOBAL_COVER) return;
-
-        img.dataset.akkoOriginalCover = original;
-        img.dataset.akkoGlobalCoverApplied = "true";
-        img.onerror = () => {
-            img.onerror = null;
-            img.src = img.dataset.akkoOriginalCover || original;
-        };
-        img.src = GLOBAL_COVER;
-    }
-
-    function applyToAllCovers(root = document) {
-        if (!globalCoverAvailable) return;
-        root.querySelectorAll?.("img").forEach(applyGlobalCover);
-    }
-
-    const probe = new Image();
-    probe.onload = () => {
-        globalCoverAvailable = true;
-        window.__akkoGlobalCoverSrc = GLOBAL_COVER;
-        applyToAllCovers();
-
-        // Refresh the currently displayed covers, including Focus Mode.
-        const currentSong = typeof getCurrentSong === "function" ? getCurrentSong() : null;
-        if (currentSong && typeof crossfadeAllCovers === "function") {
-            crossfadeAllCovers(currentSong.cover);
-        }
-    };
-    probe.onerror = () => {
-        globalCoverAvailable = false;
-        window.__akkoGlobalCoverSrc = "";
-    };
-    probe.src = GLOBAL_COVER;
-
-    const observer = new MutationObserver((mutations) => {
-        if (!globalCoverAvailable) return;
-        for (const mutation of mutations) {
-            mutation.addedNodes.forEach((node) => {
-                if (node.nodeType === 1) {
-                    if (node.tagName === "IMG") applyGlobalCover(node);
-                    applyToAllCovers(node);
-                }
-            });
-        }
-    });
-
-    observer.observe(document.documentElement, { childList: true, subtree: true });
-})();
-</script>
