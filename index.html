@@ -8943,7 +8943,20 @@ function computeLyricOffset(activeIndex, elements, track, anchorRatio = 0.46) {
     if (!line) return 0;
 
     const viewportHeight = Math.max(1, lyricsContainer.clientHeight);
-    const desired = line.offsetTop - viewportHeight * anchorRatio;
+    const cover = document.querySelector(".full-cover-wrap");
+    const containerRect = lyricsContainer.getBoundingClientRect();
+    const useCoverAnchor =
+        window.matchMedia("(min-width: 761px)").matches &&
+        fullPlayer?.classList.contains("open") &&
+        cover;
+
+    // On wider layouts, lock the current line slightly above the cover's
+    // vertical midpoint. On phones, keep it near the top of the lyric area
+    // so it does not begin far below the artwork.
+    const anchor = useCoverAnchor
+        ? cover.getBoundingClientRect().top + cover.getBoundingClientRect().height * 0.44 - containerRect.top
+        : viewportHeight * 0.18;
+    const desired = line.offsetTop - anchor;
     const maxOffset = Math.max(0, track.scrollHeight - viewportHeight);
     return Math.min(Math.max(0, desired), maxOffset);
 }
@@ -8956,8 +8969,24 @@ function refreshLyricViewport() {
 
     setLyricScrollTarget(
         computeLyricOffset(lyricMotion.activeIndex ?? 0, elements, track),
-        true
+        false
     );
+}
+
+function introduceFirstLyric(line) {
+    if (!line) return;
+
+    // Start close to the final state so the first line eases in naturally
+    // instead of appearing in a single painted frame.
+    line.style.setProperty("opacity", "0.18", "important");
+    line.style.setProperty("transform", "translate3d(0, 14px, 0)", "important");
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            line.style.removeProperty("opacity");
+            line.style.removeProperty("transform");
+        });
+    });
 }
 
 function updateLyrics(time) {
@@ -9020,8 +9049,16 @@ function updateLyrics(time) {
         if (!currentTrack || !currentElements.length) return;
 
         const offset = computeLyricOffset(activeIndex, currentElements, currentTrack);
-        const isInitialPaint = previousIndex === null || activeIndex < 0;
-        setLyricScrollTarget(offset, hardSync || isInitialPaint);
+        const needsIntro = !lyricMotion.introDone && activeIndex >= 0 && !hardSync;
+
+        // Put a new song into its final slot while the line is still faded,
+        // then let the line itself ease in. Later lyric changes always glide.
+        if (needsIntro) {
+            introduceFirstLyric(currentElements[activeIndex]);
+            lyricMotion.introDone = true;
+        }
+        setLyricScrollTarget(offset, hardSync || needsIntro);
+
         lyricsContainer.classList.remove("is-seeking");
     });
 }
@@ -10505,7 +10542,8 @@ button:active,
   transform: none !important;
   transition:
     color 360ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 360ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+    opacity 620ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 620ms cubic-bezier(0.22, 1, 0.36, 1) !important;
   will-change: color, opacity !important;
 }
 
@@ -10539,7 +10577,7 @@ button:active,
   }
 
   #lyricsContainer .lyrics-track {
-    padding-top: 42% !important;
+    padding-top: 18% !important;
     padding-bottom: 62% !important;
   }
 
