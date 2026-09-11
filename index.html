@@ -8875,13 +8875,13 @@ const lyricMotion = {
     targetY: 0,
     raf: 0,
     startTs: 0,
-    duration: 920,      // ms — Apple-like glide
+    duration: 1100,     // longer glide = silkier line changes
     activeIndex: null,
     animating: false,
-    // Apple Music uses a smooth ease-out, not physics bounce
     ease(t) {
-        // cubic ease-out — fast start, soft landing
-        return 1 - Math.pow(1 - t, 3);
+        // quint ease-out — premium soft landing, still responsive
+        const u = 1 - t;
+        return 1 - u * u * u * u * u;
     }
 };
 
@@ -8941,6 +8941,10 @@ function setLyricScrollTarget(offsetPx, instant = false) {
         applyLyricTransform(targetY);
         return;
     }
+
+    // Distance-based duration: small steps settle quicker, big jumps stay silky
+    const dist = Math.abs(targetY - lyricMotion.y);
+    lyricMotion.duration = Math.min(1400, Math.max(720, 520 + dist * 1.15));
 
     // Retarget mid-animation from the live position (no snap)
     lyricMotion.fromY = lyricMotion.y;
@@ -9892,109 +9896,117 @@ button:active,
 
 
 <style id="akko-apple-music-lyrics-exact">
-/* Apple Music–style lyrics presentation */
+/* Apple Music–style lyrics — polished + accent current line */
 
 .lyrics-heading { display: none !important; }
 
 .lyrics-track {
   transition: none !important;
   will-change: transform !important;
-  padding: 0 0 70vh !important;
+  padding: 0 0 72vh !important;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 #lyricsContainer {
   padding: 0 !important;
   transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
-/* Base line — same weight family as Apple (heavy display) */
 #lyricsContainer .lyric-line {
   font-weight: 700 !important;
-  letter-spacing: -0.03em !important;
-  line-height: 1.15 !important;
-  margin: 0 0 clamp(22px, 3.2vh, 40px) !important;
+  letter-spacing: -0.035em !important;
+  line-height: 1.18 !important;
+  margin: 0 0 clamp(24px, 3.4vh, 44px) !important;
   transition:
-    color 0.55s cubic-bezier(0.25, 0.1, 0.25, 1),
-    opacity 0.55s cubic-bezier(0.25, 0.1, 0.25, 1),
-    filter 0.6s cubic-bezier(0.25, 0.1, 0.25, 1),
-    transform 0.55s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
-  transform: scale(1);
+    color 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    text-shadow 0.65s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  transform: scale(1) translateZ(0);
   transform-origin: left center;
+  will-change: color, opacity, filter, transform;
 }
 
-/* CURRENT — brightest, slightly larger, no blur */
+/* CURRENT — accent color, slightly larger, soft glow */
 #lyricsContainer .lyric-line.active {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  color: var(--accent-bright) !important;
+  -webkit-text-fill-color: var(--accent-bright) !important;
   opacity: 1 !important;
   filter: none !important;
-  transform: scale(1.04) !important;
-  text-shadow: none !important;
+  transform: scale(1.05) translateZ(0) !important;
+  text-shadow:
+    0 0 24px color-mix(in srgb, var(--accent) 40%, transparent),
+    0 0 48px color-mix(in srgb, var(--accent) 18%, transparent) !important;
 }
 
-/* NEXT — still bright but secondary */
+/* NEXT — clear secondary */
 #lyricsContainer .lyric-line.next {
-  color: rgba(255, 255, 255, 0.55) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.55) !important;
+  color: rgba(255, 255, 255, 0.58) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.58) !important;
   opacity: 1 !important;
   filter: none !important;
-  transform: scale(1) !important;
+  transform: scale(1) translateZ(0) !important;
   text-shadow: none !important;
 }
 
-/* Further upcoming — dimmer ladder */
+/* Further upcoming */
 #lyricsContainer .lyric-line.next-next,
 #lyricsContainer .lyric-line.next-third,
 #lyricsContainer .lyric-line.upcoming {
-  color: rgba(255, 255, 255, 0.28) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.28) !important;
+  color: rgba(255, 255, 255, 0.30) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.30) !important;
   opacity: 1 !important;
   filter: none !important;
-  transform: scale(1) !important;
+  transform: scale(1) translateZ(0) !important;
+  text-shadow: none !important;
 }
 
-/* PAST — fade up, slight blur like Apple */
+/* PAST — soft fade + blur */
 #lyricsContainer .lyric-line.past {
-  color: rgba(255, 255, 255, 0.22) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.22) !important;
+  color: rgba(255, 255, 255, 0.24) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.24) !important;
   opacity: 1 !important;
-  filter: blur(0.8px) !important;
-  transform: scale(0.98) !important;
+  filter: blur(0.85px) !important;
+  transform: scale(0.985) translateZ(0) !important;
+  text-shadow: none !important;
 }
 
 #lyricsContainer .lyric-line.past-second {
   color: rgba(255, 255, 255, 0.12) !important;
   -webkit-text-fill-color: rgba(255, 255, 255, 0.12) !important;
   opacity: 1 !important;
-  filter: blur(1.5px) !important;
-  transform: scale(0.97) !important;
+  filter: blur(1.6px) !important;
+  transform: scale(0.97) translateZ(0) !important;
+  text-shadow: none !important;
 }
 
 #lyricsContainer .lyric-line.offscreen {
   opacity: 0 !important;
-  filter: blur(2px) !important;
+  filter: blur(2.2px) !important;
   visibility: visible !important;
   pointer-events: none !important;
 }
 
-/* Viewport fades: soft top only when past exists, soft bottom always */
+/* Soft edge fades */
 #lyricsContainer:not(.has-past-lyrics) {
   -webkit-mask-image: linear-gradient(
     to bottom,
     #000 0%,
-    #000 55%,
-    rgba(0,0,0,0.85) 72%,
-    rgba(0,0,0,0.4) 88%,
+    #000 52%,
+    rgba(0,0,0,0.88) 70%,
+    rgba(0,0,0,0.42) 86%,
     transparent 100%
   ) !important;
   mask-image: linear-gradient(
     to bottom,
     #000 0%,
-    #000 55%,
-    rgba(0,0,0,0.85) 72%,
-    rgba(0,0,0,0.4) 88%,
+    #000 52%,
+    rgba(0,0,0,0.88) 70%,
+    rgba(0,0,0,0.42) 86%,
     transparent 100%
   ) !important;
 }
@@ -10003,26 +10015,30 @@ button:active,
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(0,0,0,0.25) 4%,
-    #000 12%,
-    #000 55%,
-    rgba(0,0,0,0.85) 72%,
-    rgba(0,0,0,0.4) 88%,
+    rgba(0,0,0,0.3) 5%,
+    #000 13%,
+    #000 52%,
+    rgba(0,0,0,0.88) 70%,
+    rgba(0,0,0,0.42) 86%,
     transparent 100%
   ) !important;
   mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(0,0,0,0.25) 4%,
-    #000 12%,
-    #000 55%,
-    rgba(0,0,0,0.85) 72%,
-    rgba(0,0,0,0.4) 88%,
+    rgba(0,0,0,0.3) 5%,
+    #000 13%,
+    #000 52%,
+    rgba(0,0,0,0.88) 70%,
+    rgba(0,0,0,0.42) 86%,
     transparent 100%
   ) !important;
 }
 
-/* Prefer white active line like Apple; accent only if you want brand later */
+@media (prefers-reduced-motion: reduce) {
+  #lyricsContainer .lyric-line {
+    transition: color 0.2s linear, opacity 0.2s linear !important;
+  }
+}
 </style>
 
 </body>
