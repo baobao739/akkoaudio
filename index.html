@@ -8956,8 +8956,9 @@ function computeLyricOffset(activeIndex, elements, track) {
     if (!line) return 0;
 
     const viewportHeight = Math.max(1, lyricsContainer.clientHeight);
-    // Fixed Apple-like slot — upcoming always glides UP into it
-    const anchorRatio = 0.22;
+    // Centered slot — balance past (above) and upcoming (below)
+    // ~42% keeps a slight Apple bias upward without a huge empty bottom
+    const anchorRatio = 0.42;
     const anchor = viewportHeight * anchorRatio;
     const desired = line.offsetTop - anchor;
     const maxOffset = Math.max(0, track.offsetHeight - viewportHeight * 0.30);
@@ -9006,6 +9007,8 @@ function updateLyrics(time) {
     lyricMotion.activeIndex = activeIndex;
     lyricsContainer.classList.toggle("has-past-lyrics", activeIndex >= 1);
 
+    // Visible window: 1 past + 1 current + 3 upcoming (5 lines).
+    // Long lines still keep only one current + one past.
     elements.forEach((element, index) => {
         element.classList.remove(
             "active", "next", "next-next", "next-third", "next-fourth",
@@ -9013,26 +9016,21 @@ function updateLyrics(time) {
         );
 
         if (activeIndex < 0) {
-            if (index === 0) element.classList.add("next");
-            else if (index === 1) element.classList.add("next-next");
-            else element.classList.add("upcoming");
+            // Before first timestamp: show first 3 as upcoming
+            if (index <= 2) element.classList.add("upcoming");
+            else element.classList.add("offscreen");
             return;
         }
 
-        if (index < activeIndex - 2) {
-            element.classList.add("offscreen");
-        } else if (index === activeIndex - 2) {
-            element.classList.add("past-second");
-        } else if (index === activeIndex - 1) {
+        if (index === activeIndex - 1) {
             element.classList.add("past");
         } else if (index === activeIndex) {
             element.classList.add("active");
-        } else if (index === activeIndex + 1) {
-            element.classList.add("next");
-        } else if (index === activeIndex + 2) {
-            element.classList.add("next-next");
-        } else {
+        } else if (index >= activeIndex + 1 && index <= activeIndex + 3) {
+            // All three upcoming share the same style
             element.classList.add("upcoming");
+        } else {
+            element.classList.add("offscreen");
         }
     });
 
@@ -10193,6 +10191,109 @@ button:active,
   will-change: transform !important;
   backface-visibility: hidden !important;
   -webkit-backface-visibility: hidden !important;
+}
+</style>
+
+
+<style id="akko-lyrics-centered-slot">
+/* More balanced top/bottom fades around the centered active line */
+#lyricsContainer {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.45) 6%,
+    #000 14%,
+    #000 72%,
+    rgba(0,0,0,0.75) 86%,
+    transparent 100%
+  ) !important;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.45) 6%,
+    #000 14%,
+    #000 72%,
+    rgba(0,0,0,0.75) 86%,
+    transparent 100%
+  ) !important;
+}
+
+#lyricsContainer.has-past-lyrics {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.4) 5%,
+    #000 12%,
+    #000 72%,
+    rgba(0,0,0,0.75) 86%,
+    transparent 100%
+  ) !important;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.4) 5%,
+    #000 12%,
+    #000 72%,
+    rgba(0,0,0,0.75) 86%,
+    transparent 100%
+  ) !important;
+}
+</style>
+
+
+<style id="akko-lyrics-five-line-window">
+/* 5-line window: 1 past, 1 current, 3 upcoming (same color + light blur) */
+
+#lyricsContainer .lyric-line {
+  transform: none !important;
+  text-shadow: none !important;
+  transition:
+    color 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.85s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* CURRENT */
+#lyricsContainer .lyric-line.active {
+  color: var(--accent-bright) !important;
+  -webkit-text-fill-color: var(--accent-bright) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* ALL upcoming = same color + little blur */
+#lyricsContainer .lyric-line.upcoming,
+#lyricsContainer .lyric-line.next,
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third,
+#lyricsContainer .lyric-line.next-fourth {
+  color: rgba(255, 255, 255, 0.42) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.42) !important;
+  opacity: 1 !important;
+  filter: blur(1.1px) !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+
+/* ONE past — strong blur */
+#lyricsContainer .lyric-line.past {
+  color: rgba(255, 255, 255, 0.26) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.26) !important;
+  opacity: 1 !important;
+  filter: blur(3.6px) !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+
+/* Anything outside the 5-line window */
+#lyricsContainer .lyric-line.past-second,
+#lyricsContainer .lyric-line.offscreen {
+  opacity: 0 !important;
+  filter: blur(6px) !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+  text-shadow: none !important;
 }
 </style>
 
