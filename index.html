@@ -2068,7 +2068,7 @@ body::after {
     will-change: transform;
     transform: translate3d(0, 0, 0);
     transition: transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
-    padding: 4vh 0 58vh;
+    padding: 11vh 0 58vh;
 }
 
 .lyric-line {
@@ -2104,15 +2104,20 @@ body::after {
     transform: translate3d(0, 0, 0);
 }
 
-/* Upcoming — same brightness, wait below and step up with scroll */
+/* Upcoming — clearly dimmer than the active accent lyric */
 .lyric-line.next,
 .lyric-line.next-next,
 .lyric-line.next-third,
 .lyric-line.upcoming {
-    color: rgba(255,255,255,0.92);
+    color: rgba(255,255,255,0.42);
     opacity: 1;
     filter: none;
     transform: translate3d(0, 0, 0);
+}
+
+/* The immediate next line stays visible, but does not compete with active */
+.lyric-line.next {
+    color: rgba(255,255,255,0.58);
 }
 
 /* First past lyric — still clearly readable, like a recently finished line */
@@ -5171,6 +5176,62 @@ body::after {
   mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.45) 7%, #000 18%, #000 62%, rgba(0,0,0,.88) 76%, rgba(0,0,0,.48) 89%, transparent 100%) !important;
 }
 </style>
+
+<style id="akko-lyric-fade-final-fix">
+/* Keep the first upcoming lyric safely below the top fade. */
+#lyricsContainer,
+.lyrics-container,
+.lyrics,
+.lyrics-box,
+.lyrics-panel {
+  padding-top: 56px !important;
+  box-sizing: border-box !important;
+}
+
+/* Upcoming lyrics are intentionally darker than the active accent. */
+#lyricsContainer .lyric-line.upcoming,
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third,
+#lyricsContainer .lyric-line.next-fourth,
+.lyrics-container .lyric-line.upcoming,
+.lyrics-container .lyric-line.next-next,
+.lyrics-container .lyric-line.next-third,
+.lyrics-container .lyric-line.next-fourth,
+.lyrics .lyric-line.upcoming,
+.lyrics .lyric-line.next-next,
+.lyrics .lyric-line.next-third,
+.lyrics .lyric-line.next-fourth,
+.lyric-line.upcoming {
+  color: rgba(255, 255, 255, 0.34) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.34) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  font-weight: 500 !important;
+}
+
+/* The immediate next lyric is visible, but not almost-white. */
+#lyricsContainer .lyric-line.next,
+.lyrics-container .lyric-line.next,
+.lyrics .lyric-line.next,
+.lyric-line.next {
+  color: rgba(255, 255, 255, 0.52) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.52) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  font-weight: 600 !important;
+}
+
+/* Active lyric remains the strongest line. */
+#lyricsContainer .lyric-line.active,
+.lyrics-container .lyric-line.active,
+.lyrics .lyric-line.active,
+.lyric-line.current {
+  opacity: 1 !important;
+  filter: none !important;
+  font-weight: 700 !important;
+}
+</style>
+
 </head>
 
 <body>
