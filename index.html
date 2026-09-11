@@ -5129,6 +5129,48 @@ body::after {
     -webkit-font-smoothing: antialiased;
 }
 </style>
+
+
+<!-- Reorganized additions kept inside the document head -->
+<style id="akko-next-lyric-final-verified">
+/* Final lyric hierarchy: active > immediate next > other upcoming */
+#lyricsContainer .lyric-line.next {
+  color: #e8e8ee !important;
+  -webkit-text-fill-color: #e8e8ee !important;
+  opacity: 1 !important;
+  filter: none !important;
+  font-weight: 700 !important;
+}
+
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third,
+#lyricsContainer .lyric-line.upcoming {
+  color: #c9c9d1 !important;
+  -webkit-text-fill-color: #c9c9d1 !important;
+  opacity: 1 !important;
+  filter: none !important;
+  font-weight: 600 !important;
+}
+
+#lyricsContainer .lyric-line.past {
+  color: #858590 !important;
+  -webkit-text-fill-color: #858590 !important;
+  opacity: .72 !important;
+  filter: blur(.35px) !important;
+}
+
+#lyricsContainer .lyric-line.past-second {
+  color: #686873 !important;
+  -webkit-text-fill-color: #686873 !important;
+  opacity: .42 !important;
+  filter: blur(1.1px) !important;
+}
+
+#lyricsContainer {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.45) 7%, #000 18%, #000 62%, rgba(0,0,0,.88) 76%, rgba(0,0,0,.48) 89%, transparent 100%) !important;
+  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.45) 7%, #000 18%, #000 62%, rgba(0,0,0,.88) 76%, rgba(0,0,0,.48) 89%, transparent 100%) !important;
+}
+</style>
 </head>
 
 <body>
@@ -9335,44 +9377,3 @@ button:active,
 
 </body>
 </html>
-
-
-<style id="akko-next-lyric-final-verified">
-/* Final lyric hierarchy: active > immediate next > other upcoming */
-#lyricsContainer .lyric-line.next {
-  color: #e8e8ee !important;
-  -webkit-text-fill-color: #e8e8ee !important;
-  opacity: 1 !important;
-  filter: none !important;
-  font-weight: 700 !important;
-}
-
-#lyricsContainer .lyric-line.next-next,
-#lyricsContainer .lyric-line.next-third,
-#lyricsContainer .lyric-line.upcoming {
-  color: #c9c9d1 !important;
-  -webkit-text-fill-color: #c9c9d1 !important;
-  opacity: 1 !important;
-  filter: none !important;
-  font-weight: 600 !important;
-}
-
-#lyricsContainer .lyric-line.past {
-  color: #858590 !important;
-  -webkit-text-fill-color: #858590 !important;
-  opacity: .72 !important;
-  filter: blur(.35px) !important;
-}
-
-#lyricsContainer .lyric-line.past-second {
-  color: #686873 !important;
-  -webkit-text-fill-color: #686873 !important;
-  opacity: .42 !important;
-  filter: blur(1.1px) !important;
-}
-
-#lyricsContainer {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.45) 7%, #000 18%, #000 62%, rgba(0,0,0,.88) 76%, rgba(0,0,0,.48) 89%, transparent 100%) !important;
-  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.45) 7%, #000 18%, #000 62%, rgba(0,0,0,.88) 76%, rgba(0,0,0,.48) 89%, transparent 100%) !important;
-}
-</style>
