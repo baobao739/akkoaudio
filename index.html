@@ -2068,7 +2068,9 @@ body::after {
     will-change: transform;
     transform: translate3d(0, 0, 0);
     transition: transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
-    padding: 11vh 0 58vh;
+    /* Minimal top padding so the first lyric can sit at the very top.
+       Extra bottom padding keeps later lines able to scroll into view. */
+    padding: 8px 0 58vh;
 }
 
 .lyric-line {
@@ -2078,7 +2080,8 @@ body::after {
     padding: 0;
     color: rgba(255,255,255,0.9);
     font-size: clamp(28px, 3.4vw, 52px);
-    font-weight: 700;
+    font-weight: 760;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
     line-height: 1.2;
     letter-spacing: -1.1px;
     overflow-wrap: anywhere;
@@ -7493,7 +7496,7 @@ function playSongNow(song) {
 
     updateSongUI();
 
-    currentLyrics = []; lyricsContainer.classList.add('lyrics-idle');
+    currentLyrics = []; lyricsContainer.classList.add('lyrics-idle'); lyricsContainer.classList.remove('has-past-lyrics');
     lastActiveIndex = null;
     lyricsContainer.innerHTML = "";
     loadLyrics(song.lyrics);
@@ -7845,7 +7848,7 @@ function parseLRC(text) {
    ========================================================= */
 
 async function loadLyrics(path) {
-    currentLyrics = []; lyricsContainer.classList.add('lyrics-idle');
+    currentLyrics = []; lyricsContainer.classList.add('lyrics-idle'); lyricsContainer.classList.remove('has-past-lyrics');
     lastActiveIndex = null;
 
     lyricsContainer.innerHTML = "";
@@ -8844,13 +8847,20 @@ function updateLyrics(time) {
     const track = lyricsContainer.querySelector(".lyrics-track");
     if (!track || !elements.length) return;
 
+    // Fade the top of the viewport only once past lyrics exist.
+    // First lyric starts fully visible at the top (not faded).
+    const hasPast = activeIndex >= 1;
+    lyricsContainer.classList.toggle("has-past-lyrics", hasPast);
+
     elements.forEach((element, index) => {
         element.classList.remove(
             "active", "next", "next-next", "next-third", "next-fourth",
-            "upcoming", "past", "fade-past", "offscreen"
+            "upcoming", "past", "past-second", "fade-past", "offscreen"
         );
 
         if (activeIndex < 0) {
+            // Song has not reached the first timestamp yet —
+            // show the opening lines as upcoming, first one crisp at top.
             if (index === 0) element.classList.add("next");
             else if (index === 1) element.classList.add("next-next");
             else element.classList.add("upcoming");
@@ -8861,10 +8871,10 @@ function updateLyrics(time) {
             // Keep older lyrics in the layout so the track never jumps.
             element.classList.add("offscreen");
         } else if (index === activeIndex - 2) {
-            // Second past line: only a faint peek near the very top.
+            // Second past line: faint peek near the top.
             element.classList.add("past-second");
         } else if (index === activeIndex - 1) {
-            // First past line: readable but softly faded.
+            // Immediately previous line: readable but faded at the top.
             element.classList.add("past");
         } else if (index === activeIndex) {
             element.classList.add("active");
@@ -8883,7 +8893,10 @@ function updateLyrics(time) {
         if (!line) return;
 
         const viewportHeight = Math.max(1, lyricsContainer.clientHeight);
-        const anchorRatio = activeIndex < 0 ? 0.06 : 0.32;
+        // First lyric (or pre-start): pin to the very top, fully visible.
+        // After that: lock the current line near the upper-middle so past
+        // lines sit in the faded top zone.
+        const anchorRatio = (activeIndex <= 0) ? 0.02 : 0.30;
         const anchor = viewportHeight * anchorRatio;
         const desired = line.offsetTop - anchor;
         const maxOffset = Math.max(0, track.offsetHeight - viewportHeight * 0.4);
@@ -9431,6 +9444,108 @@ button:active,
 .lyric-line.next-third,
 .lyric-line.upcoming {
   color: #c9c9d1 !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+</style>
+
+
+<style id="akko-lyric-font-and-top-fade-final">
+/* Same font face + weight for every lyric line (current and upcoming). */
+#lyricsContainer .lyric-line,
+#lyricsContainer .lyric-line.active,
+#lyricsContainer .lyric-line.next,
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third,
+#lyricsContainer .lyric-line.next-fourth,
+#lyricsContainer .lyric-line.upcoming,
+#lyricsContainer .lyric-line.past,
+#lyricsContainer .lyric-line.past-second,
+#lyricsContainer .lyric-line.offscreen,
+#lyricsContainer .lyric-line.pause {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif !important;
+  font-weight: 760 !important;
+  font-size: clamp(28px, 3.4vw, 52px) !important;
+  letter-spacing: -1.1px !important;
+  -webkit-font-smoothing: antialiased !important;
+}
+
+/* Default: no top fade so the first lyric is fully visible at the top. */
+#lyricsContainer {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 62%,
+    rgba(0,0,0,0.88) 76%,
+    rgba(0,0,0,0.48) 88%,
+    transparent 100%
+  ) !important;
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 62%,
+    rgba(0,0,0,0.88) 76%,
+    rgba(0,0,0,0.48) 88%,
+    transparent 100%
+  ) !important;
+}
+
+/* Once past lyrics exist, soft-fade the top edge so they dissolve upward. */
+#lyricsContainer.has-past-lyrics {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.35) 6%,
+    #000 16%,
+    #000 62%,
+    rgba(0,0,0,0.88) 76%,
+    rgba(0,0,0,0.48) 88%,
+    transparent 100%
+  ) !important;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.35) 6%,
+    #000 16%,
+    #000 62%,
+    rgba(0,0,0,0.88) 76%,
+    rgba(0,0,0,0.48) 88%,
+    transparent 100%
+  ) !important;
+}
+
+/* Past lines: dimmer + light blur so they read as "behind" at the top. */
+#lyricsContainer .lyric-line.past {
+  color: rgba(150, 150, 160, 0.55) !important;
+  -webkit-text-fill-color: rgba(150, 150, 160, 0.55) !important;
+  opacity: 1 !important;
+  filter: blur(0.6px) !important;
+}
+#lyricsContainer .lyric-line.past-second {
+  color: rgba(120, 120, 130, 0.35) !important;
+  -webkit-text-fill-color: rgba(120, 120, 130, 0.35) !important;
+  opacity: 1 !important;
+  filter: blur(1.4px) !important;
+}
+
+/* Upcoming stay same weight as current; only color differs. */
+#lyricsContainer .lyric-line.next {
+  color: #e1e1e8 !important;
+  -webkit-text-fill-color: #e1e1e8 !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third,
+#lyricsContainer .lyric-line.upcoming {
+  color: #c9c9d1 !important;
+  -webkit-text-fill-color: #c9c9d1 !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+#lyricsContainer .lyric-line.active {
+  color: var(--accent-bright) !important;
+  -webkit-text-fill-color: var(--accent-bright) !important;
   opacity: 1 !important;
   filter: none !important;
 }
