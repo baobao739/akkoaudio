@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6424,7 +6425,7 @@ function createSongCard(song, list, autoShuffle = false) {
 
     card.innerHTML = `
         <div class="song-cover">
-            <img src="${escapeHTML(song.cover)}" alt="">
+            <img src="${escapeHTML(resolveCover(song))}" alt="">
             <div class="play-overlay">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
             </div>
@@ -6464,7 +6465,7 @@ function createTrackRow(song, list) {
     const liked = isLiked(song.id);
 
     row.innerHTML = `
-        <img src="${escapeHTML(song.cover)}" alt="">
+        <img src="${escapeHTML(resolveCover(song))}" alt="">
         <div class="track-row-info">
             <div class="track-row-title" data-song-title><span class="marquee-copy">${escapeHTML(song.title)}</span></div>
             <div class="track-row-artist">${escapeHTML(song.artist)}</div>
@@ -6514,6 +6515,60 @@ function addSongToQueue(song) {
         panel.classList.add("open");
         renderQueuePanel();
     }
+}
+
+/* =========================================================
+   GLOBAL COVER OVERRIDE (covers/any.jpg | covers/any.JPG)
+   Drop any.jpg or any.JPG into the covers/ folder to force
+   every cover (home, songs, liked, queue, dock, focus mode
+   + palette) to that image. If it's missing / fails to load,
+   everything stays normal with each song's own cover.
+   ========================================================= */
+
+let globalCoverSrc = null; // null = use per-song covers
+
+function resolveCover(songOrSrc) {
+    if (globalCoverSrc) return globalCoverSrc;
+    if (typeof songOrSrc === "string") return songOrSrc || "";
+    return (songOrSrc && songOrSrc.cover) || "";
+}
+
+function probeImage(src) {
+    return new Promise(resolve => {
+        if (!src) {
+            resolve(false);
+            return;
+        }
+        const img = new Image();
+        // No cache-bust: local any.jpg should load as-is.
+        img.onload = () => resolve(img.naturalWidth > 0 && img.naturalHeight > 0);
+        img.onerror = () => resolve(false);
+        img.src = src;
+    });
+}
+
+async function detectGlobalCover() {
+    globalCoverSrc = null;
+    // Look in covers/ for any.jpg or any.JPG (case variants for different OS/servers).
+    const candidates = [
+        "covers/any.jpg",
+        "covers/any.JPG",
+        "covers/any.jpeg",
+        "covers/any.JPEG",
+        "covers/any.png",
+        "covers/any.PNG",
+        "covers/any.webp",
+        "covers/any.WEBP"
+    ];
+    for (const src of candidates) {
+        if (await probeImage(src)) {
+            globalCoverSrc = src;
+            console.info("[AkkoAudio] Global cover active:", globalCoverSrc);
+            return globalCoverSrc;
+        }
+    }
+    console.info("[AkkoAudio] No covers/any.jpg (or any.JPG) — using per-song covers.");
+    return null;
 }
 
 /* =========================================================
@@ -6568,7 +6623,7 @@ function renderFeatured() {
     featured.className = "featured";
 
     featured.innerHTML = `
-        <img src="${escapeHTML(song.cover)}" alt="">
+        <img src="${escapeHTML(resolveCover(song))}" alt="">
 
         <div class="featured-info">
 
@@ -6995,17 +7050,18 @@ function loadImageForPalette(src) {
 }
 
 async function updateFocusPalette(song) {
-    if (!song?.cover) return;
+    const coverSrc = resolveCover(song);
+    if (!coverSrc) return;
 
     try {
-        const image = await loadImageForPalette(song.cover);
+        const image = await loadImageForPalette(coverSrc);
         const palette = await extractFocusPalette(image);
         if (palette?.length) animateFocusPalette(palette);
     } catch (_) {
         // Retry shortly after cover crossfade paints
         setTimeout(async () => {
             try {
-                const image = await loadImageForPalette(song.cover);
+                const image = await loadImageForPalette(coverSrc);
                 const palette = await extractFocusPalette(image);
                 if (palette?.length) animateFocusPalette(palette);
             } catch (__) {}
@@ -7400,7 +7456,7 @@ function updateSongUI() {
     }
 
     miniSong?.classList.remove("is-empty");
-    crossfadeAllCovers(song.cover);
+    crossfadeAllCovers(resolveCover(song));
 
     setMarqueeTitle(document.getElementById("miniTitle"), song.title, "mini");
     document.getElementById("miniArtist").textContent = song.artist;
@@ -8064,7 +8120,7 @@ function renderQueuePanel() {
             row.style.animationDelay = `${Math.min(i, 12) * 0.03}s`;
 
             row.innerHTML = `
-                <img src="${escapeHTML(song.cover)}" alt="">
+                <img src="${escapeHTML(resolveCover(song))}" alt="">
                 <div class="queue-item-info">
                     <div class="queue-item-title" data-song-title><span class="marquee-copy">${escapeHTML(song.title)}</span></div>
                     <div class="queue-item-artist">${escapeHTML(song.artist)}</div>
@@ -8110,7 +8166,7 @@ function renderQueuePanel() {
         row.dataset.index = String(index);
 
         row.innerHTML = `
-            <img src="${escapeHTML(song.cover)}" alt="">
+            <img src="${escapeHTML(resolveCover(song))}" alt="">
             <div class="queue-item-info">
                 <div class="queue-item-title" data-song-title><span class="marquee-copy">${escapeHTML(song.title)}</span></div>
                 <div class="queue-item-artist">${escapeHTML(song.artist)}</div>
@@ -8778,7 +8834,7 @@ function setupOnboarding() {
     }
 }
 
-function initialize() {
+async function initialize() {
     loadSettings();
     setupOnboarding();
     initCoverLayers();
@@ -8792,6 +8848,9 @@ function initialize() {
     document.getElementById("miniTitle").textContent = "";
     document.getElementById("miniArtist").textContent = "";
 
+    // Detect optional global any.jpg before first paint of covers.
+    await detectGlobalCover();
+
     renderFeatured();
     renderAll();
 
@@ -8800,7 +8859,9 @@ function initialize() {
     updateShuffleButtons();
     updateFullLikeButton();
 
-    initBlobMotion();
+    if (typeof initBlobMotion === "function") {
+        try { initBlobMotion(); } catch (_) {}
+    }
 
     /*
      We intentionally do not autoplay.
