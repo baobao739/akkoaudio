@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2031,6 +2030,8 @@ body::after {
 .lyrics-panel {
     min-width: 0;
     height: 100%;
+    min-height: 0;
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -2068,10 +2069,9 @@ body::after {
 .lyrics-track {
     will-change: transform;
     transform: translate3d(0, 0, 0);
-    transition: transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
-    /* Minimal top padding so the first lyric can sit at the very top.
-       Extra bottom padding keeps later lines able to scroll into view. */
-    padding: 8px 0 58vh;
+    /* Long, soft ease so the first→second line scroll is never a hard snap */
+    transition: transform 1.35s cubic-bezier(0.22, 1, 0.36, 1);
+    padding: 0 0 62vh;
 }
 
 .lyric-line {
@@ -2090,11 +2090,12 @@ body::after {
     transform: none;
     transform-origin: left center;
     opacity: 0.9;
-    will-change: color, opacity, filter;
+    will-change: color, opacity, filter, transform;
     transition:
-        color 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-        opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-        filter 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        color 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+        filter 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Current — accent, settles into place */
@@ -2681,8 +2682,8 @@ html[data-theme="light"] .play-overlay {
     }
 
     .lyrics-panel {
-        height: min(48svh, 380px);
-        min-height: 260px;
+        height: min(58svh, 520px);
+        min-height: 320px;
         margin-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     }
 
@@ -5767,13 +5768,7 @@ body::after {
         </div>
 
         <div class="lyrics-panel" id="lyricsPanel">
-
-            <div class="lyrics-heading">
-                Lyrics
-            </div>
-
             <div id="lyricsContainer" class="lyrics-idle"></div>
-
         </div>
 
     </div>
@@ -8405,20 +8400,13 @@ audio.addEventListener("timeupdate", () => {
    Resetting the active index also prevents stale faded classes/transforms. */
 audio.addEventListener("seeking", () => {
     lastActiveIndex = null;
-    const track = lyricsContainer?.querySelector(".lyrics-track");
-    if (track) track.style.transition = "none";
+    lyricsContainer?.classList.add("is-seeking");
 });
 
 audio.addEventListener("seeked", () => {
     lastActiveIndex = null;
+    lyricsContainer?.classList.add("is-seeking");
     updateLyrics(audio.currentTime || 0);
-    requestAnimationFrame(() => {
-        const track = lyricsContainer?.querySelector(".lyrics-track");
-        if (track) {
-            track.style.transition = "";
-            track.getBoundingClientRect();
-        }
-    });
 });
 
 /* High-frequency lyric sync for smoother line changes (esp. Safari / iPad) */
@@ -8900,6 +8888,7 @@ function updateLyrics(time) {
 
     // Only reposition when the active lyric actually changes.
     if (lastActiveIndex !== null && activeIndex === lastActiveIndex) return;
+    const previousActive = lastActiveIndex;
     lastActiveIndex = activeIndex;
 
     const elements = Array.from(
@@ -8909,7 +8898,7 @@ function updateLyrics(time) {
     if (!track || !elements.length) return;
 
     // Fade the top of the viewport only once past lyrics exist.
-    // First lyric starts fully visible at the top (not faded).
+    // First lyric starts fully visible at the very top (not faded).
     const hasPast = activeIndex >= 1;
     lyricsContainer.classList.toggle("has-past-lyrics", hasPast);
 
@@ -8920,8 +8909,6 @@ function updateLyrics(time) {
         );
 
         if (activeIndex < 0) {
-            // Song has not reached the first timestamp yet —
-            // show the opening lines as upcoming, first one crisp at top.
             if (index === 0) element.classList.add("next");
             else if (index === 1) element.classList.add("next-next");
             else element.classList.add("upcoming");
@@ -8929,13 +8916,10 @@ function updateLyrics(time) {
         }
 
         if (index < activeIndex - 2) {
-            // Keep older lyrics in the layout so the track never jumps.
             element.classList.add("offscreen");
         } else if (index === activeIndex - 2) {
-            // Second past line: faint peek near the top.
             element.classList.add("past-second");
         } else if (index === activeIndex - 1) {
-            // Immediately previous line: readable but faded at the top.
             element.classList.add("past");
         } else if (index === activeIndex) {
             element.classList.add("active");
@@ -8948,26 +8932,46 @@ function updateLyrics(time) {
         }
     });
 
+    // Smooth track scroll — never snap on normal line changes.
     requestAnimationFrame(() => {
         const focusIndex = activeIndex < 0 ? 0 : activeIndex;
         const line = elements[focusIndex];
         if (!line) return;
 
         const viewportHeight = Math.max(1, lyricsContainer.clientHeight);
-        // First lyric (or pre-start): pin to the very top, fully visible.
-        // After that: lock the current line near the upper-middle so past
-        // lines sit in the faded top zone.
-        const anchorRatio = (activeIndex <= 0) ? 0.02 : 0.30;
+        // First lyric (and pre-start): pin flush to the top of the box.
+        // After that: ease the active line into the upper-middle so past
+        // lines can sit in the soft top fade.
+        const anchorRatio = (activeIndex <= 0) ? 0.0 : 0.28;
         const anchor = viewportHeight * anchorRatio;
         const desired = line.offsetTop - anchor;
-        const maxOffset = Math.max(0, track.offsetHeight - viewportHeight * 0.4);
+        const maxOffset = Math.max(0, track.offsetHeight - viewportHeight * 0.35);
         const offset = Math.min(Math.max(0, desired), maxOffset);
+        const targetY = -offset;
 
-        // The CSS transition handles the movement; do not collapse/reflow
-        // lyrics while this transform is travelling to the new position.
-        track.style.transform = `translate3d(0, ${-offset}px, 0)`;
+        // First paint / hard seek: jump with no transition.
+        // Every normal line change: butter-smooth CSS transition.
+        const isFirstPaint = previousActive === null && activeIndex <= 0;
+        const isHardJump = lyricsContainer.classList.contains("is-seeking");
+
+        if (isFirstPaint || isHardJump) {
+            track.style.transition = "none";
+            track.style.transform = `translate3d(0, ${targetY}px, 0)`;
+            // Force reflow, then restore the soft transition for next moves.
+            void track.offsetHeight;
+            track.style.transition = "";
+            lyricsContainer.classList.remove("is-seeking");
+        } else {
+            // Ensure transition is active (in case a seek left it off).
+            if (track.style.transition === "none") {
+                track.style.transition = "";
+                void track.offsetHeight;
+            }
+            track.style.transform = `translate3d(0, ${targetY}px, 0)`;
+        }
     });
 }
+
 
 window.addEventListener("resize", refreshLyricViewport, { passive: true });
 
@@ -9609,6 +9613,104 @@ button:active,
   -webkit-text-fill-color: var(--accent-bright) !important;
   opacity: 1 !important;
   filter: none !important;
+}
+</style>
+
+
+<style id="akko-lyrics-butter-smooth-final">
+/* Hide any leftover "Lyrics" label */
+.lyrics-heading { display: none !important; }
+
+/* Bigger lyrics area on desktop focus mode */
+.full-content {
+  grid-template-columns: minmax(300px, 42%) minmax(0, 58%) !important;
+}
+.lyrics-panel {
+  height: 100% !important;
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+}
+#lyricsContainer {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  padding: 0 !important;
+}
+
+/* Butter-smooth track scroll */
+.lyrics-track {
+  transition: transform 1.35s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  padding: 0 0 65vh !important;
+  will-change: transform !important;
+}
+
+/* Line state changes also ease softly */
+#lyricsContainer .lyric-line {
+  transition:
+    color 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.95s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* First lyric sits flush at the top of the box */
+#lyricsContainer:not(.has-past-lyrics) {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 58%,
+    rgba(0,0,0,0.9) 74%,
+    rgba(0,0,0,0.5) 88%,
+    transparent 100%
+  ) !important;
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 58%,
+    rgba(0,0,0,0.9) 74%,
+    rgba(0,0,0,0.5) 88%,
+    transparent 100%
+  ) !important;
+}
+
+/* Soft top fade only after past lyrics exist */
+#lyricsContainer.has-past-lyrics {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.28) 5%,
+    #000 14%,
+    #000 58%,
+    rgba(0,0,0,0.9) 74%,
+    rgba(0,0,0,0.5) 88%,
+    transparent 100%
+  ) !important;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.28) 5%,
+    #000 14%,
+    #000 58%,
+    rgba(0,0,0,0.9) 74%,
+    rgba(0,0,0,0.5) 88%,
+    transparent 100%
+  ) !important;
+}
+
+@media (max-width: 760px) {
+  .lyrics-panel {
+    height: min(60svh, 560px) !important;
+    min-height: 340px !important;
+  }
+  .full-content {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lyrics-track {
+    transition: none !important;
+  }
 }
 </style>
 
