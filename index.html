@@ -9135,47 +9135,44 @@ function updateLyrics(time) {
 
     lyricsContainer.classList.remove("lyrics-idle");
 
-    // True active line by timestamp (color / hierarchy)
-    let activeIndex = -1;
+    // Timestamp-true active (when the line is actually sung)
+    let timedIndex = -1;
     for (let index = 0; index < currentLyrics.length; index++) {
-        if (time >= currentLyrics[index].time) activeIndex = index;
+        if (time >= currentLyrics[index].time) timedIndex = index;
         else break;
     }
 
-    // Scroll leads the timestamp: start moving early so the glide
-    // finishes right as the next lyric begins.
+    // Lead the next line so the glide finishes as that lyric starts.
+    // Visual focus (accent + scroll) stays LOCKED together — never leave
+    // the accent sitting in the past zone while the track moves on.
     const leadSec = (lyricMotion.lineStepMs || 580) / 1000;
-    let scrollIndex = activeIndex < 0 ? 0 : activeIndex;
-    const nextIdx = activeIndex + 1;
+    let focusIndex = timedIndex < 0 ? 0 : timedIndex;
+    const nextIdx = timedIndex + 1;
     if (nextIdx >= 0 && nextIdx < currentLyrics.length) {
         const nextTime = currentLyrics[nextIdx].time;
         if (time >= nextTime - leadSec) {
-            scrollIndex = nextIdx;
+            focusIndex = nextIdx;
         }
     }
-    // Before the first lyric: still park on line 0
-    if (activeIndex < 0) scrollIndex = 0;
+    if (timedIndex < 0) focusIndex = 0;
 
     const elements = Array.from(lyricsContainer.querySelectorAll(".lyric-line"));
     const track = getLyricTrack();
     if (!track || !elements.length) return;
 
-    const previousIndex = lyricMotion.activeIndex;
-    const previousScroll = lyricMotion.scrollIndex;
+    const previousFocus = lyricMotion.scrollIndex;
     const hardSync = lyricsContainer.classList.contains("is-seeking");
 
-    // Bail only if both color state and scroll target are unchanged
-    if (
-        previousIndex === activeIndex &&
-        previousScroll === scrollIndex &&
-        !hardSync
-    ) return;
+    // Only re-run when the visual focus actually changes (or seek)
+    if (previousFocus === focusIndex && !hardSync) return;
 
-    lyricMotion.activeIndex = activeIndex;
-    lyricMotion.scrollIndex = scrollIndex;
-    lastActiveIndex = activeIndex;
-    lyricsContainer.classList.toggle("has-past-lyrics", activeIndex > 0);
+    lyricMotion.activeIndex = focusIndex;
+    lyricMotion.scrollIndex = focusIndex;
+    lastActiveIndex = focusIndex;
+    lyricsContainer.classList.toggle("has-past-lyrics", focusIndex > 0);
 
+    // Classes follow focusIndex so accent rides the same line that slides
+    // into the current slot — smooth butter, no accent bounce-back.
     elements.forEach((element, index) => {
         element.classList.remove(
             "active", "next", "next-next", "next-third", "next-fourth",
@@ -9184,7 +9181,7 @@ function updateLyrics(time) {
         );
         element.removeAttribute("aria-current");
 
-        if (activeIndex < 0) {
+        if (focusIndex < 0) {
             if (index === 0) {
                 element.classList.add("active");
                 element.setAttribute("aria-current", "true");
@@ -9194,16 +9191,16 @@ function updateLyrics(time) {
             return;
         }
 
-        if (index === activeIndex) {
+        if (index === focusIndex) {
             element.classList.add("active");
             element.setAttribute("aria-current", "true");
-        } else if (index === activeIndex - 1) {
+        } else if (index === focusIndex - 1) {
             element.classList.add("past");
-        } else if (index === activeIndex - 2) {
+        } else if (index === focusIndex - 2) {
             element.classList.add("past-second");
-        } else if (index < activeIndex - 2) {
+        } else if (index < focusIndex - 2) {
             element.classList.add("offscreen");
-        } else if (index === activeIndex + 1) {
+        } else if (index === focusIndex + 1) {
             element.classList.add("next");
             element.classList.add("upcoming");
         } else {
@@ -9211,22 +9208,20 @@ function updateLyrics(time) {
         }
     });
 
-    // Scroll toward the lead index (often the upcoming line)
-    const offset = computeLyricOffset(scrollIndex, elements, track);
+    const offset = computeLyricOffset(focusIndex < 0 ? 0 : focusIndex, elements, track);
 
-    const focusIndex = activeIndex < 0 ? 0 : activeIndex;
     if (!lyricMotion.introDone) {
-        introduceFirstLyric(elements[focusIndex]);
+        introduceFirstLyric(elements[focusIndex < 0 ? 0 : focusIndex]);
         lyricMotion.introDone = true;
     }
 
-    const firstPaint = previousIndex === null;
+    const firstPaint = previousFocus === null;
     const jumped =
-        previousScroll !== null &&
-        Math.abs(scrollIndex - previousScroll) > 2;
+        previousFocus !== null &&
+        Math.abs(focusIndex - previousFocus) > 2;
     const sequentialStep =
-        previousScroll !== null &&
-        Math.abs(scrollIndex - previousScroll) === 1;
+        previousFocus !== null &&
+        Math.abs(focusIndex - previousFocus) === 1;
     const instant = (hardSync || firstPaint || jumped) && !sequentialStep;
     setLyricScrollTarget(offset, instant);
 
