@@ -5545,14 +5545,18 @@ body::after {
                         <span class="focus-bg-preview dynamic"></span>
                         <span>Dynamic</span>
                     </button>
-                    <button class="focus-bg-option" data-focus-bg="rainy" type="button">
-                        <span class="focus-bg-preview rainy"></span>
-                        <span>Rainy</span>
+                    <button class="focus-bg-option" data-focus-bg="trees" type="button">
+                        <span class="focus-bg-preview trees"></span>
+                        <span>Trees</span>
+                    </button>
+                    <button class="focus-bg-option" data-focus-bg="flowers" type="button">
+                        <span class="focus-bg-preview flowers"></span>
+                        <span>Flowers</span>
                     </button>
                 </div>
                 <p class="settings-hint">
-                    Rainy uses <code>covers/rainy.mp4</code> as a clear looping video behind left-side lyrics.
-                    Put your video file there (same folder as covers).
+                    Trees uses <code>covers/trees.mp4</code> and Flowers uses <code>covers/flowers.mp4</code>
+                    as looping video behind the lyrics. Put the files in the same folder as covers.
                 </p>
             </div>
 
@@ -5692,7 +5696,7 @@ body::after {
     <video
         id="focusVideo"
         class="focus-video"
-        src="covers/rainy.mp4"
+        src="covers/trees.mp4"
         muted
         loop
         playsinline
@@ -8045,11 +8049,13 @@ function openFullPlayer() {
     document.body.style.overflow = "hidden";
     startBlobMotion();
 
-    const focusBg = localStorage.getItem("akkoflac-focus-bg") || "dynamic";
-    fullPlayer.classList.toggle("focus-video-mode", focusBg === "rainy");
-    // Rainy starts lyrics-only; Dynamic starts with chrome visible
-    fullPlayer.classList.toggle("chrome-hidden", focusBg === "rainy");
-    if (focusBg === "rainy") startFocusVideo();
+    let focusBg = localStorage.getItem("akkoflac-focus-bg") || "dynamic";
+    if (focusBg === "rainy") focusBg = "trees"; // rename legacy value
+    const isVideoBg = focusBg === "trees" || focusBg === "flowers";
+    fullPlayer.classList.toggle("focus-video-mode", isVideoBg);
+    // Video modes start lyrics-only; Dynamic starts with chrome visible
+    fullPlayer.classList.toggle("chrome-hidden", isVideoBg);
+    if (isVideoBg) startFocusVideo(focusBg);
     else stopFocusVideo();
 
     // Lock lyrics to the high anchor once layout is ready (no late re-center spring)
@@ -8741,11 +8747,25 @@ function loadSettings() {
    FOCUS BACKGROUND — dynamic motion vs looping video
    ========================================================= */
 
-const FOCUS_VIDEO_SRC = "covers/rainy.mp4";
+const FOCUS_VIDEO_SRC = {
+    trees: "covers/trees.mp4",
+    flowers: "covers/flowers.mp4"
+};
+
+function normalizeFocusBg(mode) {
+    const raw = String(mode || "dynamic").toLowerCase().trim();
+    if (raw === "rainy") return "trees"; // legacy rename
+    if (raw === "trees" || raw === "flowers") return raw;
+    return "dynamic";
+}
+
+function isFocusVideoMode(mode) {
+    const m = normalizeFocusBg(mode);
+    return m === "trees" || m === "flowers";
+}
 
 function applyFocusBackground(mode) {
-    const raw = String(mode || "dynamic").toLowerCase().trim();
-    const selected = raw === "rainy" ? "rainy" : "dynamic";
+    const selected = normalizeFocusBg(mode);
     const root = document.documentElement;
     root.dataset.focusBg = selected;
     try { localStorage.setItem("akkoflac-focus-bg", selected); } catch (_) {}
@@ -8759,7 +8779,7 @@ function applyFocusBackground(mode) {
 
     const player = document.getElementById("fullPlayer");
     if (player) {
-        if (selected === "rainy") {
+        if (isFocusVideoMode(selected)) {
             player.classList.add("focus-video-mode");
         } else {
             player.classList.remove("focus-video-mode");
@@ -8769,17 +8789,18 @@ function applyFocusBackground(mode) {
 
     // Sync video only while focus is open
     if (player?.classList.contains("open")) {
-        if (selected === "rainy") startFocusVideo();
+        if (isFocusVideoMode(selected)) startFocusVideo(selected);
         else stopFocusVideo();
     }
 }
 
-function startFocusVideo() {
+function startFocusVideo(mode) {
     const video = document.getElementById("focusVideo");
     if (!video) return;
-    // Always point at covers/rainy.mp4 so a replaced file is picked up
-    if (video.getAttribute("src") !== FOCUS_VIDEO_SRC) {
-        video.src = FOCUS_VIDEO_SRC;
+    const selected = normalizeFocusBg(mode || localStorage.getItem("akkoflac-focus-bg") || "trees");
+    const src = FOCUS_VIDEO_SRC[selected] || FOCUS_VIDEO_SRC.trees;
+    if (video.getAttribute("src") !== src) {
+        video.src = src;
     }
     video.muted = true;
     video.loop = true;
@@ -11542,7 +11563,7 @@ button:active,
 /* ---- Settings picker (unchanged look) ---- */
 .focus-bg-row {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 10px;
 }
@@ -11579,11 +11600,18 @@ button:active,
     radial-gradient(circle at 75% 70%, rgba(140, 180, 255, 0.35), transparent 50%),
     linear-gradient(145deg, #2a2d3d, #12141e);
 }
-.focus-bg-preview.rainy {
+.focus-bg-preview.trees {
   background:
-    linear-gradient(180deg, rgba(40,55,70,0.5), rgba(10,14,20,0.7)),
-    repeating-linear-gradient(105deg, transparent 0 6px, rgba(180, 210, 255, 0.18) 6px 7px),
-    linear-gradient(160deg, #1a2834, #0b1016 60%, #152028);
+    linear-gradient(180deg, rgba(30,55,40,0.55), rgba(8,16,12,0.75)),
+    radial-gradient(ellipse at 40% 80%, rgba(60,120,70,0.35), transparent 55%),
+    linear-gradient(160deg, #1a2e22, #0b1410 60%, #152820);
+}
+.focus-bg-preview.flowers {
+  background:
+    linear-gradient(180deg, rgba(70,40,60,0.45), rgba(18,10,16,0.7)),
+    radial-gradient(circle at 30% 40%, rgba(255,140,180,0.28), transparent 45%),
+    radial-gradient(circle at 70% 65%, rgba(255,200,120,0.22), transparent 40%),
+    linear-gradient(160deg, #2a1a28, #120c14 60%, #241820);
 }
 .settings-hint {
   margin: 0;
