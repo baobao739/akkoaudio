@@ -12682,14 +12682,25 @@ button {
   text-shadow: none !important;
 }
 
-/* BOTH past lines — like upcoming, slightly more faded + soft blur */
-#lyricsContainer .lyric-line.past,
+/* Past = same color/weight as upcoming; only blur differs */
+#lyricsContainer .lyric-line.past {
+  color: rgba(190, 190, 200, 0.55) !important;
+  -webkit-text-fill-color: rgba(190, 190, 200, 0.55) !important;
+  opacity: 1 !important;
+  filter: blur(3.2px) !important;
+  -webkit-filter: blur(3.2px) !important;
+  text-shadow: none !important;
+  transform: translateZ(0) !important;
+}
+
 #lyricsContainer .lyric-line.past-second {
-  color: rgba(190, 190, 200, 0.42) !important;
-  -webkit-text-fill-color: rgba(190, 190, 200, 0.42) !important;
-  opacity: 0.55 !important;
-  filter: blur(1.15px) !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+  color: rgba(190, 190, 200, 0.55) !important;
+  -webkit-text-fill-color: rgba(190, 190, 200, 0.55) !important;
+  opacity: 1 !important;
+  filter: blur(6px) !important;
+  -webkit-filter: blur(6px) !important;
+  text-shadow: none !important;
+  transform: translateZ(0) !important;
 }
 
 #lyricsContainer .lyric-line.offscreen {
@@ -12720,32 +12731,15 @@ button {
 </style>
 
 <style id="akko-lyric-flat-hierarchy">
-/*
-  FINAL lyric colors — wins over every earlier experiment.
-  3 states only:
-    active   = accent
-    upcoming = one light gray (ALL upcoming lines)
-    past     = one dark gray  (ALL past lines)
-*/
-#lyricsContainer .lyric-line {
-  color: rgba(190, 190, 200, 0.55) !important;
-  -webkit-text-fill-color: rgba(190, 190, 200, 0.55) !important;
-  opacity: 1 !important;
-  filter: none !important;
-  -webkit-filter: none !important;
-  text-shadow: none !important;
-  font-weight: 700 !important;
-}
-
-#lyricsContainer .lyric-line.active,
-#lyricsContainer .lyric-line.active.next,
-#lyricsContainer .lyric-line.active.upcoming {
+/* Final: upcoming sharp, past same look + blur only */
+#lyricsContainer .lyric-line.active {
   color: var(--accent-bright, var(--accent)) !important;
   -webkit-text-fill-color: var(--accent-bright, var(--accent)) !important;
   opacity: 1 !important;
   filter: none !important;
   -webkit-filter: none !important;
   text-shadow: none !important;
+  font-weight: 700 !important;
 }
 
 #lyricsContainer .lyric-line.upcoming,
@@ -12760,17 +12754,29 @@ button {
   filter: none !important;
   -webkit-filter: none !important;
   text-shadow: none !important;
+  font-weight: 700 !important;
 }
 
-/* Past — like upcoming, softer + light blur */
-#lyricsContainer .lyric-line.past,
+#lyricsContainer .lyric-line.past {
+  color: rgba(190, 190, 200, 0.55) !important;
+  -webkit-text-fill-color: rgba(190, 190, 200, 0.55) !important;
+  opacity: 1 !important;
+  filter: blur(3.2px) !important;
+  -webkit-filter: blur(3.2px) !important;
+  text-shadow: none !important;
+  font-weight: 700 !important;
+  transform: translateZ(0) !important;
+}
+
 #lyricsContainer .lyric-line.past-second {
-  color: rgba(190, 190, 200, 0.42) !important;
-  -webkit-text-fill-color: rgba(190, 190, 200, 0.42) !important;
-  opacity: 0.55 !important;
-  filter: blur(1.15px) !important;
-  -webkit-filter: blur(1.15px) !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+  color: rgba(190, 190, 200, 0.55) !important;
+  -webkit-text-fill-color: rgba(190, 190, 200, 0.55) !important;
+  opacity: 1 !important;
+  filter: blur(6px) !important;
+  -webkit-filter: blur(6px) !important;
+  text-shadow: none !important;
+  font-weight: 700 !important;
+  transform: translateZ(0) !important;
 }
 
 #lyricsContainer .lyric-line.offscreen {
@@ -12779,31 +12785,34 @@ button {
 }
 </style>
 
-<style id="akko-past-lyrics-fade-on-video">
-/*
-  Past ≈ upcoming, but a bit more faded + soft blur.
-  Readable on dark and light video — not invisible.
-*/
+<style id="akko-past-blur-final">
 .full-player #lyricsContainer .lyric-line.past,
-.full-player #lyricsContainer .lyric-line.past-second,
 .full-player.focus-video-mode #lyricsContainer .lyric-line.past,
-.full-player.focus-video-mode #lyricsContainer .lyric-line.past-second,
-#lyricsContainer .lyric-line.past,
-#lyricsContainer .lyric-line.past-second {
-  /* same family as upcoming (rgba(190,190,200,0.55)), just softer */
-  color: rgba(190, 190, 200, 0.42) !important;
-  -webkit-text-fill-color: rgba(190, 190, 200, 0.42) !important;
-  opacity: 0.55 !important;
-  filter: blur(1.15px) !important;
-  -webkit-filter: blur(1.15px) !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+#lyricsContainer .lyric-line.past {
+  color: rgba(190, 190, 200, 0.55) !important;
+  -webkit-text-fill-color: rgba(190, 190, 200, 0.55) !important;
+  opacity: 1 !important;
+  filter: blur(3.2px) !important;
+  -webkit-filter: blur(3.2px) !important;
+  text-shadow: none !important;
 }
 
-.full-player #lyricsContainer .lyric-line.offscreen,
-.full-player.focus-video-mode #lyricsContainer .lyric-line.offscreen,
-#lyricsContainer .lyric-line.offscreen {
-  opacity: 0 !important;
-  filter: none !important;
+.full-player #lyricsContainer .lyric-line.past-second,
+.full-player.focus-video-mode #lyricsContainer .lyric-line.past-second,
+#lyricsContainer .lyric-line.past-second {
+  color: rgba(190, 190, 200, 0.55) !important;
+  -webkit-text-fill-color: rgba(190, 190, 200, 0.55) !important;
+  opacity: 1 !important;
+  filter: blur(6px) !important;
+  -webkit-filter: blur(6px) !important;
+  text-shadow: none !important;
+}
+
+#lyricsContainer .lyric-line {
+  transition:
+    color 720ms cubic-bezier(.16,1,.3,1),
+    -webkit-text-fill-color 720ms cubic-bezier(.16,1,.3,1),
+    filter 900ms cubic-bezier(.16,1,.3,1) !important;
 }
 </style>
 
