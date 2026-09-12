@@ -10888,5 +10888,353 @@ button:active,
 })();
 </script>
 
+
+<style id="akko-user-fixes-progress-lyrics-buttons">
+/* =========================================================
+   USER FIXES
+   1) Dock progress track visible (was forced transparent)
+   2) Focus-mode progress translucent (not dark grey)
+   3) Lyric box larger + horizontal padding so text-shadow glow is not clipped
+   4) Controls / queue button no longer overlap or steal taps on iPad
+   ========================================================= */
+
+/* ---- 1 & 2: Progress bars ---- */
+.bottom-player .progress,
+.bottom-player input.progress,
+.bottom-player input[type="range"].progress {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+  background-color: rgba(255, 255, 255, 0.28) !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  height: 4px !important;
+  border-radius: 999px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.bottom-player .progress::-webkit-slider-runnable-track,
+.bottom-player input.progress::-webkit-slider-runnable-track {
+  height: 4px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+}
+
+.bottom-player .progress::-moz-range-track {
+  height: 4px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+  border: 0 !important;
+}
+
+.bottom-player .progress::-webkit-slider-thumb {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 11px !important;
+  height: 11px !important;
+  margin-top: -3.5px !important;
+  border-radius: 50% !important;
+  background: var(--accent) !important;
+  box-shadow: 0 0 10px var(--accent-glow) !important;
+  border: 0 !important;
+}
+
+.bottom-player .progress::-moz-range-thumb {
+  width: 11px !important;
+  height: 11px !important;
+  border-radius: 50% !important;
+  background: var(--accent) !important;
+  border: 0 !important;
+  box-shadow: 0 0 10px var(--accent-glow) !important;
+}
+
+/* Keep a compact progress line on the dock even on small screens */
+@media (max-width: 760px) {
+  .bottom-player .now-playing .progress-area,
+  .bottom-player .progress-area {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 4px !important;
+    margin-top: 2px !important;
+  }
+  .bottom-player .progress-area .time {
+    display: none !important; /* keep the line only; times stay in focus mode */
+  }
+  .bottom-player .progress {
+    height: 3px !important;
+    min-height: 3px !important;
+  }
+  .bottom-player .now-playing-meta {
+    gap: 3px !important;
+  }
+}
+
+/* Focus mode: translucent track instead of dark grey */
+.full-player .full-progress-bar,
+.full-player input.full-progress-bar,
+.full-player input[type="range"].full-progress-bar,
+#fullProgressBar {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  background-color: rgba(255, 255, 255, 0.22) !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  height: 6px !important;
+  border-radius: 999px !important;
+  opacity: 1 !important;
+}
+
+.full-player .full-progress-bar::-webkit-slider-runnable-track,
+#fullProgressBar::-webkit-slider-runnable-track {
+  height: 6px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+}
+
+.full-player .full-progress-bar::-moz-range-track,
+#fullProgressBar::-moz-range-track {
+  height: 6px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  border: 0 !important;
+}
+
+.full-player .full-progress-bar::-webkit-slider-thumb,
+#fullProgressBar::-webkit-slider-thumb {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 14px !important;
+  height: 14px !important;
+  margin-top: -4px !important;
+  border-radius: 50% !important;
+  background: var(--accent) !important;
+  box-shadow: 0 0 14px var(--accent-glow) !important;
+  border: 0 !important;
+}
+
+.full-player .full-progress-bar::-moz-range-thumb,
+#fullProgressBar::-moz-range-thumb {
+  width: 14px !important;
+  height: 14px !important;
+  border-radius: 50% !important;
+  background: var(--accent) !important;
+  border: 0 !important;
+  box-shadow: 0 0 14px var(--accent-glow) !important;
+}
+
+/* ---- 3: Larger lyric area + room for glow ---- */
+.lyrics-panel {
+  min-height: min(62svh, 560px) !important;
+  height: min(68svh, 620px) !important;
+  padding-left: 12px !important;
+  padding-right: 8px !important;
+  box-sizing: border-box !important;
+}
+
+#lyricsContainer {
+  overflow: visible !important;
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+  box-sizing: border-box !important;
+}
+
+#lyricsContainer .lyrics-track {
+  overflow: visible !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+#lyricsContainer .lyric-line,
+#lyricsContainer .lyric-line.active,
+#lyricsContainer .lyric-line.past,
+#lyricsContainer .lyric-line.past-second,
+#lyricsContainer .lyric-line.upcoming,
+#lyricsContainer .lyric-line.next {
+  padding-left: 10px !important;
+  padding-right: 14px !important;
+  box-sizing: border-box !important;
+  /* soft glow needs horizontal room so first letter is not clipped */
+  overflow: visible !important;
+}
+
+@media (max-width: 760px) {
+  .lyrics-panel {
+    height: min(58svh, 520px) !important;
+    min-height: 340px !important;
+    padding-left: 6px !important;
+    padding-right: 4px !important;
+  }
+  #lyricsContainer {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+  #lyricsContainer .lyric-line,
+  #lyricsContainer .lyric-line.active,
+  #lyricsContainer .lyric-line.past {
+    padding-left: 8px !important;
+    padding-right: 10px !important;
+  }
+}
+
+/* ---- 4: Non-overlapping, reliable tap targets (esp. iPad) ---- */
+.bottom-player {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  isolation: isolate !important;
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
+.bottom-player .player-controls,
+.bottom-player .player-trailing,
+.bottom-player .now-playing {
+  position: relative !important;
+  z-index: 2 !important;
+  pointer-events: auto !important;
+  flex-shrink: 0 !important;
+}
+
+.bottom-player .now-playing {
+  z-index: 1 !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  max-width: min(360px, 42vw) !important;
+}
+
+.bottom-player .player-controls {
+  z-index: 3 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 0 4px !important;
+}
+
+.bottom-player .player-trailing {
+  z-index: 4 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 2px !important;
+  min-width: 44px !important;
+}
+
+.bottom-player .control,
+.bottom-player .control.queue-btn,
+#queueButton,
+#playButton,
+#previousButton,
+#nextButton,
+#shuffleButton,
+#repeatButton {
+  position: relative !important;
+  z-index: 5 !important;
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  width: 40px !important;
+  height: 40px !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+}
+
+.bottom-player .control.main-play,
+#playButton.main-play {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  width: 44px !important;
+  height: 44px !important;
+}
+
+/* Queue button must never sit under now-playing / progress */
+#queueButton {
+  z-index: 6 !important;
+}
+
+/* Full-player controls: same idea */
+.full-controls {
+  gap: 14px !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+}
+
+.full-control,
+.full-back,
+.full-like {
+  min-width: 46px !important;
+  min-height: 46px !important;
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  position: relative !important;
+  z-index: 5 !important;
+}
+
+.full-control.big {
+  min-width: 62px !important;
+  min-height: 62px !important;
+}
+
+@media (max-width: 760px) {
+  .bottom-player {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 6px 10px !important;
+  }
+  .bottom-player .now-playing {
+    max-width: none !important;
+    width: auto !important;
+    grid-column: 1 !important;
+  }
+  .bottom-player .player-controls {
+    grid-column: 2 !important;
+    gap: 6px !important;
+  }
+  .bottom-player .player-trailing {
+    grid-column: 3 !important;
+    min-width: 44px !important;
+  }
+  .bottom-player .control {
+    min-width: 38px !important;
+    min-height: 38px !important;
+    width: 38px !important;
+    height: 38px !important;
+  }
+  .bottom-player .control.main-play {
+    min-width: 42px !important;
+    min-height: 42px !important;
+    width: 42px !important;
+    height: 42px !important;
+  }
+  /* Hide shuffle/repeat on narrow dock to free space for play + queue */
+  .bottom-player .control.shuffle,
+  .bottom-player .control.repeat {
+    display: none !important;
+  }
+}
+
+/* iPad-ish widths: keep clear gaps */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .bottom-player .player-controls {
+    gap: 12px !important;
+  }
+  .bottom-player .control {
+    min-width: 42px !important;
+    min-height: 42px !important;
+  }
+}
+</style>
+
 </body>
 </html>
