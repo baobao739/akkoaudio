@@ -4800,7 +4800,7 @@ html .play-overlay {
 
 /* Smoother page enters */
 @keyframes pageIn {
-    from { opacity: 0; transform: translateY(22px) scale(0.985); filter: blur(6px); }
+    from { opacity: 0; transform: translateY(22px) scale(0.985); filter: blur(3.2px); }
     to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
 
@@ -5541,22 +5541,39 @@ body::after {
             <div class="settings-group">
                 <div class="settings-label">Focus Background</div>
                 <div class="focus-bg-row" id="focusBgRow">
-                    <button class="focus-bg-option active" data-focus-bg="dynamic" type="button">
-                        <span class="focus-bg-preview dynamic"></span>
-                        <span>Dynamic</span>
+                    <button class="focus-bg-option active" data-focus-bg="dynamic" type="button" aria-pressed="true">
+                        <span class="focus-bg-preview dynamic" aria-hidden="true"></span>
+                        <span class="focus-bg-name">Dynamic</span>
+                        <span class="focus-bg-badge" aria-hidden="true">Selected</span>
                     </button>
-                    <button class="focus-bg-option" data-focus-bg="trees" type="button">
-                        <span class="focus-bg-preview trees"></span>
-                        <span>Trees</span>
+                    <button class="focus-bg-option" data-focus-bg="trees" type="button" aria-pressed="false">
+                        <span class="focus-bg-preview trees" aria-hidden="true">
+                            <video muted playsinline preload="metadata" src="covers/trees.mp4"></video>
+                        </span>
+                        <span class="focus-bg-name">Trees</span>
+                        <span class="focus-bg-badge" aria-hidden="true">Selected</span>
                     </button>
-                    <button class="focus-bg-option" data-focus-bg="flowers" type="button">
-                        <span class="focus-bg-preview flowers"></span>
-                        <span>Flowers</span>
+                    <button class="focus-bg-option" data-focus-bg="flowers" type="button" aria-pressed="false">
+                        <span class="focus-bg-preview flowers" aria-hidden="true">
+                            <video muted playsinline preload="metadata" src="covers/flowers.mp4"></video>
+                        </span>
+                        <span class="focus-bg-name">Flowers</span>
+                        <span class="focus-bg-badge" aria-hidden="true">Selected</span>
+                    </button>
+                    <button class="focus-bg-option" data-focus-bg="akko" type="button" aria-pressed="false">
+                        <span class="focus-bg-preview akko" aria-hidden="true">
+                            <video muted playsinline preload="metadata" src="covers/akko.mp4"></video>
+                        </span>
+                        <span class="focus-bg-name">Akko</span>
+                        <span class="focus-bg-badge" aria-hidden="true">Selected</span>
                     </button>
                 </div>
                 <p class="settings-hint">
-                    Trees uses <code>covers/trees.mp4</code> and Flowers uses <code>covers/flowers.mp4</code>
-                    as looping video behind the lyrics. Put the files in the same folder as covers.
+                    Video modes loop a file behind lyrics:
+                    <code>covers/trees.mp4</code>,
+                    <code>covers/flowers.mp4</code>,
+                    <code>covers/akko.mp4</code>.
+                    Previews show the first frame of each video.
                 </p>
             </div>
 
@@ -8049,9 +8066,8 @@ function openFullPlayer() {
     document.body.style.overflow = "hidden";
     startBlobMotion();
 
-    let focusBg = localStorage.getItem("akkoflac-focus-bg") || "dynamic";
-    if (focusBg === "rainy") focusBg = "trees"; // rename legacy value
-    const isVideoBg = focusBg === "trees" || focusBg === "flowers";
+    let focusBg = normalizeFocusBg(localStorage.getItem("akkoflac-focus-bg") || "dynamic");
+    const isVideoBg = isFocusVideoMode(focusBg);
     fullPlayer.classList.toggle("focus-video-mode", isVideoBg);
     // Video modes start lyrics-only; Dynamic starts with chrome visible
     fullPlayer.classList.toggle("chrome-hidden", isVideoBg);
@@ -8749,19 +8765,42 @@ function loadSettings() {
 
 const FOCUS_VIDEO_SRC = {
     trees: "covers/trees.mp4",
-    flowers: "covers/flowers.mp4"
+    flowers: "covers/flowers.mp4",
+    akko: "covers/akko.mp4"
 };
 
 function normalizeFocusBg(mode) {
     const raw = String(mode || "dynamic").toLowerCase().trim();
     if (raw === "rainy") return "trees"; // legacy rename
-    if (raw === "trees" || raw === "flowers") return raw;
+    if (raw === "trees" || raw === "flowers" || raw === "akko") return raw;
     return "dynamic";
 }
 
 function isFocusVideoMode(mode) {
     const m = normalizeFocusBg(mode);
-    return m === "trees" || m === "flowers";
+    return m === "trees" || m === "flowers" || m === "akko";
+}
+
+/** Seek preview videos to ~first second and freeze as a static thumbnail */
+function initFocusBgPreviews() {
+    document.querySelectorAll(".focus-bg-preview video").forEach((video) => {
+        const freeze = () => {
+            try {
+                const t = Math.min(0.35, Math.max(0.05, (video.duration || 1) * 0.02));
+                if (Math.abs(video.currentTime - t) > 0.02) video.currentTime = t;
+                else video.pause();
+            } catch (_) {}
+        };
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = "metadata";
+        video.addEventListener("loadeddata", freeze, { once: true });
+        video.addEventListener("seeked", () => {
+            try { video.pause(); } catch (_) {}
+        });
+        // If already cached
+        if (video.readyState >= 2) freeze();
+    });
 }
 
 function applyFocusBackground(mode) {
@@ -8819,6 +8858,13 @@ function stopFocusVideo() {
     const video = document.getElementById("focusVideo");
     if (!video) return;
     try { video.pause(); } catch (_) {}
+}
+
+// Build static first-frame previews for video modes
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initFocusBgPreviews, { once: true });
+} else {
+    initFocusBgPreviews();
 }
 
 /* Robust settings clicks — document delegation so nothing can "miss" the button */
@@ -10454,7 +10500,7 @@ button:active,
 #lyricsContainer .lyric-line.past-second,
 #lyricsContainer .lyric-line.offscreen {
   opacity: 0 !important;
-  filter: blur(6px) !important;
+  filter: blur(3.2px) !important;
   visibility: visible !important;
   pointer-events: none !important;
   text-shadow: none !important;
@@ -10536,7 +10582,7 @@ button:active,
 #lyricsContainer .lyric-line.offscreen,
 #lyricsContainer .lyric-line.past-second {
   opacity: 0 !important;
-  filter: blur(6px) !important;
+  filter: blur(3.2px) !important;
   pointer-events: none !important;
   visibility: visible !important;
 }
@@ -11545,36 +11591,91 @@ button:active,
 /* ---- Settings picker (unchanged look) ---- */
 .focus-bg-row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 10px;
 }
+@media (min-width: 520px) {
+  .focus-bg-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
 .focus-bg-option {
+  position: relative;
   display: grid;
   gap: 8px;
   min-width: 0;
-  padding: 12px 10px;
+  padding: 12px 10px 14px;
   border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--accent) 22%, rgba(255,255,255,0.12));
+  border: 2px solid color-mix(in srgb, var(--accent) 18%, rgba(255,255,255,0.10));
   background: color-mix(in srgb, var(--accent) 10%, rgba(14,16,26,0.75));
   color: var(--muted);
   font-size: 12px;
   font-weight: 680;
   text-align: center;
   cursor: pointer;
+  transition: border-color .25s ease, box-shadow .25s ease, background .25s ease, color .25s ease;
 }
 .focus-bg-option:hover { color: var(--text); }
 .focus-bg-option.active {
   color: #fff;
-  border-color: color-mix(in srgb, var(--accent) 55%, rgba(255,255,255,0.2));
-  box-shadow: 0 0 0 2px var(--accent), 0 0 20px color-mix(in srgb, var(--accent) 28%, transparent);
+  border-color: var(--accent) !important;
+  background: color-mix(in srgb, var(--accent) 22%, rgba(14,16,26,0.88));
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 35%, transparent),
+    inset 0 0 0 1px rgba(255,255,255,0.12);
+}
+.focus-bg-name {
+  font-weight: 720;
+  letter-spacing: -0.01em;
+}
+.focus-bg-option.active .focus-bg-name {
+  color: #fff;
+}
+.focus-bg-badge {
+  display: none;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #0c0c14;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 40%, transparent);
+  pointer-events: none;
+}
+.focus-bg-option.active .focus-bg-badge {
+  display: inline-flex;
+  align-items: center;
 }
 .focus-bg-preview {
+  position: relative;
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.14);
+  overflow: hidden;
+  background: #12141e;
+}
+.focus-bg-preview video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  background: #0a0c12;
+}
+.focus-bg-option.active .focus-bg-preview {
+  border-color: color-mix(in srgb, var(--accent) 50%, rgba(255,255,255,0.25));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 .focus-bg-preview.dynamic {
   background:
@@ -11594,6 +11695,12 @@ button:active,
     radial-gradient(circle at 30% 40%, rgba(255,140,180,0.28), transparent 45%),
     radial-gradient(circle at 70% 65%, rgba(255,200,120,0.22), transparent 40%),
     linear-gradient(160deg, #2a1a28, #120c14 60%, #241820);
+}
+.focus-bg-preview.akko {
+  background:
+    linear-gradient(180deg, rgba(40,50,90,0.5), rgba(10,12,24,0.75)),
+    radial-gradient(circle at 50% 40%, rgba(123,140,255,0.35), transparent 50%),
+    linear-gradient(160deg, #1a2038, #0a0c16 60%, #141828);
 }
 .settings-hint {
   margin: 0;
@@ -12683,22 +12790,13 @@ button {
 }
 
 /* Past = same color/weight as upcoming; only blur differs */
-#lyricsContainer .lyric-line.past {
+#lyricsContainer .lyric-line.past,
+#lyricsContainer .lyric-line.past-second {
   color: rgba(190, 190, 200, 0.55) !important;
   -webkit-text-fill-color: rgba(190, 190, 200, 0.55) !important;
   opacity: 1 !important;
   filter: blur(3.2px) !important;
   -webkit-filter: blur(3.2px) !important;
-  text-shadow: none !important;
-  transform: translateZ(0) !important;
-}
-
-#lyricsContainer .lyric-line.past-second {
-  color: rgba(190, 190, 200, 0.55) !important;
-  -webkit-text-fill-color: rgba(190, 190, 200, 0.55) !important;
-  opacity: 1 !important;
-  filter: blur(6px) !important;
-  -webkit-filter: blur(6px) !important;
   text-shadow: none !important;
   transform: translateZ(0) !important;
 }
@@ -12757,23 +12855,13 @@ button {
   font-weight: 700 !important;
 }
 
-#lyricsContainer .lyric-line.past {
+#lyricsContainer .lyric-line.past,
+#lyricsContainer .lyric-line.past-second {
   color: rgba(190, 190, 200, 0.55) !important;
   -webkit-text-fill-color: rgba(190, 190, 200, 0.55) !important;
   opacity: 1 !important;
   filter: blur(3.2px) !important;
   -webkit-filter: blur(3.2px) !important;
-  text-shadow: none !important;
-  font-weight: 700 !important;
-  transform: translateZ(0) !important;
-}
-
-#lyricsContainer .lyric-line.past-second {
-  color: rgba(190, 190, 200, 0.55) !important;
-  -webkit-text-fill-color: rgba(190, 190, 200, 0.55) !important;
-  opacity: 1 !important;
-  filter: blur(6px) !important;
-  -webkit-filter: blur(6px) !important;
   text-shadow: none !important;
   font-weight: 700 !important;
   transform: translateZ(0) !important;
@@ -12787,8 +12875,11 @@ button {
 
 <style id="akko-past-blur-final">
 .full-player #lyricsContainer .lyric-line.past,
+.full-player #lyricsContainer .lyric-line.past-second,
 .full-player.focus-video-mode #lyricsContainer .lyric-line.past,
-#lyricsContainer .lyric-line.past {
+.full-player.focus-video-mode #lyricsContainer .lyric-line.past-second,
+#lyricsContainer .lyric-line.past,
+#lyricsContainer .lyric-line.past-second {
   color: rgba(190, 190, 200, 0.55) !important;
   -webkit-text-fill-color: rgba(190, 190, 200, 0.55) !important;
   opacity: 1 !important;
@@ -12797,22 +12888,26 @@ button {
   text-shadow: none !important;
 }
 
-.full-player #lyricsContainer .lyric-line.past-second,
-.full-player.focus-video-mode #lyricsContainer .lyric-line.past-second,
-#lyricsContainer .lyric-line.past-second {
-  color: rgba(190, 190, 200, 0.55) !important;
-  -webkit-text-fill-color: rgba(190, 190, 200, 0.55) !important;
-  opacity: 1 !important;
-  filter: blur(6px) !important;
-  -webkit-filter: blur(6px) !important;
-  text-shadow: none !important;
-}
-
 #lyricsContainer .lyric-line {
   transition:
     color 720ms cubic-bezier(.16,1,.3,1),
     -webkit-text-fill-color 720ms cubic-bezier(.16,1,.3,1),
     filter 900ms cubic-bezier(.16,1,.3,1) !important;
+}
+</style>
+
+<style id="akko-past-same-blur">
+/* Both past lines: same blur as most recent past (3.2px) */
+#lyricsContainer .lyric-line.past,
+#lyricsContainer .lyric-line.past-second,
+.full-player #lyricsContainer .lyric-line.past,
+.full-player #lyricsContainer .lyric-line.past-second {
+  color: rgba(190, 190, 200, 0.55) !important;
+  -webkit-text-fill-color: rgba(190, 190, 200, 0.55) !important;
+  opacity: 1 !important;
+  filter: blur(3.2px) !important;
+  -webkit-filter: blur(3.2px) !important;
+  text-shadow: none !important;
 }
 </style>
 
