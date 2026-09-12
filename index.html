@@ -8967,7 +8967,11 @@ function getLyricTrack() {
 function applyLyricTransform(y) {
     const track = getLyricTrack();
     if (!track) return;
-    track.style.transform = `translate3d(0, ${y.toFixed(3)}px, 0)`;
+    // Explicit X=0 every frame — never let compositing/filter side-effects drift the track sideways
+    track.style.transform = `translate3d(0px, ${y.toFixed(3)}px, 0)`;
+    track.style.left = "0";
+    track.style.marginLeft = "0";
+    track.style.marginRight = "0";
 }
 
 function lyricMotionStep(ts) {
@@ -12489,6 +12493,175 @@ button {
 })();
 </script>
 
+
+<style id="akko-lyric-no-left-shift">
+/* =========================================================
+   FIX: lyrics shifting left when first line becomes past
+   Root cause: filter:blur() on .past creates a new composited
+   layer inside a transformed track → subpixel X drift.
+   ========================================================= */
+
+#lyricsContainer,
+#lyricsContainer.has-past-lyrics,
+.full-player.open #lyricsContainer,
+.full-player.open #lyricsContainer.has-past-lyrics {
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  box-sizing: border-box !important;
+  /* stable mask — identical with or without past */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,.55) 3%,
+    #000 10%,
+    #000 78%,
+    rgba(0,0,0,.72) 90%,
+    transparent 100%
+  ) !important;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,.55) 3%,
+    #000 10%,
+    #000 78%,
+    rgba(0,0,0,.72) 90%,
+    transparent 100%
+  ) !important;
+}
+
+#lyricsContainer .lyrics-track,
+.lyrics-track {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  left: 0 !important;
+  right: auto !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+  /* Do NOT set transform here — JS owns translateY. X stays 0 via JS. */
+  will-change: transform !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+}
+
+/* Every line: identical box model forever. Color/opacity only. */
+#lyricsContainer .lyric-line,
+#lyricsContainer .lyric-line.active,
+#lyricsContainer .lyric-line.next,
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third,
+#lyricsContainer .lyric-line.next-fourth,
+#lyricsContainer .lyric-line.upcoming,
+#lyricsContainer .lyric-line.upcoming-last,
+#lyricsContainer .lyric-line.past,
+#lyricsContainer .lyric-line.past-second,
+#lyricsContainer .lyric-line.offscreen,
+#lyricsContainer .lyric-line.pause,
+#lyricsContainer .lyric-line.lyric-intro {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: clamp(14px, 1.9vh, 28px) !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box !important;
+  text-align: left !important;
+  transform: none !important;
+  scale: 1 !important;
+  translate: 0 0 !important;
+  transform-origin: left center !important;
+  /* NO filter — blur is what shifted the whole stack left */
+  filter: none !important;
+  -webkit-filter: none !important;
+  text-shadow: none !important;
+  font-size: clamp(30px, 3.2vw, 50px) !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.034em !important;
+  left: 0 !important;
+  right: auto !important;
+  position: relative !important;
+}
+
+/* Active — accent color only, no glow/shadow (shadow changed visual weight/position) */
+#lyricsContainer .lyric-line.active {
+  color: var(--accent-bright, var(--accent)) !important;
+  -webkit-text-fill-color: var(--accent-bright, var(--accent)) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* Next */
+#lyricsContainer .lyric-line.next {
+  color: rgba(255, 255, 255, 0.58) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.58) !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Further upcoming */
+#lyricsContainer .lyric-line.upcoming,
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third,
+#lyricsContainer .lyric-line.next-fourth,
+#lyricsContainer .lyric-line.upcoming-last {
+  color: rgba(255, 255, 255, 0.40) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.40) !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Past — dim only, never blur */
+#lyricsContainer .lyric-line.past {
+  color: rgba(255, 255, 255, 0.28) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.28) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+#lyricsContainer .lyric-line.past-second {
+  color: rgba(255, 255, 255, 0.16) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.16) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+#lyricsContainer .lyric-line.offscreen {
+  opacity: 0 !important;
+  filter: none !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+  height: auto !important;
+  margin-bottom: clamp(14px, 1.9vh, 28px) !important;
+}
+
+@media (max-width: 760px) {
+  #lyricsContainer .lyric-line,
+  #lyricsContainer .lyric-line.active,
+  #lyricsContainer .lyric-line.upcoming,
+  #lyricsContainer .lyric-line.next,
+  #lyricsContainer .lyric-line.past,
+  #lyricsContainer .lyric-line.past-second {
+    font-size: clamp(26px, 7.2vw, 38px) !important;
+    margin-bottom: 20px !important;
+  }
+  #lyricsContainer,
+  #lyricsContainer.has-past-lyrics {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+}
+</style>
 
 </body>
 </html>
