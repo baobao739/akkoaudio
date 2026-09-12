@@ -8926,11 +8926,16 @@ function applyFocusBackground(mode) {
     }
 }
 
+let _focusVideoPlayToken = 0;
+
 function startFocusVideo(mode) {
     const video = document.getElementById("focusVideo");
     if (!video) return;
     const selected = normalizeFocusBg(mode || localStorage.getItem("akkoflac-focus-bg") || "trees");
     const src = FOCUS_VIDEO_SRC[selected] || FOCUS_VIDEO_SRC.trees;
+
+    // Bump token so older async play attempts cannot fight a newer call
+    const token = ++_focusVideoPlayToken;
 
     video.muted = true;
     video.defaultMuted = true;
@@ -8941,37 +8946,53 @@ function startFocusVideo(mode) {
     video.setAttribute("muted", "");
     video.preload = "auto";
 
-    const current = video.getAttribute("src") || video.currentSrc || "";
-    const needsSrc = !current.endsWith(src.replace(/^\.\//, ""));
-    if (needsSrc || !current) {
+    const current = (video.currentSrc || video.getAttribute("src") || "").split("?")[0];
+    const target = src.split("?")[0];
+    const alreadyThis =
+        current === target ||
+        current.endsWith("/" + target) ||
+        current.endsWith(target);
+
+    // Only reload when the file actually changes — load() was causing play/pause loops
+    if (!alreadyThis) {
         video.src = src;
         try { video.load(); } catch (_) {}
     }
 
     const tryPlay = () => {
-        try {
-            const p = video.play();
-            if (p && typeof p.then === "function") {
-                p.catch(() => {
-                    // One more shot after a short delay (PC autoplay quirks)
-                    window.setTimeout(() => {
-                        video.play().catch(() => {});
-                    }, 120);
-                });
-            }
-        } catch (_) {}
+        if (token !== _focusVideoPlayToken) return;
+        if (video.paused === false && !video.ended) return; // already playing
+        const p = video.play();
+        if (p && typeof p.then === "function") {
+            p.then(() => {
+                // playing
+            }).catch(() => {
+                if (token !== _focusVideoPlayToken) return;
+                // Single quiet retry — no spam
+                window.setTimeout(() => {
+                    if (token !== _focusVideoPlayToken) return;
+                    if (!video.paused) return;
+                    video.play().catch(() => {});
+                }, 250);
+            });
+        }
     };
 
-    if (video.readyState >= 2) tryPlay();
-    else {
-        video.addEventListener("canplay", tryPlay, { once: true });
-        video.addEventListener("loadeddata", tryPlay, { once: true });
+    if (video.readyState >= 3) {
+        tryPlay();
+    } else {
+        const onReady = () => {
+            video.removeEventListener("canplay", onReady);
+            video.removeEventListener("loadeddata", onReady);
+            tryPlay();
+        };
+        video.addEventListener("canplay", onReady);
+        video.addEventListener("loadeddata", onReady);
     }
-    // Also attempt immediately — helps when file is already cached
-    tryPlay();
 }
 
 function stopFocusVideo() {
+    _focusVideoPlayToken++; // cancel in-flight play attempts
     const video = document.getElementById("focusVideo");
     if (!video) return;
     try { video.pause(); } catch (_) {}
@@ -13264,32 +13285,63 @@ button {
 }
 </style>
 
-<script id="akko-focus-video-play-boost">
-(() => {
-  "use strict";
-  // When focus opens on PC, retry play a few times so the bg actually starts
-  const origOpen = window.openFullPlayer;
-  // openFullPlayer is not on window — hook via MutationObserver on class
-  const fp = document.getElementById("fullPlayer");
-  if (!fp) return;
-  const boost = () => {
-    if (!fp.classList.contains("open") || !fp.classList.contains("focus-video-mode")) return;
-    const video = document.getElementById("focusVideo");
-    if (!video) return;
-    video.muted = true;
-    video.playsInline = true;
-    const p = video.play();
-    if (p && p.catch) p.catch(() => {});
-  };
-  new MutationObserver(() => {
-    if (fp.classList.contains("open") && fp.classList.contains("focus-video-mode")) {
-      boost();
-      setTimeout(boost, 150);
-      setTimeout(boost, 400);
-    }
-  }).observe(fp, { attributes: true, attributeFilter: ["class"] });
-})();
-</script>
+<!-- focus video play boost removed: was causing play/pause loops -->
+
+
+<style id="akko-full-times-fix">
+/* Progress stack must be vertical — flex row was gluing 2:05 + 3:12 into 2:053:12 */
+.full-player .full-progress,
+.full-player.focus-video-mode .full-progress,
+.full-player.focus-video-mode:not(.chrome-hidden) .full-progress {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  width: min(380px, 100%) !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.full-player .full-times,
+.full-player.focus-video-mode .full-times {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+  margin-top: 0 !important;
+  gap: 12px !important;
+  color: rgba(255,255,255,0.55) !important;
+  font-size: 12px !important;
+  font-variant-numeric: tabular-nums !important;
+  white-space: nowrap !important;
+}
+
+.full-player .full-times #fullCurrentTime,
+.full-player .full-times #fullDuration,
+.full-player.focus-video-mode .full-times #fullCurrentTime,
+.full-player.focus-video-mode .full-times #fullDuration {
+  display: inline-block !important;
+  flex: 0 0 auto !important;
+  min-width: 2.5em !important;
+  white-space: nowrap !important;
+}
+
+.full-player .full-times #fullCurrentTime {
+  text-align: left !important;
+}
+.full-player .full-times #fullDuration {
+  text-align: right !important;
+  margin-left: auto !important;
+}
+
+.full-player .full-progress-bar,
+.full-player.focus-video-mode .full-progress-bar {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+}
+</style>
 
 </body>
 </html>
