@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9054,11 +9055,10 @@ function computeLyricOffset(activeIndex, elements, track, anchorRatio = 0.46) {
 
     // Lock the current lyric ~2/3 of the way UP the cover (≈ 1/3 from the top).
     // On phones keep it higher in the lyric panel so it still feels anchored.
-    // Video mode: anchor a bit higher so more upcoming lines fit under the active line.
+    // Keep the active line in the upper third so 2–3 upcoming lines always fit below.
+    // Do NOT lock to cover midpoint — that left only one upcoming visible.
     const videoMode = fullPlayer?.classList.contains("focus-video-mode");
-    const anchor = useCoverAnchor && !videoMode
-        ? cover.getBoundingClientRect().top + cover.getBoundingClientRect().height * 0.28 - containerRect.top
-        : viewportHeight * (videoMode ? 0.26 : 0.24);
+    const anchor = viewportHeight * (videoMode ? 0.20 : 0.18);
     const desired = line.offsetTop - anchor;
     const maxOffset = Math.max(0, track.scrollHeight - viewportHeight);
     return Math.min(Math.max(0, desired), maxOffset);
@@ -10572,7 +10572,7 @@ button:active,
   letter-spacing: -0.035em !important;
   font-weight: 700 !important;
   margin: 0 0 clamp(36px, 5.2vh, 64px) !important;
-  max-width: 16ch !important;
+  max-width: none !important; /* was 16ch — caused 2-line morph */
 }
 
 @media (max-width: 760px) {
@@ -11343,78 +11343,168 @@ button:active,
 
 <style id="akko-focus-video-and-more-lyrics">
 /* =========================================================
-   MORE UPCOMING LYRICS + FOCUS VIDEO MODE (Rainy)
+   FINAL: more upcoming lyrics + rainy = video + lyrics only
    ========================================================= */
 
-/* Show more upcoming lines: softer bottom fade, slightly tighter spacing */
+/* Kill the 16ch wrap that made current lines 2 rows then jump to 1 long line */
+#lyricsContainer .lyric-line,
+#lyricsContainer .lyric-line.active,
+#lyricsContainer .lyric-line.next,
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third,
+#lyricsContainer .lyric-line.next-fourth,
+#lyricsContainer .lyric-line.upcoming,
+#lyricsContainer .lyric-line.upcoming-last,
+#lyricsContainer .lyric-line.past,
+#lyricsContainer .lyric-line.past-second,
+#lyricsContainer .lyric-line.offscreen,
+#lyricsContainer .lyric-line.pause {
+  max-width: none !important;
+  width: 100% !important;
+  font-size: clamp(30px, 3.2vw, 50px) !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.034em !important;
+  margin: 0 0 clamp(18px, 2.4vh, 30px) !important;
+  padding-left: 10px !important;
+  padding-right: 12px !important;
+  box-sizing: border-box !important;
+  /* Size NEVER changes between states — only color / opacity / blur */
+  transform: none !important;
+  scale: 1 !important;
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+  visibility: visible !important;
+}
+
+/* Past / upcoming: same box metrics as active */
+#lyricsContainer .lyric-line.past,
+#lyricsContainer .lyric-line.past-second,
+#lyricsContainer .lyric-line.upcoming,
+#lyricsContainer .lyric-line.next,
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third {
+  font-size: clamp(30px, 3.2vw, 50px) !important;
+  line-height: 1.2 !important;
+  margin: 0 0 clamp(18px, 2.4vh, 30px) !important;
+  max-width: none !important;
+  transform: none !important;
+}
+
+/* Show more of the stack — mask stays open much lower */
 #lyricsContainer,
 #lyricsContainer.has-past-lyrics {
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(0,0,0,.55) 5%,
-    #000 12%,
-    #000 72%,
-    rgba(0,0,0,.85) 86%,
-    rgba(0,0,0,.45) 94%,
+    rgba(0,0,0,.7) 4%,
+    #000 10%,
+    #000 78%,
+    rgba(0,0,0,.75) 90%,
+    rgba(0,0,0,.35) 96%,
     transparent 100%
   ) !important;
   mask-image: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(0,0,0,.55) 5%,
-    #000 12%,
-    #000 72%,
-    rgba(0,0,0,.85) 86%,
-    rgba(0,0,0,.45) 94%,
+    rgba(0,0,0,.7) 4%,
+    #000 10%,
+    #000 78%,
+    rgba(0,0,0,.75) 90%,
+    rgba(0,0,0,.35) 96%,
     transparent 100%
   ) !important;
 }
 
 #lyricsContainer .lyrics-track {
-  padding-bottom: 55vh !important;
+  padding-bottom: 40vh !important;
 }
 
-#lyricsContainer .lyric-line,
-#lyricsContainer .lyric-line.active,
+/* Active */
+#lyricsContainer .lyric-line.active {
+  color: var(--accent) !important;
+  -webkit-text-fill-color: var(--accent) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow:
+    0 0 10px color-mix(in srgb, var(--accent) 38%, transparent),
+    0 0 24px color-mix(in srgb, var(--accent) 18%, transparent) !important;
+}
+
+/* Immediate next + further upcoming — all visible */
+#lyricsContainer .lyric-line.next {
+  color: rgba(255, 255, 255, 0.62) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.62) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  visibility: visible !important;
+}
+
 #lyricsContainer .lyric-line.upcoming,
-#lyricsContainer .lyric-line.next,
 #lyricsContainer .lyric-line.next-next,
 #lyricsContainer .lyric-line.next-third,
 #lyricsContainer .lyric-line.next-fourth,
-#lyricsContainer .lyric-line.past,
+#lyricsContainer .lyric-line.upcoming-last {
+  color: rgba(255, 255, 255, 0.42) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.42) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  visibility: visible !important;
+}
+
+/* Past — same size, only softer */
+#lyricsContainer .lyric-line.past {
+  color: rgba(255, 255, 255, 0.32) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.32) !important;
+  opacity: 1 !important;
+  filter: blur(1.2px) !important;
+  text-shadow: none !important;
+}
+
 #lyricsContainer .lyric-line.past-second {
-  margin-bottom: clamp(22px, 2.8vh, 36px) !important;
+  color: rgba(255, 255, 255, 0.18) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.18) !important;
+  opacity: 1 !important;
+  filter: blur(2.2px) !important;
 }
 
-/* Keep the next ~3 upcoming lines clearly readable */
-#lyricsContainer .lyric-line.next {
-  color: rgba(255, 255, 255, 0.58) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.58) !important;
-  opacity: 1 !important;
+/* Offscreen keeps height so scroll does not jump */
+#lyricsContainer .lyric-line.offscreen {
+  opacity: 0 !important;
   filter: none !important;
   visibility: visible !important;
+  pointer-events: none !important;
+  height: auto !important;
+  margin-bottom: clamp(18px, 2.4vh, 30px) !important;
 }
 
-#lyricsContainer .lyric-line.upcoming,
-#lyricsContainer .lyric-line.next-next,
-#lyricsContainer .lyric-line.next-third,
-#lyricsContainer .lyric-line.next-fourth {
-  color: rgba(255, 255, 255, 0.40) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.40) !important;
-  opacity: 1 !important;
-  filter: none !important;
-  visibility: visible !important;
+.lyrics-panel {
+  min-height: min(70svh, 640px) !important;
 }
 
-/* ---- Settings: Focus Background picker ---- */
+@media (max-width: 760px) {
+  #lyricsContainer .lyric-line,
+  #lyricsContainer .lyric-line.active,
+  #lyricsContainer .lyric-line.upcoming,
+  #lyricsContainer .lyric-line.next,
+  #lyricsContainer .lyric-line.past {
+    font-size: clamp(26px, 7.2vw, 38px) !important;
+    margin-bottom: 20px !important;
+    max-width: none !important;
+  }
+  .lyrics-panel {
+    min-height: min(52svh, 460px) !important;
+  }
+}
+
+/* ---- Settings picker (unchanged look) ---- */
 .focus-bg-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 10px;
 }
-
 .focus-bg-option {
   display: grid;
   gap: 8px;
@@ -11428,25 +11518,13 @@ button:active,
   font-weight: 680;
   text-align: center;
   cursor: pointer;
-  box-shadow:
-    6px 8px 18px rgba(0,0,0,0.28),
-    -2px -2px 10px rgba(255,255,255,0.05);
 }
-
-.focus-bg-option:hover {
-  color: var(--text);
-  background: color-mix(in srgb, var(--accent) 14%, rgba(255,255,255,0.08));
-}
-
+.focus-bg-option:hover { color: var(--text); }
 .focus-bg-option.active {
   color: #fff;
   border-color: color-mix(in srgb, var(--accent) 55%, rgba(255,255,255,0.2));
-  box-shadow:
-    inset 3px 3px 10px rgba(0,0,0,0.3),
-    0 0 0 2px var(--accent),
-    0 0 20px color-mix(in srgb, var(--accent) 28%, transparent);
+  box-shadow: 0 0 0 2px var(--accent), 0 0 20px color-mix(in srgb, var(--accent) 28%, transparent);
 }
-
 .focus-bg-preview {
   display: block;
   width: 100%;
@@ -11454,32 +11532,24 @@ button:active,
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.14);
 }
-
 .focus-bg-preview.dynamic {
   background:
     radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--accent) 55%, transparent), transparent 55%),
     radial-gradient(circle at 75% 70%, rgba(140, 180, 255, 0.35), transparent 50%),
     linear-gradient(145deg, #2a2d3d, #12141e);
 }
-
 .focus-bg-preview.rainy {
   background:
     linear-gradient(180deg, rgba(40,55,70,0.5), rgba(10,14,20,0.7)),
-    repeating-linear-gradient(
-      105deg,
-      transparent 0 6px,
-      rgba(180, 210, 255, 0.18) 6px 7px
-    ),
+    repeating-linear-gradient(105deg, transparent 0 6px, rgba(180, 210, 255, 0.18) 6px 7px),
     linear-gradient(160deg, #1a2834, #0b1016 60%, #152028);
 }
-
 .settings-hint {
   margin: 0;
   color: var(--muted);
   font-size: 12px;
   line-height: 1.55;
 }
-
 .settings-hint code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 11.5px;
@@ -11489,7 +11559,7 @@ button:active,
   border-radius: 6px;
 }
 
-/* ---- Focus video element (hidden unless rainy mode) ---- */
+/* ---- Focus video element ---- */
 .focus-video {
   position: absolute;
   inset: 0;
@@ -11501,18 +11571,16 @@ button:active,
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  /* Sharp — no blur */
   filter: none !important;
   transform: none !important;
 }
-
 .full-player.focus-video-mode .focus-video {
   opacity: 1;
   visibility: visible;
   z-index: 1;
 }
 
-/* Hide dynamic cover-blur + palette when using video */
+/* Hide dynamic bg/palette in rainy */
 .full-player.focus-video-mode .full-bg,
 .full-player.focus-video-mode .focus-palette {
   opacity: 0 !important;
@@ -11520,74 +11588,61 @@ button:active,
   pointer-events: none !important;
 }
 
-/* Light scrim so lyrics stay readable on bright video frames */
+/* Soft scrim only — still readable */
 .full-player.focus-video-mode .full-bg-overlay {
   z-index: 2;
   background:
-    linear-gradient(90deg, rgba(6, 8, 14, 0.55) 0%, rgba(6, 8, 14, 0.28) 42%, rgba(6, 8, 14, 0.18) 100%),
-    linear-gradient(180deg, rgba(6, 8, 14, 0.2) 0%, transparent 30%, rgba(6, 8, 14, 0.35) 100%) !important;
+    linear-gradient(90deg, rgba(4, 6, 12, 0.42) 0%, rgba(4, 6, 12, 0.18) 55%, rgba(4, 6, 12, 0.12) 100%),
+    linear-gradient(180deg, rgba(4, 6, 12, 0.15) 0%, transparent 35%, rgba(4, 6, 12, 0.28) 100%) !important;
+}
+
+/* RAINY: ONLY video + lyrics. Nothing else. Exit with Escape. */
+.full-player.focus-video-mode .full-left,
+.full-player.focus-video-mode .full-cover-wrap,
+.full-player.focus-video-mode .full-info,
+.full-player.focus-video-mode .full-progress,
+.full-player.focus-video-mode .full-controls,
+.full-player.focus-video-mode .full-back,
+.full-player.focus-video-mode .full-like,
+.full-player.focus-video-mode #fullBack,
+.full-player.focus-video-mode #fullLike,
+.full-player.focus-video-mode #fullPlay,
+.full-player.focus-video-mode #fullQueue {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 .full-player.focus-video-mode .full-content {
   position: relative;
   z-index: 10;
-  /* Lyrics LEFT, controls RIGHT */
-  grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr) !important;
-  gap: clamp(18px, 3vw, 40px) !important;
+  display: block !important;
+  grid-template-columns: none !important;
+  padding: clamp(48px, 8vh, 80px) clamp(24px, 5vw, 72px) clamp(32px, 6vh, 64px) !important;
+  height: 100% !important;
 }
 
 .full-player.focus-video-mode .lyrics-panel {
-  order: -1 !important; /* left column */
+  order: unset !important;
+  width: min(720px, 100%) !important;
+  max-width: 100% !important;
   height: 100% !important;
   min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-.full-player.focus-video-mode .full-left {
-  order: 1 !important;
-  justify-content: flex-end !important;
-  align-items: stretch !important;
-  padding-bottom: 8px;
-}
-
-/* Hide big cover art in video mode — video is the visual */
-.full-player.focus-video-mode .full-cover-wrap {
-  display: none !important;
-}
-
-.full-player.focus-video-mode .full-info,
-.full-player.focus-video-mode .full-progress,
-.full-player.focus-video-mode .full-controls {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-}
-
-.full-player.focus-video-mode .full-title {
-  font-size: clamp(20px, 2.4vw, 32px) !important;
-}
-
-.full-player.focus-video-mode .full-back,
-.full-player.focus-video-mode .full-like,
-.full-player.focus-video-mode .full-control {
-  background: rgba(10, 12, 18, 0.45) !important;
-  backdrop-filter: blur(16px) saturate(1.2) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(1.2) !important;
+.full-player.focus-video-mode #lyricsContainer {
+  height: 100% !important;
 }
 
 @media (max-width: 760px) {
   .full-player.focus-video-mode .full-content {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 16px !important;
+    padding: 56px 18px 28px !important;
   }
   .full-player.focus-video-mode .lyrics-panel {
-    order: 0 !important;
-    height: min(48svh, 420px) !important;
-    min-height: 260px !important;
-  }
-  .full-player.focus-video-mode .full-left {
-    order: 1 !important;
+    height: 100% !important;
+    min-height: 0 !important;
   }
   .focus-bg-row {
     grid-template-columns: 1fr 1fr;
