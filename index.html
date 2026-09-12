@@ -13033,9 +13033,11 @@ button {
 
 <style id="akko-k-smooth-and-stable-lyrics">
 /* =========================================================
-   ALWAYS use the K-stretch lyric size (full / long box).
-   Chrome fades on top — never shrinks the lyrics column.
-   Applies to video modes AND dynamic focus.
+   VIDEO MODES ONLY (trees / flowers / akko)
+   - Lyrics locked on the LEFT — never shift when K is pressed
+   - K only fades the RIGHT chrome (cover + controls)
+   - Right chrome is roomy
+   DYNAMIC mode is NOT touched here
    ========================================================= */
 
 .full-player.focus-video-mode .focus-video {
@@ -13048,135 +13050,206 @@ button {
   object-fit: cover !important;
 }
 
-/* Single full-width content area — the "K stretch" layout, always */
-.full-player.open .full-content,
-.full-player.focus-video-mode .full-content,
-.full-player.focus-video-mode.chrome-hidden .full-content,
-.full-player.focus-video-mode:not(.chrome-hidden) .full-content,
-.full-player.open:not(.focus-video-mode) .full-content {
-  display: block !important;
-  grid-template-columns: none !important;
+/* Stable 2-column grid: lyrics left, chrome right — columns never change on K */
+.full-player.focus-video-mode .full-content {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.95fr) !important;
+  gap: clamp(20px, 3.5vw, 48px) !important;
+  align-items: stretch !important;
   position: relative !important;
   height: 100% !important;
   min-height: 100% !important;
   overflow: hidden !important;
-  padding: clamp(48px, 8vh, 80px) clamp(24px, 5vw, 72px) clamp(32px, 6vh, 64px) !important;
-  gap: 0 !important;
+  padding: clamp(48px, 8vh, 80px) clamp(24px, 5vw, 64px) clamp(32px, 6vh, 56px) !important;
 }
 
-/* Lyrics always full stretch size */
-.full-player.open .lyrics-panel,
+/* K does NOT change grid — lyrics stay put */
+.full-player.focus-video-mode.chrome-hidden .full-content {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.95fr) !important;
+  gap: clamp(20px, 3.5vw, 48px) !important;
+}
+
+/* Lyrics — always left column, full height, never reflow on K */
 .full-player.focus-video-mode .lyrics-panel,
 .full-player.focus-video-mode.chrome-hidden .lyrics-panel,
-.full-player.focus-video-mode:not(.chrome-hidden) .lyrics-panel,
-.full-player.open:not(.focus-video-mode) .lyrics-panel {
+.full-player.focus-video-mode:not(.chrome-hidden) .lyrics-panel {
   display: flex !important;
   flex-direction: column !important;
-  width: min(920px, 100%) !important;
+  grid-column: 1 !important;
+  order: 0 !important;
+  width: 100% !important;
   max-width: 100% !important;
   height: 100% !important;
   min-height: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
-  order: unset !important;
   opacity: 1 !important;
   visibility: visible !important;
+  justify-self: stretch !important;
 }
 
-.full-player.open #lyricsContainer,
 .full-player.focus-video-mode #lyricsContainer,
-.full-player.open:not(.focus-video-mode) #lyricsContainer {
+.full-player.focus-video-mode.chrome-hidden #lyricsContainer {
   flex: 1 1 auto !important;
   height: 100% !important;
   min-height: 0 !important;
   max-height: none !important;
 }
 
-/* Chrome overlays on the right — does not take a grid column */
-.full-player.open .full-left,
+/* Right chrome column — larger, fixed slot */
 .full-player.focus-video-mode .full-left,
-.full-player.focus-video-mode:not(.chrome-hidden) .full-left {
-  position: absolute !important;
-  right: clamp(16px, 3vw, 40px) !important;
-  top: 50% !important;
+.full-player.focus-video-mode:not(.chrome-hidden) .full-left,
+.full-player.focus-video-mode.chrome-hidden .full-left {
+  grid-column: 2 !important;
+  order: 0 !important;
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
   left: auto !important;
   bottom: auto !important;
-  transform: translateY(-50%) translate3d(0, 0, 0) !important;
-  z-index: 30 !important;
-  width: min(320px, 34vw) !important;
-  max-width: 42% !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
   margin: 0 !important;
-  order: unset !important;
+  padding: 8px 4px !important;
+  box-sizing: border-box !important;
+  z-index: 30 !important;
+  transform: none !important;
   transition:
     opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
     visibility 0.55s linear !important;
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
 }
 
-.full-player.open .full-back,
+/* Bigger cover + controls on the right */
+.full-player.focus-video-mode .full-cover-wrap,
+.full-player.focus-video-mode:not(.chrome-hidden) .full-cover-wrap {
+  display: block !important;
+  width: min(360px, 100%) !important;
+  max-width: 100% !important;
+  aspect-ratio: 1 !important;
+  margin: 0 auto 16px !important;
+}
+
+.full-player.focus-video-mode .full-info,
+.full-player.focus-video-mode .full-progress,
+.full-player.focus-video-mode .full-controls,
+.full-player.focus-video-mode:not(.chrome-hidden) .full-info,
+.full-player.focus-video-mode:not(.chrome-hidden) .full-progress,
+.full-player.focus-video-mode:not(.chrome-hidden) .full-controls {
+  display: flex !important;
+  width: min(360px, 100%) !important;
+  max-width: 100% !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.full-player.focus-video-mode .full-title {
+  font-size: clamp(20px, 2.4vw, 32px) !important;
+}
+
 .full-player.focus-video-mode .full-back {
   z-index: 40 !important;
   transition:
     opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-    visibility 0.55s linear,
-    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1) !important;
-  opacity: 1;
-  visibility: visible;
-  transform: translate3d(0, 0, 0);
+    visibility 0.55s linear !important;
 }
 
-.full-player.focus-video-mode:not(.chrome-hidden) .full-cover-wrap,
-.full-player.open:not(.chrome-hidden) .full-cover-wrap {
-  display: block !important;
+/* K: only fade right chrome + back button — lyrics untouched */
+.full-player.focus-video-mode.chrome-hidden .full-left {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  /* keep grid cell so left column does not expand/shift */
+  transform: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
 }
 
-/* K: fade chrome only — lyrics stay at full stretch size */
-.full-player.chrome-hidden .full-left,
-.full-player.chrome-hidden .full-back,
-.full-player.focus-video-mode.chrome-hidden .full-left,
 .full-player.focus-video-mode.chrome-hidden .full-back {
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
-  transform: translateY(-50%) translate3d(12px, 0, 0) !important;
-  display: flex !important;
-  width: min(320px, 34vw) !important;
-  height: auto !important;
-  overflow: visible !important;
 }
 
-.full-player.chrome-hidden .full-back,
-.full-player.focus-video-mode.chrome-hidden .full-back {
-  transform: translate3d(-6px, 0, 0) !important;
+/* -------- DYNAMIC: restore classic 2-col layout (do not use video rules) -------- */
+.full-player.open:not(.focus-video-mode) .full-content {
   display: grid !important;
+  grid-template-columns: minmax(280px, 42%) minmax(0, 58%) !important;
+  gap: clamp(24px, 5vw, 80px) !important;
+  align-items: stretch !important;
+  height: 100% !important;
+  padding: clamp(70px, 10vh, 90px) clamp(20px, 5vw, 90px) clamp(28px, 4vh, 50px) !important;
+}
+
+.full-player.open:not(.focus-video-mode) .full-left {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  transform: none !important;
+  width: auto !important;
+  max-width: none !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.full-player.open:not(.focus-video-mode) .lyrics-panel {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-width: none !important;
+}
+
+.full-player.open:not(.focus-video-mode) .full-cover-wrap {
+  width: min(420px, 72vh, 40vw) !important;
+  display: block !important;
+}
+
+.full-player.open:not(.focus-video-mode).chrome-hidden .full-left,
+.full-player.open:not(.focus-video-mode).chrome-hidden .full-back {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 @media (max-width: 760px) {
-  .full-player.open .full-left,
-  .full-player.focus-video-mode .full-left {
-    right: 50% !important;
-    top: auto !important;
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
-    transform: translateX(50%) !important;
-    width: min(280px, 88vw) !important;
-    max-width: 88vw !important;
+  .full-player.focus-video-mode .full-content {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
   }
-  .full-player.chrome-hidden .full-left,
-  .full-player.focus-video-mode.chrome-hidden .full-left {
-    transform: translateX(50%) translateY(8px) !important;
-  }
-  .full-player.open .lyrics-panel,
   .full-player.focus-video-mode .lyrics-panel {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 100% !important;
+    flex: 1 1 auto !important;
+    min-height: 42vh !important;
+    order: 0 !important;
+  }
+  .full-player.focus-video-mode .full-left {
+    flex: 0 0 auto !important;
+    width: min(300px, 88vw) !important;
+    height: auto !important;
+    order: 1 !important;
+    padding-bottom: 12px !important;
+  }
+  .full-player.focus-video-mode .full-cover-wrap {
+    width: min(220px, 56vw) !important;
+  }
+  .full-player.open:not(.focus-video-mode) .full-content {
+    display: block !important;
+    grid-template-columns: none !important;
   }
 }
 </style>
