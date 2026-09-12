@@ -8076,8 +8076,17 @@ function openFullPlayer() {
     fullPlayer.classList.toggle("focus-video-mode", isVideoBg);
     // Video modes start lyrics-only; Dynamic starts with chrome visible
     fullPlayer.classList.toggle("chrome-hidden", isVideoBg);
-    if (isVideoBg) startFocusVideo(focusBg);
-    else stopFocusVideo();
+    const left0 = fullPlayer.querySelector(".full-left");
+    const back0 = document.getElementById("fullBack");
+    if (isVideoBg) {
+        left0?.setAttribute("inert", "");
+        back0?.setAttribute("inert", "");
+        startFocusVideo(focusBg);
+    } else {
+        left0?.removeAttribute("inert");
+        back0?.removeAttribute("inert");
+        stopFocusVideo();
+    }
 
     // Lock lyrics to the high anchor once layout is ready (no late re-center spring)
     lyricsContainer?.classList.add("is-seeking");
@@ -8544,7 +8553,25 @@ document.addEventListener("keydown", event => {
         if (fp?.classList.contains("open")) {
             event.preventDefault();
             fp.classList.toggle("chrome-hidden");
-            // Lyrics already at full stretch size — chrome only fades
+            // Make hidden chrome truly non-interactive (opacity alone still receives clicks)
+            const hidden = fp.classList.contains("chrome-hidden");
+            const left = fp.querySelector(".full-left");
+            const back = document.getElementById("fullBack");
+            if (left) {
+                if (hidden) left.setAttribute("inert", "");
+                else left.removeAttribute("inert");
+            }
+            if (back) {
+                if (hidden) back.setAttribute("inert", "");
+                else back.removeAttribute("inert");
+            }
+            // Nudge bg video if PC stalled it
+            if (fp.classList.contains("focus-video-mode")) {
+                const v = document.getElementById("focusVideo");
+                if (v && v.paused && v.dataset.allowPause !== "1") {
+                    v.play().catch(() => {});
+                }
+            }
         }
     }
 });
@@ -8995,8 +9022,45 @@ function stopFocusVideo() {
     _focusVideoPlayToken++; // cancel in-flight play attempts
     const video = document.getElementById("focusVideo");
     if (!video) return;
+    video.dataset.allowPause = "1";
     try { video.pause(); } catch (_) {}
+    window.setTimeout(() => {
+        if (video) video.dataset.allowPause = "0";
+    }, 100);
 }
+
+/** Keep background video running while focus video-mode is open (PC random pause fix) */
+function armFocusVideoWatchdog() {
+    const video = document.getElementById("focusVideo");
+    if (!video || video.dataset.watchdog === "1") return;
+    video.dataset.watchdog = "1";
+
+    const resumeIfNeeded = () => {
+        const fp = document.getElementById("fullPlayer");
+        if (!fp || !fp.classList.contains("open")) return;
+        if (!fp.classList.contains("focus-video-mode")) return;
+        if (video.dataset.allowPause === "1") return;
+        if (!video.paused) return;
+        video.muted = true;
+        const p = video.play();
+        if (p && p.catch) p.catch(() => {});
+    };
+
+    video.addEventListener("pause", () => {
+        // Defer so intentional stopFocusVideo can set allowPause first
+        window.setTimeout(resumeIfNeeded, 40);
+    });
+
+    // Rare stalls without a pause event
+    window.setInterval(() => {
+        const fp = document.getElementById("fullPlayer");
+        if (!fp || !fp.classList.contains("open") || !fp.classList.contains("focus-video-mode")) return;
+        if (video.dataset.allowPause === "1") return;
+        if (video.paused) resumeIfNeeded();
+    }, 2000);
+}
+
+armFocusVideoWatchdog();
 
 // Build static first-frame previews for video modes
 if (document.readyState === "loading") {
@@ -13340,6 +13404,39 @@ button {
   width: 100% !important;
   max-width: 100% !important;
   display: block !important;
+}
+</style>
+
+<style id="akko-chrome-no-ghost-clicks">
+/* Hidden UI must not receive clicks — opacity:0 still hit-tests without this */
+.full-player.chrome-hidden .full-left,
+.full-player.chrome-hidden .full-left *,
+.full-player.chrome-hidden .full-back,
+.full-player.chrome-hidden .full-back *,
+.full-player.focus-video-mode.chrome-hidden .full-left,
+.full-player.focus-video-mode.chrome-hidden .full-left *,
+.full-player.focus-video-mode.chrome-hidden .full-back,
+.full-player.focus-video-mode.chrome-hidden .full-back *,
+.full-player.chrome-hidden .full-control,
+.full-player.chrome-hidden .full-like,
+.full-player.chrome-hidden .full-progress,
+.full-player.chrome-hidden .full-progress-bar,
+.full-player.chrome-hidden .full-cover-wrap {
+  pointer-events: none !important;
+  cursor: default !important;
+}
+
+/* When chrome is visible, controls work normally */
+.full-player:not(.chrome-hidden) .full-left,
+.full-player:not(.chrome-hidden) .full-left *,
+.full-player:not(.chrome-hidden) .full-back {
+  pointer-events: auto !important;
+}
+
+/* Decorative video never steals clicks */
+#focusVideo.focus-video,
+.full-player .focus-video {
+  pointer-events: none !important;
 }
 </style>
 
