@@ -12682,15 +12682,16 @@ button {
   text-shadow: none !important;
 }
 
-/* BOTH past lines — same faded + soft blur */
+/* BOTH past lines — same soft fade */
 #lyricsContainer .lyric-line.past,
 #lyricsContainer .lyric-line.past-second {
-  color: #8a8a96 !important;
-  -webkit-text-fill-color: #8a8a96 !important;
-  opacity: 0.5 !important;
-  filter: blur(1.4px) !important;
-  -webkit-filter: blur(1.4px) !important;
-  text-shadow: none !important;
+  color: rgba(255, 255, 255, 0.22) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.22) !important;
+  opacity: 0.28 !important;
+  filter: none !important;
+  text-shadow:
+    0 0 10px rgba(0, 0, 0, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.25) !important;
 }
 
 #lyricsContainer .lyric-line.offscreen {
@@ -12763,20 +12764,47 @@ button {
   text-shadow: none !important;
 }
 
+/* Past — heavily faded so they don't pop on light video (e.g. flower.mp4) */
 #lyricsContainer .lyric-line.past,
 #lyricsContainer .lyric-line.past-second {
-  color: #5a5a66 !important;
-  -webkit-text-fill-color: #5a5a66 !important;
-  opacity: 1 !important;
+  color: rgba(255, 255, 255, 0.22) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.22) !important;
+  opacity: 0.28 !important;
   filter: none !important;
   -webkit-filter: none !important;
-  text-shadow: none !important;
+  /* soft dark edge so white/bright video doesn't wash them into hard text */
+  text-shadow:
+    0 0 10px rgba(0, 0, 0, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.25) !important;
 }
 
 #lyricsContainer .lyric-line.offscreen {
   opacity: 0 !important;
-  color: #5a5a66 !important;
-  -webkit-text-fill-color: #5a5a66 !important;
+  color: rgba(255, 255, 255, 0.15) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.15) !important;
+  text-shadow: none !important;
+}
+</style>
+
+<style id="akko-past-lyrics-fade-on-video">
+/* Past lyrics stay ghosted on any focus bg (dark or light video) */
+.full-player #lyricsContainer .lyric-line.past,
+.full-player #lyricsContainer .lyric-line.past-second,
+.full-player.focus-video-mode #lyricsContainer .lyric-line.past,
+.full-player.focus-video-mode #lyricsContainer .lyric-line.past-second {
+  color: rgba(255, 255, 255, 0.18) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.18) !important;
+  opacity: 0.22 !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  text-shadow:
+    0 0 12px rgba(0, 0, 0, 0.45),
+    0 1px 3px rgba(0, 0, 0, 0.35) !important;
+}
+
+.full-player #lyricsContainer .lyric-line.offscreen,
+.full-player.focus-video-mode #lyricsContainer .lyric-line.offscreen {
+  opacity: 0 !important;
 }
 </style>
 
