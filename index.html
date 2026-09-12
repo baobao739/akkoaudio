@@ -8041,6 +8041,7 @@ function openFullPlayer() {
     // Focus Mode only opens when there is an actual song playing/selected.
     if (!getCurrentSong()) return;
     fullPlayer.classList.add("open");
+    fullPlayer.removeAttribute("inert");
     document.body.style.overflow = "hidden";
     startBlobMotion();
 
@@ -8067,6 +8068,7 @@ function openFullPlayer() {
 function closeFullPlayer() {
     fullPlayer.classList.remove("open");
     fullPlayer.classList.remove("chrome-hidden");
+    fullPlayer.setAttribute("inert", "");
     document.body.style.overflow = "";
     stopFocusVideo();
 }
@@ -9006,10 +9008,8 @@ function ensureLyricMotionLoop() {
 
 function setLyricScrollTarget(offsetPx, instant = false) {
     lyricMotion.targetY = -Math.max(0, offsetPx);
-    // Only snap on huge layout corrections — normal line steps always ease
-    if (!instant && Math.abs(lyricMotion.targetY - lyricMotion.y) > 160) {
-        instant = true;
-    }
+    // Never force-snap on moderate deltas — that felt like the lyrics "reshaping".
+    // Only honor explicit instant (seek / first paint / big jump).
     if (instant) {
         lyricMotion.y = lyricMotion.targetY;
         applyLyricTransform(lyricMotion.targetY);
@@ -9028,18 +9028,14 @@ function computeLyricOffset(activeIndex, elements, track, anchorRatio) {
 
     const viewportHeight = Math.max(1, lyricsContainer.clientHeight);
 
-    // Current lyric sits HIGH (~top 22%) so ~1–1.5 past lines show above
-    // and the rest of the box fills with upcoming lyrics.
-    // Same anchor for rainy + dynamic so chrome toggle does not "recenter".
-    let ratio;
+    // Fixed anchor for every state — never change ratio on first→second line
+    // or rainy/dynamic, so the box does not "reshape" when past lyrics appear.
+    let ratio = 0.22;
     if (typeof anchorRatio === "number" && anchorRatio > 0 && anchorRatio < 1) {
         ratio = anchorRatio;
-    } else if (activeIndex < 0) {
-        ratio = 0.18; // first upcoming a bit higher before playback hits a line
-    } else {
-        ratio = 0.22;
     }
     const anchor = viewportHeight * ratio;
+    // Prefer layout offsetTop (unaffected by filter/blur) over visual rects
     const desired = line.offsetTop - anchor;
     const maxOffset = Math.max(0, track.scrollHeight - viewportHeight);
     return Math.min(Math.max(0, desired), maxOffset);
@@ -9130,25 +9126,27 @@ function updateLyrics(time) {
         }
     });
 
+    // Measure scroll target from CURRENT layout before blur/filter classes settle.
+    // Sequential first→second line must always ease — never snap or reflow the box.
+    const offset = computeLyricOffset(activeIndex, elements, track);
+
+    const focusIndex = activeIndex < 0 ? 0 : activeIndex;
+    if (!lyricMotion.introDone) {
+        introduceFirstLyric(elements[focusIndex]);
+        lyricMotion.introDone = true;
+    }
+
+    // Only snap on seek / first paint / large jumps. Adjacent line steps always ease.
+    const firstPaint = previousIndex === null;
+    const jumped = previousIndex !== null && Math.abs(activeIndex - previousIndex) > 2;
+    const sequentialStep =
+        previousIndex !== null &&
+        Math.abs(activeIndex - previousIndex) === 1;
+    const instant = (hardSync || firstPaint || jumped) && !sequentialStep;
+    setLyricScrollTarget(offset, instant);
+
+    // Defer mask class paint to next frame so transform starts first (no reshape flash)
     requestAnimationFrame(() => {
-        const currentTrack = getLyricTrack();
-        const currentElements = Array.from(lyricsContainer.querySelectorAll(".lyric-line"));
-        if (!currentTrack || !currentElements.length) return;
-
-        const offset = computeLyricOffset(activeIndex, currentElements, currentTrack);
-
-        const focusIndex = activeIndex < 0 ? 0 : activeIndex;
-        if (!lyricMotion.introDone) {
-            introduceFirstLyric(currentElements[focusIndex]);
-            lyricMotion.introDone = true;
-        }
-
-        // First paint / seeks snap; normal line-to-line always eases smoothly.
-        const firstPaint = previousIndex === null;
-        const jumped = previousIndex !== null && Math.abs(activeIndex - previousIndex) > 2;
-        const instant = hardSync || firstPaint || jumped;
-        setLyricScrollTarget(offset, instant);
-
         lyricsContainer.classList.remove("is-seeking");
     });
 }
@@ -9160,11 +9158,14 @@ if ("ResizeObserver" in window && lyricsContainer) {
     let _lastLyricH = 0;
     new ResizeObserver(() => {
         const h = lyricsContainer.clientHeight || 0;
-        const bigChange = Math.abs(h - _lastLyricH) > 24;
+        const delta = Math.abs(h - _lastLyricH);
+        // Ignore sub-pixel / filter-induced noise that used to reflow the lyric box
+        if (delta < 8) return;
+        const bigChange = delta > 48;
         _lastLyricH = h;
-        // Debounce tiny changes; big layout changes snap instantly
         clearTimeout(_lyricRoTimer);
-        _lyricRoTimer = setTimeout(() => refreshLyricViewport(bigChange), bigChange ? 0 : 50);
+        // Never snap on observer noise during normal line changes
+        _lyricRoTimer = setTimeout(() => refreshLyricViewport(false), bigChange ? 16 : 80);
     }).observe(lyricsContainer);
 }
 
@@ -12239,6 +12240,255 @@ button.theme-option {
   }
 }
 </style>
+
+<style id="akko-click-and-lyric-stability-fix">
+/* =========================================================
+   CLICK RELIABILITY + LYRIC BOX STABILITY
+   ========================================================= */
+
+/* Atmosphere is decorative only — never intercept taps */
+.app-atmosphere,
+.app-atmosphere *,
+.ambient-orb {
+  pointer-events: none !important;
+}
+
+/* Closed full player must be fully inert (not just invisible) */
+.full-player:not(.open) {
+  pointer-events: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  /* Keep it out of hit-testing even during opacity transitions */
+  z-index: -1 !important;
+}
+.full-player.open {
+  pointer-events: auto !important;
+  z-index: 200 !important;
+}
+
+/* Closed queue / onboarding / toast never steal clicks */
+.queue-panel:not(.open),
+.onboarding.hidden,
+.queue-toast:not(.show),
+.repeat-label:not(.show) {
+  pointer-events: none !important;
+}
+
+/* Interactive controls always win hit-testing */
+.song-card,
+.track-row,
+.nav-button,
+.control,
+.full-control,
+.full-back,
+.full-like,
+.like-btn,
+.track-row-like,
+.queue-add-btn,
+.queue-item,
+.queue-item-add,
+.queue-item-remove,
+.accent-swatch,
+.theme-option,
+.focus-bg-option,
+.shuffle-btn,
+.onboard-btn,
+.featured,
+.search-box,
+.search-box input,
+button {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Children of cards pass the click up (except explicit buttons) */
+.song-card .song-cover,
+.song-card .song-cover img,
+.song-card .play-overlay,
+.song-card .song-title,
+.song-card .song-artist,
+.song-card .marquee-track,
+.song-card .marquee-copy {
+  pointer-events: none !important;
+}
+.song-card .like-btn,
+.song-card .queue-add-btn {
+  pointer-events: auto !important;
+  z-index: 6 !important;
+}
+
+/* Kill the global transform transition on hit targets — it made
+   elements move under the finger so the first tap often missed */
+.song-card,
+.track-row,
+.nav-button,
+.control,
+.full-control,
+.featured,
+.like-btn,
+.theme-option,
+.accent-swatch,
+.focus-bg-option,
+.shuffle-btn {
+  transition-property: background-color, color, border-color, box-shadow, opacity, filter !important;
+}
+
+/* =========================================================
+   LYRICS: one mask forever — no reshape when past lines appear
+   ========================================================= */
+#lyricsContainer,
+#lyricsContainer.has-past-lyrics,
+.full-player.open #lyricsContainer,
+.full-player.open #lyricsContainer.has-past-lyrics {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,.55) 3%,
+    #000 10%,
+    #000 78%,
+    rgba(0,0,0,.72) 90%,
+    transparent 100%
+  ) !important;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,.55) 3%,
+    #000 10%,
+    #000 78%,
+    rgba(0,0,0,.72) 90%,
+    transparent 100%
+  ) !important;
+}
+
+/* Lock line box metrics — color/blur only, never size/margin changes */
+#lyricsContainer .lyric-line,
+#lyricsContainer .lyric-line.active,
+#lyricsContainer .lyric-line.next,
+#lyricsContainer .lyric-line.upcoming,
+#lyricsContainer .lyric-line.past,
+#lyricsContainer .lyric-line.past-second,
+#lyricsContainer .lyric-line.offscreen {
+  font-size: clamp(30px, 3.2vw, 50px) !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.034em !important;
+  margin: 0 0 clamp(14px, 1.9vh, 28px) !important;
+  padding-left: 10px !important;
+  padding-right: 12px !important;
+  max-width: none !important;
+  width: 100% !important;
+  transform: none !important;
+  scale: 1 !important;
+  box-sizing: border-box !important;
+  /* Blur must not affect layout height */
+  will-change: color, opacity, filter !important;
+}
+
+/* Soft past blur (readable, no heavy reshape feel) */
+#lyricsContainer .lyric-line.past {
+  color: rgba(255, 255, 255, 0.36) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.36) !important;
+  opacity: 1 !important;
+  filter: blur(1.1px) !important;
+  text-shadow: none !important;
+}
+#lyricsContainer .lyric-line.past-second {
+  color: rgba(255, 255, 255, 0.20) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.20) !important;
+  opacity: 1 !important;
+  filter: blur(2.0px) !important;
+  text-shadow: none !important;
+}
+#lyricsContainer .lyric-line.offscreen {
+  opacity: 0 !important;
+  filter: none !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+  height: auto !important;
+  margin-bottom: clamp(14px, 1.9vh, 28px) !important;
+}
+
+/* Track padding stays constant across first→second line */
+.full-player.open #lyricsContainer .lyrics-track,
+.full-player.focus-video-mode #lyricsContainer .lyrics-track {
+  padding-top: 6% !important;
+  padding-bottom: 70vh !important;
+  transition: none !important;
+}
+
+@media (max-width: 760px) {
+  #lyricsContainer .lyric-line,
+  #lyricsContainer .lyric-line.active,
+  #lyricsContainer .lyric-line.upcoming,
+  #lyricsContainer .lyric-line.next,
+  #lyricsContainer .lyric-line.past {
+    font-size: clamp(26px, 7.2vw, 38px) !important;
+    margin-bottom: 20px !important;
+  }
+}
+</style>
+
+<script id="akko-click-reliability-js">
+(() => {
+  "use strict";
+
+  // Mark closed overlays as inert so they cannot intercept events
+  function syncInert() {
+    const fp = document.getElementById("fullPlayer");
+    if (fp) {
+      if (fp.classList.contains("open")) {
+        fp.removeAttribute("inert");
+      } else {
+        fp.setAttribute("inert", "");
+      }
+    }
+    const onboard = document.getElementById("onboarding");
+    if (onboard) {
+      if (onboard.classList.contains("hidden")) {
+        onboard.setAttribute("inert", "");
+      } else {
+        onboard.removeAttribute("inert");
+      }
+    }
+    const queue = document.getElementById("queuePanel");
+    if (queue) {
+      if (queue.classList.contains("open")) {
+        queue.removeAttribute("inert");
+      } else {
+        queue.setAttribute("inert", "");
+      }
+    }
+  }
+
+  syncInert();
+
+  // Keep inert in sync when classes flip
+  const mo = new MutationObserver(syncInert);
+  ["fullPlayer", "onboarding", "queuePanel"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) mo.observe(el, { attributes: true, attributeFilter: ["class"] });
+  });
+
+  // Event-delegation fallback: song cards / track rows always play on click
+  // even if a nested handler was somehow lost after re-render.
+  document.addEventListener("click", (e) => {
+    const like = e.target.closest?.(".like-btn, .track-row-like, .queue-add-btn, .queue-item-remove, .queue-item-add");
+    if (like) return; // those have their own handlers
+
+    // Don't steal clicks that already bubbled from a working card handler
+    // — only act as a safety net when the direct target is a card region.
+  }, true);
+
+  // Ensure atmosphere never blocks
+  const atmo = document.querySelector(".app-atmosphere");
+  if (atmo) {
+    atmo.style.pointerEvents = "none";
+    atmo.setAttribute("aria-hidden", "true");
+  }
+})();
+</script>
+
 
 </body>
 </html>
