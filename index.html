@@ -8027,86 +8027,9 @@ async function loadLyrics(path) {
    - Once the current line reaches the middle it STAYS locked there
    ========================================================= */
 
-function updateLyrics(time) {
-        if (!currentLyrics.length) return;
-
-        lyricsContainer.classList.remove('lyrics-idle');
-
-        let activeIndex = -1;
-        for (let i = 0; i < currentLyrics.length; i++) {
-            if (time >= currentLyrics[i].time) activeIndex = i;
-            else break;
-        }
-
-        // Only treat a line as "current" once playback has reached its timestamp.
-        // Before that, lines are incoming (next / next-next / next-third).
-        // lastActiveIndex starts null so the first paint always runs.
-        if (lastActiveIndex !== null && activeIndex === lastActiveIndex) return;
-        lastActiveIndex = activeIndex;
-
-        const elements = Array.from(
-            lyricsContainer.querySelectorAll('.lyric-line')
-        );
-        const track = lyricsContainer.querySelector('.lyrics-track');
-        if (!track || !elements.length) return;
-
-        elements.forEach((element, index) => {
-            element.classList.remove(
-                'active', 'next', 'next-next', 'next-third',
-                'next-fourth', 'past', 'past-second', 'fade-past', 'offscreen'
-            );
-
-            if (element._fadeTimer) {
-                clearTimeout(element._fadeTimer);
-                element._fadeTimer = null;
-            }
-
-            if (activeIndex < 0) {
-                // Nothing playing yet — first lines are upcoming only
-                if (index === 0) {
-                    element.classList.add('next');
-                } else if (index === 1) {
-                    element.classList.add('next-next');
-                } else if (index === 2) {
-                    element.classList.add('next-third');
-                } else {
-                    element.classList.add('offscreen');
-                }
-                return;
-            }
-
-            if (index === activeIndex - 2) {
-                // Keep the second-most-recent line as a faint sliver at the top.
-                element.classList.add('past-second');
-            } else if (index === activeIndex - 1) {
-                // The immediately previous line stays visible and gently faded.
-                element.classList.add('past');
-            } else if (index === activeIndex) {
-                element.classList.add('active');
-            } else if (index === activeIndex + 1) {
-                element.classList.add('next');
-            } else if (index === activeIndex + 2) {
-                element.classList.add('next-next');
-            } else if (index === activeIndex + 3) {
-                element.classList.add('next-third');
-            } else {
-                element.classList.add('offscreen');
-            }
-        });
-
-        // Anchor on current line, or first upcoming line before lyrics start
-        const focusIndex = activeIndex < 0 ? 0 : activeIndex;
-        const line = elements[focusIndex];
-        if (!line) return;
-
-        requestAnimationFrame(() => {
-            // Before first lyric: sit a bit higher so incoming lines fill the box
-            const anchorRatio = activeIndex < 0 ? 0.28 : 0.31;
-            const anchor = lyricsContainer.clientHeight * anchorRatio;
-            const target = line.offsetTop - anchor;
-            track.style.transform =
-                `translate3d(0, ${-Math.max(0, target)}px, 0)`;
-        });
+function updateLyrics_legacy_disabled(time) {
+        /* superseded by focused lyrics renderer below */
+        return;
     }
 
 
@@ -8128,13 +8051,14 @@ function openFullPlayer() {
     if (focusBg === "rainy") startFocusVideo();
     else stopFocusVideo();
 
-    // Recenter lyrics after layout is ready — always instant, never a late spring
+    // Lock lyrics to the high anchor once layout is ready (no late re-center spring)
     lyricsContainer?.classList.add("is-seeking");
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-            lyricsContainer?.classList.add("is-seeking");
             if (typeof refreshLyricViewport === "function") {
                 refreshLyricViewport(true);
+            } else if (typeof updateLyrics === "function") {
+                updateLyrics(audio?.currentTime || 0);
             }
         });
     });
@@ -9028,9 +8952,8 @@ const lyricMotion = {
     raf: 0,
     lastTs: 0,
     activeIndex: null,
-    // Softer exponential spring — feels closer to Apple Music's fluid glide
-    // (lower = silkier, higher = snappier). 4.2 is a sweet spot.
-    smooth: 4.2,
+    // Silky exponential spring — lower = smoother current→next glide
+    smooth: 2.85,
     introDone: false,
     running: false
 };
@@ -9083,8 +9006,8 @@ function ensureLyricMotionLoop() {
 
 function setLyricScrollTarget(offsetPx, instant = false) {
     lyricMotion.targetY = -Math.max(0, offsetPx);
-    // Large corrections (open focus / layout settle) must never spring into place
-    if (!instant && Math.abs(lyricMotion.targetY - lyricMotion.y) > 48) {
+    // Only snap on huge layout corrections — normal line steps always ease
+    if (!instant && Math.abs(lyricMotion.targetY - lyricMotion.y) > 160) {
         instant = true;
     }
     if (instant) {
@@ -9096,7 +9019,7 @@ function setLyricScrollTarget(offsetPx, instant = false) {
     ensureLyricMotionLoop();
 }
 
-function computeLyricOffset(activeIndex, elements, track, anchorRatio = 0.46) {
+function computeLyricOffset(activeIndex, elements, track, anchorRatio) {
     if (!elements.length || !track || !lyricsContainer) return 0;
 
     const focusIndex = activeIndex < 0 ? 0 : activeIndex;
@@ -9105,12 +9028,17 @@ function computeLyricOffset(activeIndex, elements, track, anchorRatio = 0.46) {
 
     const viewportHeight = Math.max(1, lyricsContainer.clientHeight);
 
-    // Keep the active line high in the panel so the rest of the lyric box
-    // is filled with upcoming lines (dynamic + rainy).
-    const videoMode = fullPlayer?.classList.contains("focus-video-mode");
-    const ratio = typeof anchorRatio === "number" && anchorRatio > 0 && anchorRatio < 1
-        ? anchorRatio
-        : (videoMode ? 0.16 : 0.14);
+    // Current lyric sits HIGH (~top 22%) so ~1–1.5 past lines show above
+    // and the rest of the box fills with upcoming lyrics.
+    // Same anchor for rainy + dynamic so chrome toggle does not "recenter".
+    let ratio;
+    if (typeof anchorRatio === "number" && anchorRatio > 0 && anchorRatio < 1) {
+        ratio = anchorRatio;
+    } else if (activeIndex < 0) {
+        ratio = 0.18; // first upcoming a bit higher before playback hits a line
+    } else {
+        ratio = 0.22;
+    }
     const anchor = viewportHeight * ratio;
     const desired = line.offsetTop - anchor;
     const maxOffset = Math.max(0, track.scrollHeight - viewportHeight);
@@ -9189,12 +9117,15 @@ function updateLyrics(time) {
         } else if (index === activeIndex - 1) {
             element.classList.add("past");
         } else if (index === activeIndex - 2) {
+            // Half-visible second past line near the top
             element.classList.add("past-second");
         } else if (index < activeIndex - 2) {
-            // Older past lines stay offscreen
             element.classList.add("offscreen");
+        } else if (index === activeIndex + 1) {
+            element.classList.add("next");
+            element.classList.add("upcoming");
         } else {
-            // All remaining upcoming lines stay visible and flow to the bottom
+            // Rest of the stack fills the lyric box downward
             element.classList.add("upcoming");
         }
     });
@@ -9212,10 +9143,9 @@ function updateLyrics(time) {
             lyricMotion.introDone = true;
         }
 
-        // First paint, seeks, and multi-line jumps snap instantly.
-        // Only ease when advancing one line at a time during playback.
+        // First paint / seeks snap; normal line-to-line always eases smoothly.
         const firstPaint = previousIndex === null;
-        const jumped = previousIndex !== null && Math.abs(activeIndex - previousIndex) > 1;
+        const jumped = previousIndex !== null && Math.abs(activeIndex - previousIndex) > 2;
         const instant = hardSync || firstPaint || jumped;
         setLyricScrollTarget(offset, instant);
 
@@ -12199,6 +12129,116 @@ button.theme-option {
   }, true);
 })();
 </script>
+
+
+
+<style id="akko-lyric-high-anchor-final">
+/* =========================================================
+   HIGH CURRENT LYRIC + FULL BOX FILL
+   Current sits high (~top 22%) with ~1.5 past above and a full
+   stack of upcoming below. Rainy + dynamic share the same rules.
+   ========================================================= */
+
+.full-player.open #lyricsContainer .lyrics-track {
+  /* Extra top room so past lines can sit above the active slot */
+  padding-top: 6% !important;
+  padding-bottom: 70vh !important;
+}
+
+.full-player.focus-video-mode #lyricsContainer .lyrics-track {
+  padding-top: 6% !important;
+  padding-bottom: 70vh !important;
+}
+
+/* Soft mask: leave the top open enough for ~1.5 past lines */
+.full-player.open #lyricsContainer,
+.full-player.open #lyricsContainer.has-past-lyrics {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,.55) 3%,
+    #000 9%,
+    #000 78%,
+    rgba(0,0,0,.72) 90%,
+    transparent 100%
+  ) !important;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,.55) 3%,
+    #000 9%,
+    #000 78%,
+    rgba(0,0,0,.72) 90%,
+    transparent 100%
+  ) !important;
+}
+
+/* Past lines readable under light blur; second past half-faded */
+#lyricsContainer .lyric-line.past {
+  color: rgba(255, 255, 255, 0.38) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.38) !important;
+  opacity: 1 !important;
+  filter: blur(1.1px) !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+
+#lyricsContainer .lyric-line.past-second {
+  color: rgba(255, 255, 255, 0.22) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.22) !important;
+  opacity: 1 !important;
+  filter: blur(2.2px) !important;
+  text-shadow: none !important;
+  transform: none !important;
+  visibility: visible !important;
+}
+
+/* Current → next color ease is already long; keep size locked */
+#lyricsContainer .lyric-line {
+  transition:
+    color 980ms cubic-bezier(0.16, 1, 0.3, 1),
+    -webkit-text-fill-color 980ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 980ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 980ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+#lyricsContainer .lyric-line.active {
+  color: var(--accent-bright, var(--accent)) !important;
+  -webkit-text-fill-color: var(--accent-bright, var(--accent)) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow:
+    0 0 12px color-mix(in srgb, var(--accent) 36%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 16%, transparent) !important;
+}
+
+#lyricsContainer .lyric-line.next {
+  color: rgba(255, 255, 255, 0.58) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.58) !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+#lyricsContainer .lyric-line.upcoming:not(.next) {
+  color: rgba(255, 255, 255, 0.40) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.40) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  visibility: visible !important;
+}
+
+/* Slightly tighter spacing so more upcoming lines fit the box */
+.full-player.open #lyricsContainer .lyric-line {
+  margin-bottom: clamp(14px, 1.9vh, 28px) !important;
+}
+
+@media (max-width: 760px) {
+  .full-player.open #lyricsContainer .lyrics-track {
+    padding-top: 4% !important;
+    padding-bottom: 58vh !important;
+  }
+}
+</style>
 
 </body>
 </html>
