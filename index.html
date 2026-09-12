@@ -5688,8 +5688,8 @@ body::after {
         <div class="full-left">
 
             <div class="full-cover-wrap">
-                <img class="full-cover cover-layer is-active" id="fullCover" src="covers/here.jfif" alt="">
-                <img class="full-cover cover-layer" id="fullCoverB" src="covers/here.jfif" alt="">
+                <img class="full-cover cover-layer is-active" id="fullCover" src="" alt="">
+                <img class="full-cover cover-layer" id="fullCoverB" src="" alt="">
             </div>
 
             <div class="full-info">
@@ -10648,6 +10648,245 @@ button:active,
   }
 }
 </style>
+
+
+<style id="akko-final-lyrics-cover-smoothness">
+/* =========================================================
+   FINAL LYRIC + COVER POLISH
+   This block is last so older experimental lyric styles cannot
+   override the intended visual state.
+   ========================================================= */
+
+/* Never let a lyric fade mask or clipping layer cover the text glow. */
+#lyricsContainer,
+#lyricsContainer .lyrics-track,
+.lyrics-container,
+.lyrics-track {
+  overflow: visible !important;
+}
+
+#lyricsContainer {
+  position: relative;
+  isolation: isolate;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,.92) 5%,
+    #000 15%,
+    #000 88%,
+    rgba(0,0,0,.72) 96%,
+    transparent 100%
+  ) !important;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0,0,0,.92) 5%,
+    #000 15%,
+    #000 88%,
+    rgba(0,0,0,.72) 96%,
+    transparent 100%
+  ) !important;
+}
+
+/* Keep the moving track from being clipped by an ancestor. */
+#lyricsContainer .lyrics-track {
+  position: relative;
+  overflow: visible !important;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+/* One font and one smooth transition system for every lyric state. */
+#lyricsContainer .lyric-line,
+#lyricsContainer .lyric-line.active,
+#lyricsContainer .lyric-line.upcoming,
+#lyricsContainer .lyric-line.next,
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third,
+#lyricsContainer .lyric-line.next-fourth,
+#lyricsContainer .lyric-line.upcoming-last,
+#lyricsContainer .lyric-line.past,
+#lyricsContainer .lyric-line.past-second,
+#lyricsContainer .lyric-line.offscreen,
+#lyricsContainer .lyric-line.pause {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.034em !important;
+  transform-origin: center center !important;
+  transition:
+    color 720ms cubic-bezier(.16,1,.3,1),
+    -webkit-text-fill-color 720ms cubic-bezier(.16,1,.3,1),
+    opacity 900ms cubic-bezier(.16,1,.3,1),
+    filter 900ms cubic-bezier(.16,1,.3,1),
+    transform 900ms cubic-bezier(.16,1,.3,1) !important;
+  will-change: color, opacity, filter, transform;
+}
+
+/* The current line uses the user's selected accent, not hardcoded white. */
+#lyricsContainer .lyric-line.active {
+  color: var(--accent) !important;
+  -webkit-text-fill-color: var(--accent) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow:
+    0 0 10px color-mix(in srgb, var(--accent) 38%, transparent),
+    0 0 26px color-mix(in srgb, var(--accent) 20%, transparent) !important;
+}
+
+/* Upcoming lines stay consistent and never inherit the accent accidentally. */
+#lyricsContainer .lyric-line.upcoming,
+#lyricsContainer .lyric-line.next,
+#lyricsContainer .lyric-line.next-next,
+#lyricsContainer .lyric-line.next-third,
+#lyricsContainer .lyric-line.next-fourth,
+#lyricsContainer .lyric-line.upcoming-last {
+  color: rgba(255,255,255,.44) !important;
+  -webkit-text-fill-color: rgba(255,255,255,.44) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* Past lines: readable, soft, and glowing without an overly strong blur. */
+#lyricsContainer .lyric-line.past {
+  color: rgba(255,255,255,.36) !important;
+  -webkit-text-fill-color: rgba(255,255,255,.36) !important;
+  opacity: 1 !important;
+  filter: blur(1.35px) !important;
+  text-shadow:
+    0 0 9px rgba(255,255,255,.13),
+    0 0 20px color-mix(in srgb, var(--accent) 10%, transparent) !important;
+}
+
+#lyricsContainer .lyric-line.past-second {
+  color: rgba(255,255,255,.18) !important;
+  -webkit-text-fill-color: rgba(255,255,255,.18) !important;
+  opacity: 1 !important;
+  filter: blur(2.5px) !important;
+  text-shadow:
+    0 0 10px rgba(255,255,255,.08),
+    0 0 22px color-mix(in srgb, var(--accent) 8%, transparent) !important;
+}
+
+#lyricsContainer .lyric-line.offscreen {
+  opacity: 0 !important;
+  filter: blur(3px) !important;
+  pointer-events: none !important;
+  text-shadow: none !important;
+}
+
+/* Do not let generic fade pseudo-elements paint over the past-lyric glow. */
+#lyricsContainer::before,
+#lyricsContainer::after,
+#lyricsContainer .lyrics-track::before,
+#lyricsContainer .lyrics-track::after {
+  pointer-events: none !important;
+}
+
+/* Cover layers start empty and crossfade only after a valid active cover loads. */
+.mini-cover-wrap,
+.full-cover-wrap {
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.mini-cover-wrap .cover-layer,
+.full-cover-wrap .cover-layer {
+  background: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  transition:
+    opacity 700ms cubic-bezier(.16,1,.3,1),
+    filter 700ms cubic-bezier(.16,1,.3,1),
+    transform 900ms cubic-bezier(.16,1,.3,1) !important;
+}
+
+.mini-cover-wrap .cover-layer:not(.is-active),
+.full-cover-wrap .cover-layer:not(.is-active) {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.mini-cover-wrap .cover-layer.is-active,
+.full-cover-wrap .cover-layer.is-active {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Smoother global motion without forcing every element to animate forever. */
+.song-card,
+.featured,
+.nav-button,
+.control,
+.full-control,
+.queue-item,
+.track-row,
+.play-overlay,
+.like-btn,
+.queue-add-btn,
+.mini-cover-wrap,
+.full-cover-wrap,
+.settings-card,
+.credits-card {
+  transition-timing-function: cubic-bezier(.16,1,.3,1) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #lyricsContainer .lyric-line,
+  #lyricsContainer .lyric-line.active,
+  #lyricsContainer .lyric-line.upcoming,
+  #lyricsContainer .lyric-line.past,
+  #lyricsContainer .lyric-line.past-second,
+  .mini-cover-wrap .cover-layer,
+  .full-cover-wrap .cover-layer {
+    transition: none !important;
+  }
+}
+</style>
+
+<script id="akko-final-cover-guard">
+(() => {
+  "use strict";
+
+  /*
+   * Prevent stale/hardcoded cover flashes:
+   * - empty src values are ignored
+   * - only the currently resolved active song cover is accepted
+   * - a global covers/any.* still wins when detectGlobalCover() found one
+   */
+  const originalResolveCover = window.resolveCover;
+  if (typeof originalResolveCover === "function") {
+    window.resolveCover = function(songOrSrc) {
+      const resolved = originalResolveCover(songOrSrc);
+      return typeof resolved === "string" ? resolved : "";
+    };
+  }
+
+  function clearInvalidCoverLayers() {
+    document.querySelectorAll(".cover-layer").forEach(img => {
+      const src = img.getAttribute("src") || "";
+      if (!src || /here\.(jpe?g|jfif|png|webp)$/i.test(src)) {
+        img.removeAttribute("src");
+        img.classList.remove("is-active");
+        img.style.opacity = "0";
+        img.style.visibility = "hidden";
+      }
+    });
+  }
+
+  clearInvalidCoverLayers();
+
+  /* Recheck after the existing initialization and playback code has run. */
+  requestAnimationFrame(clearInvalidCoverLayers);
+  setTimeout(clearInvalidCoverLayers, 120);
+})();
+</script>
 
 </body>
 </html>
