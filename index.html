@@ -5548,21 +5548,21 @@ body::after {
                     </button>
                     <button class="focus-bg-option" data-focus-bg="trees" type="button" aria-pressed="false">
                         <span class="focus-bg-preview trees" aria-hidden="true">
-                            <video muted playsinline preload="metadata" src="covers/trees.mp4"></video>
+                            <video muted playsinline preload="auto" src="covers/trees.mp4"></video>
                         </span>
                         <span class="focus-bg-name">Trees</span>
                         <span class="focus-bg-badge" aria-hidden="true">Selected</span>
                     </button>
                     <button class="focus-bg-option" data-focus-bg="flowers" type="button" aria-pressed="false">
                         <span class="focus-bg-preview flowers" aria-hidden="true">
-                            <video muted playsinline preload="metadata" src="covers/flowers.mp4"></video>
+                            <video muted playsinline preload="auto" src="covers/flowers.mp4"></video>
                         </span>
                         <span class="focus-bg-name">Flowers</span>
                         <span class="focus-bg-badge" aria-hidden="true">Selected</span>
                     </button>
                     <button class="focus-bg-option" data-focus-bg="akko" type="button" aria-pressed="false">
                         <span class="focus-bg-preview akko" aria-hidden="true">
-                            <video muted playsinline preload="metadata" src="covers/akko.mp4"></video>
+                            <video muted playsinline preload="auto" src="covers/akko.mp4"></video>
                         </span>
                         <span class="focus-bg-name">Akko</span>
                         <span class="focus-bg-badge" aria-hidden="true">Selected</span>
@@ -6844,6 +6844,11 @@ function showPage(page, keepSearch = false) {
     document.querySelectorAll(".nav-button").forEach(button => {
         button.classList.toggle("active", button.dataset.page === page);
     });
+
+    if (page === "settings") {
+        // Hidden pages often skip video decode — rebuild thumbs when settings opens
+        window.setTimeout(() => initFocusBgPreviews(true), 220);
+    }
 
     if (!keepSearch) {
         searchInput.value = "";
@@ -8781,25 +8786,118 @@ function isFocusVideoMode(mode) {
     return m === "trees" || m === "flowers" || m === "akko";
 }
 
-/** Seek preview videos to ~first second and freeze as a static thumbnail */
-function initFocusBgPreviews() {
+/**
+ * Build static first-frame thumbnails for focus background video options.
+ * Uses play→pause→seek + canvas capture so browsers actually paint a frame
+ * (preload=metadata alone often leaves a blank box).
+ */
+function initFocusBgPreviews(force = false) {
     document.querySelectorAll(".focus-bg-preview video").forEach((video) => {
-        const freeze = () => {
-            try {
-                const t = Math.min(0.35, Math.max(0.05, (video.duration || 1) * 0.02));
-                if (Math.abs(video.currentTime - t) > 0.02) video.currentTime = t;
-                else video.pause();
-            } catch (_) {}
-        };
+        if (!force && video.dataset.previewReady === "1") return;
+
+        const host = video.closest(".focus-bg-preview");
+        if (!host) return;
+
         video.muted = true;
+        video.defaultMuted = true;
         video.playsInline = true;
-        video.preload = "metadata";
-        video.addEventListener("loadeddata", freeze, { once: true });
-        video.addEventListener("seeked", () => {
-            try { video.pause(); } catch (_) {}
+        video.setAttribute("playsinline", "");
+        video.setAttribute("webkit-playsinline", "");
+        video.preload = "auto";
+        video.removeAttribute("hidden");
+        video.style.opacity = "1";
+
+        const waitEvent = (el, type, ms = 10000) => new Promise((resolve, reject) => {
+            let done = false;
+            const timer = setTimeout(() => {
+                if (done) return;
+                done = true;
+                cleanup();
+                reject(new Error("timeout " + type));
+            }, ms);
+            const onOk = () => {
+                if (done) return;
+                done = true;
+                cleanup();
+                resolve();
+            };
+            const onErr = () => {
+                if (done) return;
+                done = true;
+                cleanup();
+                reject(new Error("error"));
+            };
+            const cleanup = () => {
+                clearTimeout(timer);
+                el.removeEventListener(type, onOk);
+                el.removeEventListener("error", onErr);
+            };
+            el.addEventListener(type, onOk, { once: true });
+            el.addEventListener("error", onErr, { once: true });
         });
-        // If already cached
-        if (video.readyState >= 2) freeze();
+
+        const showThumb = (dataUrl) => {
+            let img = host.querySelector("img.focus-bg-thumb");
+            if (!img) {
+                img = document.createElement("img");
+                img.className = "focus-bg-thumb";
+                img.alt = "";
+                host.appendChild(img);
+            }
+            img.src = dataUrl;
+            host.classList.add("has-thumb");
+            video.dataset.previewReady = "1";
+            video.style.opacity = "0";
+        };
+
+        const capture = async () => {
+            try {
+                // Ensure data is loading
+                try { video.load(); } catch (_) {}
+
+                if (video.readyState < 2) {
+                    await waitEvent(video, "loadeddata");
+                }
+
+                // Decode at least one frame (critical on Safari / Chrome)
+                try {
+                    const p = video.play();
+                    if (p && typeof p.then === "function") await p;
+                    video.pause();
+                } catch (_) {
+                    // autoplay may be blocked; still try seek
+                }
+
+                const dur = Number.isFinite(video.duration) && video.duration > 0
+                    ? video.duration
+                    : 1;
+                const t = Math.min(0.4, Math.max(0.08, dur * 0.03));
+                try {
+                    video.currentTime = t;
+                    await waitEvent(video, "seeked", 6000);
+                } catch (_) {}
+
+                video.pause();
+
+                if (video.videoWidth > 0 && video.videoHeight > 0) {
+                    const canvas = document.createElement("canvas");
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    showThumb(canvas.toDataURL("image/jpeg", 0.86));
+                } else {
+                    // Leave the live video element visible as fallback
+                    video.style.opacity = "1";
+                    host.classList.add("has-live-video");
+                }
+            } catch (err) {
+                host.classList.add("preview-failed");
+                video.style.opacity = "0";
+            }
+        };
+
+        capture();
     });
 }
 
@@ -11664,14 +11762,40 @@ button:active,
   overflow: hidden;
   background: #12141e;
 }
-.focus-bg-preview video {
+.focus-bg-preview video,
+.focus-bg-preview img.focus-bg-thumb {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   pointer-events: none;
-  background: #0a0c12;
+  background: transparent;
+  border: 0;
+  display: block;
+}
+.focus-bg-preview img.focus-bg-thumb {
+  z-index: 2;
+}
+.focus-bg-preview video {
+  z-index: 1;
+  opacity: 1;
+}
+.focus-bg-preview.has-thumb video {
+  opacity: 0 !important;
+}
+.focus-bg-preview.preview-failed::after {
+  content: "Video not found";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 650;
+  color: rgba(255,255,255,0.55);
+  background: rgba(0,0,0,0.35);
+  letter-spacing: 0.02em;
 }
 .focus-bg-option.active .focus-bg-preview {
   border-color: color-mix(in srgb, var(--accent) 50%, rgba(255,255,255,0.25));
