@@ -8544,12 +8544,7 @@ document.addEventListener("keydown", event => {
         if (fp?.classList.contains("open")) {
             event.preventDefault();
             fp.classList.toggle("chrome-hidden");
-            // Keep lyrics anchored after chrome show/hide reflow
-            requestAnimationFrame(() => {
-                if (typeof refreshLyricViewport === "function") {
-                    refreshLyricViewport(true);
-                }
-            });
+            // Lyrics already at full stretch size — chrome only fades
         }
     }
 });
@@ -8936,20 +8931,44 @@ function startFocusVideo(mode) {
     if (!video) return;
     const selected = normalizeFocusBg(mode || localStorage.getItem("akkoflac-focus-bg") || "trees");
     const src = FOCUS_VIDEO_SRC[selected] || FOCUS_VIDEO_SRC.trees;
-    if (video.getAttribute("src") !== src) {
-        video.src = src;
-    }
+
     video.muted = true;
+    video.defaultMuted = true;
     video.loop = true;
     video.playsInline = true;
-    const play = () => {
-        const p = video.play();
-        if (p && typeof p.catch === "function") p.catch(() => {});
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+    video.setAttribute("muted", "");
+    video.preload = "auto";
+
+    const current = video.getAttribute("src") || video.currentSrc || "";
+    const needsSrc = !current.endsWith(src.replace(/^\.\//, ""));
+    if (needsSrc || !current) {
+        video.src = src;
+        try { video.load(); } catch (_) {}
+    }
+
+    const tryPlay = () => {
+        try {
+            const p = video.play();
+            if (p && typeof p.then === "function") {
+                p.catch(() => {
+                    // One more shot after a short delay (PC autoplay quirks)
+                    window.setTimeout(() => {
+                        video.play().catch(() => {});
+                    }, 120);
+                });
+            }
+        } catch (_) {}
     };
-    if (video.readyState >= 2) play();
-    else video.addEventListener("loadeddata", play, { once: true });
-    // Try load in case file was added after page open
-    try { video.load(); } catch (_) {}
+
+    if (video.readyState >= 2) tryPlay();
+    else {
+        video.addEventListener("canplay", tryPlay, { once: true });
+        video.addEventListener("loadeddata", tryPlay, { once: true });
+    }
+    // Also attempt immediately — helps when file is already cached
+    tryPlay();
 }
 
 function stopFocusVideo() {
@@ -12409,31 +12428,8 @@ button.theme-option {
 }
 </style>
 
-<script id="akko-lyric-anchor-fill-fix">
-(() => {
-  "use strict";
-  // After K toggles chrome, re-center lyrics once the rainy layout settles.
-  document.addEventListener("keydown", (event) => {
-    if (event.defaultPrevented) return;
-    const typing = event.target && (
-      event.target.tagName === "INPUT" ||
-      event.target.tagName === "TEXTAREA" ||
-      event.target.isContentEditable
-    );
-    if (typing) return;
-    if (event.key !== "k" && event.key !== "K") return;
-    if (!fullPlayer?.classList.contains("open")) return;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        lyricsContainer?.classList.add("is-seeking");
-        if (typeof refreshLyricViewport === "function") {
-          refreshLyricViewport(true);
-        }
-      });
-    });
-  }, true);
-})();
-</script>
+<!-- akko-lyric-anchor-fill-fix removed: K no longer reflows lyrics -->
+
 
 
 
@@ -13034,6 +13030,183 @@ button {
   text-shadow: none !important;
 }
 </style>
+
+<style id="akko-k-smooth-and-stable-lyrics">
+/* =========================================================
+   ALWAYS use the K-stretch lyric size (full / long box).
+   Chrome fades on top — never shrinks the lyrics column.
+   Applies to video modes AND dynamic focus.
+   ========================================================= */
+
+.full-player.focus-video-mode .focus-video {
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 1 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+/* Single full-width content area — the "K stretch" layout, always */
+.full-player.open .full-content,
+.full-player.focus-video-mode .full-content,
+.full-player.focus-video-mode.chrome-hidden .full-content,
+.full-player.focus-video-mode:not(.chrome-hidden) .full-content,
+.full-player.open:not(.focus-video-mode) .full-content {
+  display: block !important;
+  grid-template-columns: none !important;
+  position: relative !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  overflow: hidden !important;
+  padding: clamp(48px, 8vh, 80px) clamp(24px, 5vw, 72px) clamp(32px, 6vh, 64px) !important;
+  gap: 0 !important;
+}
+
+/* Lyrics always full stretch size */
+.full-player.open .lyrics-panel,
+.full-player.focus-video-mode .lyrics-panel,
+.full-player.focus-video-mode.chrome-hidden .lyrics-panel,
+.full-player.focus-video-mode:not(.chrome-hidden) .lyrics-panel,
+.full-player.open:not(.focus-video-mode) .lyrics-panel {
+  display: flex !important;
+  flex-direction: column !important;
+  width: min(920px, 100%) !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  order: unset !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.full-player.open #lyricsContainer,
+.full-player.focus-video-mode #lyricsContainer,
+.full-player.open:not(.focus-video-mode) #lyricsContainer {
+  flex: 1 1 auto !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+/* Chrome overlays on the right — does not take a grid column */
+.full-player.open .full-left,
+.full-player.focus-video-mode .full-left,
+.full-player.focus-video-mode:not(.chrome-hidden) .full-left {
+  position: absolute !important;
+  right: clamp(16px, 3vw, 40px) !important;
+  top: 50% !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: translateY(-50%) translate3d(0, 0, 0) !important;
+  z-index: 30 !important;
+  width: min(320px, 34vw) !important;
+  max-width: 42% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  order: unset !important;
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0.55s linear !important;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.full-player.open .full-back,
+.full-player.focus-video-mode .full-back {
+  z-index: 40 !important;
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0.55s linear,
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  opacity: 1;
+  visibility: visible;
+  transform: translate3d(0, 0, 0);
+}
+
+.full-player.focus-video-mode:not(.chrome-hidden) .full-cover-wrap,
+.full-player.open:not(.chrome-hidden) .full-cover-wrap {
+  display: block !important;
+}
+
+/* K: fade chrome only — lyrics stay at full stretch size */
+.full-player.chrome-hidden .full-left,
+.full-player.chrome-hidden .full-back,
+.full-player.focus-video-mode.chrome-hidden .full-left,
+.full-player.focus-video-mode.chrome-hidden .full-back {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translateY(-50%) translate3d(12px, 0, 0) !important;
+  display: flex !important;
+  width: min(320px, 34vw) !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.full-player.chrome-hidden .full-back,
+.full-player.focus-video-mode.chrome-hidden .full-back {
+  transform: translate3d(-6px, 0, 0) !important;
+  display: grid !important;
+}
+
+@media (max-width: 760px) {
+  .full-player.open .full-left,
+  .full-player.focus-video-mode .full-left {
+    right: 50% !important;
+    top: auto !important;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+    transform: translateX(50%) !important;
+    width: min(280px, 88vw) !important;
+    max-width: 88vw !important;
+  }
+  .full-player.chrome-hidden .full-left,
+  .full-player.focus-video-mode.chrome-hidden .full-left {
+    transform: translateX(50%) translateY(8px) !important;
+  }
+  .full-player.open .lyrics-panel,
+  .full-player.focus-video-mode .lyrics-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+  }
+}
+</style>
+
+<script id="akko-focus-video-play-boost">
+(() => {
+  "use strict";
+  // When focus opens on PC, retry play a few times so the bg actually starts
+  const origOpen = window.openFullPlayer;
+  // openFullPlayer is not on window — hook via MutationObserver on class
+  const fp = document.getElementById("fullPlayer");
+  if (!fp) return;
+  const boost = () => {
+    if (!fp.classList.contains("open") || !fp.classList.contains("focus-video-mode")) return;
+    const video = document.getElementById("focusVideo");
+    if (!video) return;
+    video.muted = true;
+    video.playsInline = true;
+    const p = video.play();
+    if (p && p.catch) p.catch(() => {});
+  };
+  new MutationObserver(() => {
+    if (fp.classList.contains("open") && fp.classList.contains("focus-video-mode")) {
+      boost();
+      setTimeout(boost, 150);
+      setTimeout(boost, 400);
+    }
+  }).observe(fp, { attributes: true, attributeFilter: ["class"] });
+})();
+</script>
 
 </body>
 </html>
