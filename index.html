@@ -5715,9 +5715,13 @@ body::after {
         class="focus-video"
         src="covers/trees.mp4"
         muted
+        defaultMuted
         loop
+        autoplay
         playsinline
-        preload="metadata"
+        webkit-playsinline
+        preload="auto"
+        disablePictureInPicture
         aria-hidden="true"
     ></video>
     <div class="focus-palette" id="focusPalette">
@@ -8953,25 +8957,89 @@ function applyFocusBackground(mode) {
     }
 }
 
-let _focusVideoPlayToken = 0;
+/* =========================================================
+   FOCUS BACKGROUND VIDEO — PC-stable playback
+   iPad often keeps decoding; desktop Chrome/Edge can pause or
+   freeze hardware-decoded loops. One controller, freeze detect.
+   ========================================================= */
+const focusVideoCtl = {
+    token: 0,
+    wantPlay: false,
+    lastTime: 0,
+    stuckHits: 0,
+    timer: 0,
+    armed: false
+};
+
+function focusVideoShouldRun() {
+    const fp = document.getElementById("fullPlayer");
+    return !!(
+        fp &&
+        fp.classList.contains("open") &&
+        fp.classList.contains("focus-video-mode") &&
+        focusVideoCtl.wantPlay
+    );
+}
+
+function focusVideoEnsureAttrs(video) {
+    video.muted = true;
+    video.defaultMuted = true;
+    video.loop = true;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.preload = "auto";
+    video.setAttribute("muted", "");
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+    video.setAttribute("autoplay", "");
+    try { video.disableRemotePlayback = true; } catch (_) {}
+    try { video.disablePictureInPicture = true; } catch (_) {}
+}
+
+function focusVideoTryPlay(video) {
+    if (!focusVideoShouldRun()) return;
+    focusVideoEnsureAttrs(video);
+    if (!video.paused && !video.ended) return;
+    const p = video.play();
+    if (p && typeof p.then === "function") {
+        p.catch(() => {
+            // Desktop autoplay can reject once; retry once on next tick
+            window.setTimeout(() => {
+                if (!focusVideoShouldRun()) return;
+                if (!video.paused) return;
+                video.play().catch(() => {});
+            }, 180);
+        });
+    }
+}
+
+function focusVideoUnfreeze(video) {
+    if (!focusVideoShouldRun()) return;
+    // PC "freeze while playing": clock stops without a pause event
+    try {
+        const t = video.currentTime || 0;
+        const dur = video.duration;
+        if (Number.isFinite(dur) && dur > 1) {
+            video.currentTime = Math.min(t + 0.05, Math.max(0, dur - 0.1));
+        } else {
+            video.currentTime = t + 0.01;
+        }
+    } catch (_) {}
+    focusVideoTryPlay(video);
+}
 
 function startFocusVideo(mode) {
     const video = document.getElementById("focusVideo");
     if (!video) return;
+
     const selected = normalizeFocusBg(mode || localStorage.getItem("akkoflac-focus-bg") || "trees");
     const src = FOCUS_VIDEO_SRC[selected] || FOCUS_VIDEO_SRC.trees;
+    const token = ++focusVideoCtl.token;
 
-    // Bump token so older async play attempts cannot fight a newer call
-    const token = ++_focusVideoPlayToken;
-
-    video.muted = true;
-    video.defaultMuted = true;
-    video.loop = true;
-    video.playsInline = true;
-    video.setAttribute("playsinline", "");
-    video.setAttribute("webkit-playsinline", "");
-    video.setAttribute("muted", "");
-    video.preload = "auto";
+    focusVideoCtl.wantPlay = true;
+    focusVideoCtl.stuckHits = 0;
+    focusVideoCtl.lastTime = 0;
+    focusVideoEnsureAttrs(video);
 
     const current = (video.currentSrc || video.getAttribute("src") || "").split("?")[0];
     const target = src.split("?")[0];
@@ -8980,84 +9048,110 @@ function startFocusVideo(mode) {
         current.endsWith("/" + target) ||
         current.endsWith(target);
 
-    // Only reload when the file actually changes — load() was causing play/pause loops
     if (!alreadyThis) {
         video.src = src;
         try { video.load(); } catch (_) {}
     }
 
-    const tryPlay = () => {
-        if (token !== _focusVideoPlayToken) return;
-        if (video.paused === false && !video.ended) return; // already playing
-        const p = video.play();
-        if (p && typeof p.then === "function") {
-            p.then(() => {
-                // playing
-            }).catch(() => {
-                if (token !== _focusVideoPlayToken) return;
-                // Single quiet retry — no spam
-                window.setTimeout(() => {
-                    if (token !== _focusVideoPlayToken) return;
-                    if (!video.paused) return;
-                    video.play().catch(() => {});
-                }, 250);
-            });
-        }
+    const kick = () => {
+        if (token !== focusVideoCtl.token) return;
+        focusVideoTryPlay(video);
     };
 
-    if (video.readyState >= 3) {
-        tryPlay();
-    } else {
+    if (video.readyState >= 2) kick();
+    else {
         const onReady = () => {
             video.removeEventListener("canplay", onReady);
             video.removeEventListener("loadeddata", onReady);
-            tryPlay();
+            kick();
         };
         video.addEventListener("canplay", onReady);
         video.addEventListener("loadeddata", onReady);
     }
+
+    // Second kick after layout paints (helps desktop)
+    window.requestAnimationFrame(() => {
+        window.setTimeout(kick, 50);
+        window.setTimeout(kick, 300);
+    });
+
+    armFocusVideoWatchdog();
 }
 
 function stopFocusVideo() {
-    _focusVideoPlayToken++; // cancel in-flight play attempts
+    focusVideoCtl.token++;
+    focusVideoCtl.wantPlay = false;
+    focusVideoCtl.stuckHits = 0;
     const video = document.getElementById("focusVideo");
     if (!video) return;
     video.dataset.allowPause = "1";
     try { video.pause(); } catch (_) {}
     window.setTimeout(() => {
         if (video) video.dataset.allowPause = "0";
-    }, 100);
+    }, 120);
 }
 
-/** Keep background video running while focus video-mode is open (PC random pause fix) */
 function armFocusVideoWatchdog() {
     const video = document.getElementById("focusVideo");
-    if (!video || video.dataset.watchdog === "1") return;
-    video.dataset.watchdog = "1";
+    if (!video) return;
 
-    const resumeIfNeeded = () => {
-        const fp = document.getElementById("fullPlayer");
-        if (!fp || !fp.classList.contains("open")) return;
-        if (!fp.classList.contains("focus-video-mode")) return;
-        if (video.dataset.allowPause === "1") return;
-        if (!video.paused) return;
-        video.muted = true;
-        const p = video.play();
-        if (p && p.catch) p.catch(() => {});
-    };
+    if (!focusVideoCtl.armed) {
+        focusVideoCtl.armed = true;
 
-    video.addEventListener("pause", () => {
-        // Defer so intentional stopFocusVideo can set allowPause first
-        window.setTimeout(resumeIfNeeded, 40);
-    });
+        video.addEventListener("pause", () => {
+            if (video.dataset.allowPause === "1") return;
+            if (!focusVideoShouldRun()) return;
+            // Immediate resume — desktop sometimes drops loop playback
+            window.setTimeout(() => focusVideoTryPlay(video), 30);
+        });
 
-    // Rare stalls without a pause event
-    window.setInterval(() => {
-        const fp = document.getElementById("fullPlayer");
-        if (!fp || !fp.classList.contains("open") || !fp.classList.contains("focus-video-mode")) return;
-        if (video.dataset.allowPause === "1") return;
-        if (video.paused) resumeIfNeeded();
-    }, 2000);
+        video.addEventListener("stalled", () => {
+            if (!focusVideoShouldRun()) return;
+            focusVideoUnfreeze(video);
+        });
+
+        video.addEventListener("waiting", () => {
+            if (!focusVideoShouldRun()) return;
+            // Buffering — nudge play when data returns
+            const onCan = () => focusVideoTryPlay(video);
+            video.addEventListener("canplay", onCan, { once: true });
+        });
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) return;
+            if (!focusVideoShouldRun()) return;
+            focusVideoTryPlay(video);
+        });
+
+        // Detect freeze: playing flag true but currentTime stuck (common on PC GPU decode)
+        focusVideoCtl.timer = window.setInterval(() => {
+            if (!focusVideoShouldRun()) {
+                focusVideoCtl.stuckHits = 0;
+                return;
+            }
+            if (video.dataset.allowPause === "1") return;
+
+            if (video.paused) {
+                focusVideoTryPlay(video);
+                focusVideoCtl.stuckHits = 0;
+                focusVideoCtl.lastTime = video.currentTime || 0;
+                return;
+            }
+
+            const t = video.currentTime || 0;
+            if (Math.abs(t - focusVideoCtl.lastTime) < 0.03) {
+                focusVideoCtl.stuckHits += 1;
+                // ~1.2s of no progress while "playing"
+                if (focusVideoCtl.stuckHits >= 3) {
+                    focusVideoCtl.stuckHits = 0;
+                    focusVideoUnfreeze(video);
+                }
+            } else {
+                focusVideoCtl.stuckHits = 0;
+            }
+            focusVideoCtl.lastTime = t;
+        }, 400);
+    }
 }
 
 armFocusVideoWatchdog();
@@ -13437,6 +13531,24 @@ button {
 #focusVideo.focus-video,
 .full-player .focus-video {
   pointer-events: none !important;
+}
+</style>
+
+<style id="akko-focus-video-pc-stable">
+.full-player.focus-video-mode .focus-video,
+#focusVideo {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  pointer-events: none !important;
+  /* Own layer — helps desktop Chrome keep decoding under heavy CSS */
+  transform: translateZ(0) !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  will-change: auto !important;
+  object-fit: cover !important;
+  width: 100% !important;
+  height: 100% !important;
 }
 </style>
 
