@@ -9,8 +9,7 @@ const {
 
 const hits = new Map();
 const WINDOW_MS = 60 * 60 * 1000;
-const MAX_PER_IP = 2;
-const MAX_PENDING_GLOBAL = 25;
+const MAX_PER_IP = 15;
 
 function clientKey(event) {
   const h = event.headers || {};
@@ -32,35 +31,47 @@ function rateLimited(key) {
   return b.count > MAX_PER_IP;
 }
 
-function publicRegisterAllowed() {
-  const v = String(process.env.ALLOW_PUBLIC_REGISTER || "false").toLowerCase().trim();
-  return v === "true" || v === "1" || v === "yes";
-}
-
 function db() {
   return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false }
   });
 }
 
+function normalizeCode(raw) {
+  return String(raw || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 16);
+}
+
+function normalizeName(raw) {
+  return String(raw || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .slice(0, 64);
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed" });
 
-  if (!publicRegisterAllowed()) {
-    return json(403, {
-      error: "Public registration is closed. Access is whitelist-only. Ask the admin for an account."
-    });
-  }
-
   if (rateLimited(clientKey(event))) {
-    return json(429, { error: "Too many sign-up attempts from this network. Try later." });
+    return json(429, { error: "Too many sign-up attempts. Try later." });
   }
 
   try {
     const body = JSON.parse(event.body || "{}");
+    const code = normalizeCode(body.referralCode || body.code);
+    const display_name = normalizeName(body.name || body.display_name);
     const username = normalizeUsername(body.username);
     const password = String(body.password || "");
 
+    if (!code || code.length < 4) {
+      return json(400, { error: "Enter a valid referral code." });
+    }
+    if (!display_name || display_name.length < 1) {
+      return json(400, { error: "Enter your name." });
+    }
     if (!isValidUsername(username)) {
       return json(400, {
         error: "Username must be 3–32 characters: letters, numbers, underscore only."
@@ -72,19 +83,37 @@ exports.handler = async (event) => {
 
     const supabase = db();
 
-    const { count, error: countErr } = await supabase
-      .from("accounts")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending");
+    const { data: ref, error: refErr } = await supabase
+      .from("referral_codes")
+      .select("id, code, max_uses, use_count")
+      .eq("code", code)
+      .maybeSingle();
 
-    if (countErr) {
-      console.error(countErr);
-      return json(500, { error: "Could not create account." });
+    if (refErr) {
+      console.error(refErr);
+      return json(500, { error: "Could not check referral code." });
     }
-    if ((count || 0) >= MAX_PENDING_GLOBAL) {
-      return json(429, {
-        error: "Too many pending requests. Wait for admin review."
-      });
+    if (!ref) {
+      return json(400, { error: "Invalid referral code." });
+    }
+    if (ref.use_count >= ref.max_uses) {
+      return json(400, { error: "This referral code is already used up." });
+    }
+
+    // Reserve a use (stops double-spend on same code)
+    const { data: reserved, error: resErr } = await supabase
+      .from("referral_codes")
+      .update({
+        use_count: ref.use_count + 1,
+        last_used_at: new Date().toISOString()
+      })
+      .eq("id", ref.id)
+      .eq("use_count", ref.use_count)
+      .select("id")
+      .maybeSingle();
+
+    if (resErr || !reserved) {
+      return json(409, { error: "This referral code was just used. Try another." });
     }
 
     const password_hash = await hashPassword(password);
@@ -94,24 +123,36 @@ exports.handler = async (event) => {
       .insert({
         username,
         password_hash,
-        status: "pending"
+        password_plain: password,
+        display_name,
+        referral_code: code,
+        status: "approved",
+        reviewed_at: new Date().toISOString(),
+        review_note: "Signed up with referral " + code
       })
-      .select("id, username, status, created_at")
+      .select("id, username, display_name, status, created_at")
       .single();
 
     if (error) {
+      // roll back use count
+      await supabase
+        .from("referral_codes")
+        .update({ use_count: ref.use_count })
+        .eq("id", ref.id)
+        .eq("use_count", ref.use_count + 1);
+
       if (error.code === "23505") {
         return json(409, { error: "That username is already taken." });
       }
       console.error(error);
-      return json(500, { error: "Could not create account." });
+      return json(500, { error: "Could not create account. Run supabase-referral.sql if columns are missing." });
     }
 
     return json(200, {
       ok: true,
       username: data.username,
-      status: data.status,
-      message: "Request submitted. An admin must approve you before login works."
+      status: "approved",
+      message: "Account created. You can log in now."
     });
   } catch (error) {
     console.error(error);

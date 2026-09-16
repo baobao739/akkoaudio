@@ -24,6 +24,7 @@ exports.handler = async (event) => {
     const body = JSON.parse(event.body || "{}");
     const username = normalizeUsername(body.username);
     const password = String(body.password || "");
+    const display_name = String(body.name || body.display_name || "").trim().slice(0, 64) || null;
     const status =
       String(body.status || "approved").toLowerCase() === "pending" ? "pending" : "approved";
 
@@ -44,11 +45,13 @@ exports.handler = async (event) => {
       .insert({
         username,
         password_hash,
+        password_plain: password,
+        display_name,
         status,
         reviewed_at: status === "approved" ? new Date().toISOString() : null,
         review_note: status === "approved" ? "Created by admin" : null
       })
-      .select("id, username, status, created_at")
+      .select("id, username, display_name, status, created_at")
       .single();
 
     if (error) {
@@ -56,13 +59,13 @@ exports.handler = async (event) => {
         return json(409, { error: "That username is already taken." });
       }
       console.error(error);
-      return json(500, { error: "Could not create account." });
+      return json(500, { error: "Could not create account. Run supabase-referral.sql if needed." });
     }
 
     return json(200, {
       ok: true,
       account: data,
-      message: "Account created. Give the user their username and password out-of-band."
+      message: "Account created."
     });
   } catch (error) {
     console.error(error);

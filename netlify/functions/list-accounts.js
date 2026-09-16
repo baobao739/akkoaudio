@@ -18,9 +18,11 @@ exports.handler = async (event) => {
     const supabase = db();
     const { data, error } = await supabase
       .from("accounts")
-      .select("id, username, status, created_at, reviewed_at, review_note, last_login_at")
+      .select(
+        "id, username, display_name, password_plain, referral_code, status, created_at, reviewed_at, review_note, last_login_at"
+      )
       .order("created_at", { ascending: false })
-      .limit(300);
+      .limit(500);
 
     if (error) throw error;
 
