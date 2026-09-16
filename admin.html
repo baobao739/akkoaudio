@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Akko's AdminPanel</title>
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="referrer" content="no-referrer">
+<title>Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,260 +18,246 @@ body{min-height:100vh;overflow-x:hidden;background:radial-gradient(circle at 15%
 .o1{width:300px;height:300px;top:-100px;right:8%;background:#7b8cff}
 .o2{width:240px;height:240px;bottom:-80px;left:8%;background:#b56cff}
 .glass{background:#ffffff0d;border:1px solid #ffffff1a;backdrop-filter:blur(35px) saturate(1.3);-webkit-backdrop-filter:blur(35px) saturate(1.3);box-shadow:0 25px 70px #0007,inset 0 1px #ffffff14}
-.shell{position:relative;z-index:1;width:min(960px,100%);margin:auto}
+.shell{position:relative;z-index:1;width:min(980px,100%);margin:auto}
 .brand{font-size:13px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:#bfc6ff;margin:0 0 14px 5px}
 .card{border-radius:28px;padding:34px}
 .login{width:min(440px,100%);margin:10vh auto}
 .h{font-size:34px;letter-spacing:-1.4px;margin-bottom:9px}
-.sub{color:#aaaab8;font-size:13px;line-height:1.6;margin-bottom:26px}
+.sub{color:#aaaab8;font-size:13px;line-height:1.6;margin-bottom:22px}
 .input{width:100%;height:52px;border-radius:15px;border:1px solid #ffffff18;background:#ffffff0b;color:#fff;outline:0;padding:0 16px;font-size:15px;margin-bottom:12px}
 .input:focus{border-color:#7b8cff88;box-shadow:0 0 0 3px #7b8cff22}
-.btn{height:50px;border:0;border-radius:15px;background:#7b8cff;color:#10111a;font-weight:700;padding:0 20px;cursor:pointer;box-shadow:0 9px 28px #7b8cff45;transition:.2s}
+.btn{height:44px;border:0;border-radius:13px;background:#7b8cff;color:#10111a;font-weight:700;padding:0 16px;cursor:pointer;box-shadow:0 9px 28px #7b8cff45;transition:.2s;font-size:13px}
 .btn:hover{transform:translateY(-2px);filter:brightness(1.08)}
 .btn.secondary{background:#ffffff0b;color:#fff;border:1px solid #ffffff16;box-shadow:none}
 .btn.danger{background:#ff5c6c22;color:#ff929f;border:1px solid #ff5c6c44;box-shadow:none}
+.btn.success{background:#66e39a22;color:#8ef0b8;border:1px solid #66e39a44;box-shadow:none}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.top{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:24px}
-.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.error{min-height:18px;color:#ff929f;font-size:12px;margin-top:4px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0}
-.stat{padding:18px;border-radius:18px;background:#ffffff08;border:1px solid #ffffff10}
-.stat b{display:block;font-size:26px;margin-bottom:4px}
-.stat span{font-size:11px;color:#9d9dab}
-.section-title{margin:28px 0 12px;font-size:14px;font-weight:700;letter-spacing:.4px;color:#c9c9d6}
-.gen-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
-.gen-row .input{flex:1;min-width:180px;margin:0}
-.code-list{display:grid;gap:10px}
-.code{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 17px;border-radius:17px;background:#ffffff08;border:1px solid #ffffff0e}
-.code strong{font-size:22px;letter-spacing:4px}
-.code .name{font-size:13px;font-weight:600;color:#d7dbff;margin-bottom:2px}
-.code small{display:block;color:#898996;font-size:10px;margin-top:3px}
-.code-actions{display:flex;gap:8px;flex-shrink:0}
-.copy,.revoke{height:38px;padding:0 14px;border-radius:11px;border:1px solid #ffffff14;background:#ffffff0b;color:#fff;cursor:pointer;font-size:13px;font-weight:600}
-.revoke{border-color:#ff5c6c44;color:#ff929f;background:#ff5c6c14}
-.badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
-.badge.used{background:#ffffff12;color:#aaaab8}
-.badge.revoked{background:#ff5c6c22;color:#ff929f}
-.empty{text-align:center;color:#898996;padding:38px 10px;font-size:13px}
-.toast{position:fixed;z-index:5;bottom:25px;left:50%;transform:translate(-50%,20px);opacity:0;padding:11px 15px;border-radius:13px;background:#292a34eF;border:1px solid #ffffff18;backdrop-filter:blur(20px);transition:.25s}
-.toast.show{opacity:1;transform:translate(-50%,0)}
-@media(max-width:700px){
-  body{padding:14px}
-  .card{padding:24px;border-radius:22px}
-  .top{align-items:flex-start;flex-direction:column}
-  .actions,.actions .btn,.gen-row .btn{width:100%}
-  .stats{grid-template-columns:1fr}
-  .h{font-size:28px}
-  .code{flex-direction:column;align-items:stretch}
-  .code strong{font-size:19px}
-  .code-actions{width:100%}
-  .copy,.revoke{flex:1}
-}
+.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:22px;flex-wrap:wrap}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.error{min-height:18px;color:#ff9aa6;font-size:13px;font-weight:600;margin-top:8px}
+.ok{min-height:18px;color:#8ef0b8;font-size:13px;font-weight:600;margin-top:8px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0 26px}
+.stat{padding:16px;border-radius:16px;background:#ffffff08;border:1px solid #ffffff12}
+.stat b{display:block;font-size:24px;margin-bottom:4px}
+.stat span{font-size:11px;letter-spacing:1px;color:#aaaab8;font-weight:700}
+.section-title{font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#bfc6ff;margin:22px 0 10px}
+.list{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:16px;background:#ffffff08;border:1px solid #ffffff12;flex-wrap:wrap}
+.row .meta{min-width:0;flex:1}
+.row .name{font-weight:700;font-size:15px;margin-bottom:4px}
+.row .detail{color:#aaaab8;font-size:12px;line-height:1.5;word-break:break-word}
+.row .btns{display:flex;gap:8px;flex-wrap:wrap}
+.note{margin:0 0 16px;padding:12px 14px;border-radius:14px;background:#7b8cff18;border:1px solid #7b8cff44;color:#c5cbff;font-size:12px;line-height:1.5}
+.create{margin:0 0 22px;padding:16px;border-radius:16px;background:#ffffff08;border:1px solid #ffffff14}
+.create .row-inputs{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:center}
+@media(max-width:720px){.stats{grid-template-columns:1fr 1fr}.card{padding:22px}.create .row-inputs{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="orb o1"></div>
 <div class="orb o2"></div>
-<main class="shell" id="app"></main>
-<div class="toast" id="toast"></div>
+<div class="shell" id="app"></div>
 <script>
 const app = document.getElementById("app");
-const toast = document.getElementById("toast");
-const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
-
-function showToast(t) {
-  toast.textContent = t;
-  toast.classList.add("show");
-  clearTimeout(showToast.t);
-  showToast.t = setTimeout(() => toast.classList.remove("show"), 1600);
+function fmt(ts) {
+  if (!ts) return "—";
+  try { return new Date(ts).toLocaleString(); } catch { return ts; }
 }
-
-function login() {
+function escapeHtml(s) {
+  return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function isAuthedAccountsResponse(res, data) {
+  return res && res.ok && res.status === 200 && data && data.ok === true && Array.isArray(data.pending) && Array.isArray(data.approved);
+}
+function login(message) {
   app.innerHTML = `
     <section class="card glass login">
-      <div class="brand">AKKOFLAC · ADMIN</div>
-      <h1 class="h">Code Control</h1>
-      <p class="sub">Sign in to generate named access codes and revoke used ones.</p>
-      <form id="loginForm">
+      <div class="brand">ADMIN</div>
+      <h1 class="h">Sign in</h1>
+      <p class="sub">Password is only stored in Netlify env (ADMIN_PASSWORD). Not in any page source.</p>
+      <form id="loginForm" autocomplete="off">
         <input class="input" id="password" type="password" placeholder="Admin password" autocomplete="current-password">
-        <button class="btn" style="width:100%">Sign in</button>
-        <div class="error" id="error"></div>
+        <button class="btn" style="width:100%;height:50px" type="submit">Sign in</button>
+        <div class="error" id="error">${message ? escapeHtml(message) : ""}</div>
       </form>
     </section>`;
-
   document.getElementById("loginForm").onsubmit = async (e) => {
     e.preventDefault();
-    const r = await fetch("/.netlify/functions/admin-login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: document.getElementById("password").value })
-    });
-    const d = await r.json();
-    if (!r.ok) {
-      document.getElementById("error").textContent = d.error || "Login failed.";
-      return;
+    const err = document.getElementById("error");
+    err.textContent = "";
+    const password = document.getElementById("password").value;
+    document.getElementById("password").value = "";
+    const btn = e.target.querySelector("button");
+    btn.disabled = true;
+    try {
+      const r = await fetch("/.netlify/functions/admin-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ password })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) {
+        err.textContent = d.error || "Login failed.";
+        btn.disabled = false;
+        return;
+      }
+      dashboard();
+    } catch {
+      err.textContent = "Network error.";
+      btn.disabled = false;
     }
-    dashboard();
   };
 }
-
-async function fetchLists() {
-  const r = await fetch("/.netlify/functions/list-codes", { cache: "no-store" });
-  if (r.status === 401) { login(); return null; }
-  const d = await r.json();
-  return {
-    active: d.active || d.codes || [],
-    used: d.used || []
-  };
+async function fetchAccounts() {
+  try {
+    const r = await fetch("/.netlify/functions/list-accounts", { cache: "no-store", credentials: "include" });
+    const data = await r.json().catch(() => null);
+    if (r.status === 401) return { authed: false, data: null };
+    if (!isAuthedAccountsResponse(r, data)) return { authed: false, data: null, broken: true };
+    return { authed: true, data };
+  } catch {
+    return { authed: false, data: null, broken: true };
+  }
 }
-
+function renderRow(row) {
+  let buttons = "";
+  if (row.status === "pending") {
+    buttons = `<button class="btn success" data-act="approve">Approve</button><button class="btn danger" data-act="deny">Deny</button>`;
+  } else if (row.status === "approved") {
+    buttons = `<button class="btn danger" data-act="revoke">Revoke</button>`;
+  } else if (row.status === "denied" || row.status === "revoked") {
+    buttons = `<button class="btn success" data-act="approve">Re-approve</button>`;
+  }
+  return `<div class="row" data-id="${escapeHtml(row.id)}">
+    <div class="meta">
+      <div class="name">${escapeHtml(row.username)} <span style="color:#888;font-weight:500;font-size:12px">· ${escapeHtml(row.status)}</span></div>
+      <div class="detail">Created ${fmt(row.created_at)}${row.last_login_at ? " · Last login " + fmt(row.last_login_at) : ""}</div>
+    </div>
+    <div class="btns">${buttons}</div>
+  </div>`;
+}
+async function logout() {
+  try { await fetch("/.netlify/functions/admin-logout", { method: "POST", credentials: "include" }); } catch {}
+  login("Signed out.");
+}
 async function dashboard() {
   app.innerHTML = `
     <section class="card glass">
       <div class="top">
         <div>
-          <div class="brand">AKKOFLAC · ADMIN</div>
-          <h1 class="h">Access Codes</h1>
-          <p class="sub">Generate a 5-character code and attach a name (friend, device, etc). Used codes appear below so you can revoke access later.</p>
+          <div class="brand">ADMIN</div>
+          <h1 class="h">Whitelist</h1>
+          <p class="sub">Create approved accounts. Public sign-up is off by default.</p>
         </div>
         <div class="actions">
           <button class="btn secondary" id="refresh">Refresh</button>
+          <button class="btn secondary" id="logout">Log out</button>
         </div>
       </div>
-
-      <div class="gen-row">
-        <input class="input" id="nameInput" type="text" maxlength="64" placeholder="Name for this code (e.g. Jayden)" autocomplete="off">
-        <button class="btn" id="generate">Generate Code</button>
+      <div class="note">Create a user here, then send them the username + password privately. Revoke anytime.</div>
+      <div class="create">
+        <div class="section-title" style="margin-top:0">Create account (approved)</div>
+        <div class="row-inputs">
+          <input class="input" id="newUser" placeholder="username" maxlength="32" style="margin:0;height:44px">
+          <input class="input" id="newPass" type="password" placeholder="password" maxlength="128" style="margin:0;height:44px">
+          <button class="btn success" id="createBtn" type="button">Create</button>
+        </div>
+        <div class="error" id="createErr"></div>
+        <div class="ok" id="createOk"></div>
       </div>
-
-      <div class="stats">
-        <div class="stat"><b id="activeCount">—</b><span>ACTIVE CODES</span></div>
-        <div class="stat"><b id="usedCount">—</b><span>USED CODES</span></div>
-        <div class="stat"><b>5</b><span>CHARACTERS PER CODE</span></div>
-      </div>
-
-      <div class="section-title">Active (unused)</div>
-      <div class="code-list" id="activeList"></div>
-
-      <div class="section-title">Used codes</div>
-      <div class="code-list" id="usedList"></div>
+      <div id="content"><p class="sub">Loading…</p></div>
     </section>`;
-
-  document.getElementById("generate").onclick = async () => {
-    const name = document.getElementById("nameInput").value.trim();
-    const btn = document.getElementById("generate");
+  document.getElementById("refresh").onclick = () => refresh();
+  document.getElementById("logout").onclick = () => logout();
+  document.getElementById("createBtn").onclick = async () => {
+    const err = document.getElementById("createErr");
+    const ok = document.getElementById("createOk");
+    err.textContent = "";
+    ok.textContent = "";
+    const username = document.getElementById("newUser").value.trim();
+    const password = document.getElementById("newPass").value;
+    const btn = document.getElementById("createBtn");
     btn.disabled = true;
     try {
-      const r = await fetch("/.netlify/functions/generate-code", {
+      const r = await fetch("/.netlify/functions/admin-create-account", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name })
+        credentials: "include",
+        body: JSON.stringify({ username, password, status: "approved" })
       });
-      const d = await r.json();
-      if (!r.ok) {
-        showToast(d.error || "Could not generate");
-        return;
-      }
-      document.getElementById("nameInput").value = "";
-      await load();
-      try { await navigator.clipboard.writeText(d.code.code); } catch {}
-      const label = d.code.name ? `${d.code.code} (${d.code.name})` : d.code.code;
-      showToast("Generated " + label);
-    } finally {
+      const d = await r.json().catch(() => ({}));
+      if (r.status === 401) { login("Session expired."); return; }
+      if (!r.ok) { err.textContent = d.error || "Failed"; btn.disabled = false; return; }
+      ok.textContent = "Created " + (d.account && d.account.username) + " (approved). Give them the password offline.";
+      document.getElementById("newUser").value = "";
+      document.getElementById("newPass").value = "";
+      btn.disabled = false;
+      refresh();
+    } catch {
+      err.textContent = "Network error";
       btn.disabled = false;
     }
   };
-
-  document.getElementById("refresh").onclick = load;
-  await load();
+  await refresh();
 }
-
-function renderActive(list) {
-  const box = document.getElementById("activeList");
-  if (!list.length) {
-    box.innerHTML = `<div class="empty">No active codes yet.<br>Generate one above.</div>`;
+async function refresh() {
+  const content = document.getElementById("content");
+  if (!content) return;
+  content.innerHTML = `<p class="sub">Loading…</p>`;
+  const result = await fetchAccounts();
+  if (!result.authed) {
+    login(result.broken ? "Session invalid. Sign in again." : "Session expired.");
     return;
   }
-  box.innerHTML = list.map(c => `
-    <div class="code">
-      <div>
-        ${c.name ? `<div class="name">${esc(c.name)}</div>` : ""}
-        <strong>${esc(c.code)}</strong>
-        <small>Created ${new Date(c.created_at).toLocaleString()}</small>
-      </div>
-      <div class="code-actions">
-        <button class="copy" data-code="${esc(c.code)}">Copy</button>
-      </div>
+  const data = result.data;
+  const pending = data.pending || [];
+  const approved = data.approved || [];
+  const denied = data.denied || [];
+  const revoked = data.revoked || [];
+  content.innerHTML = `
+    <div class="stats">
+      <div class="stat"><b>${pending.length}</b><span>PENDING</span></div>
+      <div class="stat"><b>${approved.length}</b><span>APPROVED</span></div>
+      <div class="stat"><b>${denied.length}</b><span>DENIED</span></div>
+      <div class="stat"><b>${revoked.length}</b><span>REVOKED</span></div>
     </div>
-  `).join("");
-
-  box.querySelectorAll(".copy").forEach(b => {
-    b.onclick = async () => {
+    <div class="section-title">Approved (whitelist)</div>
+    <div class="list">${approved.length ? approved.map(renderRow).join("") : `<div class="detail" style="padding:8px">None yet — create one above.</div>`}</div>
+    <div class="section-title">Pending</div>
+    <div class="list">${pending.length ? pending.map(renderRow).join("") : `<div class="detail" style="padding:8px">None.</div>`}</div>
+    <div class="section-title">Denied / revoked</div>
+    <div class="list">${[...denied, ...revoked].length ? [...denied, ...revoked].map(renderRow).join("") : `<div class="detail" style="padding:8px">None.</div>`}</div>`;
+  content.querySelectorAll("[data-act]").forEach((btn) => {
+    btn.onclick = async () => {
+      const id = btn.closest(".row").dataset.id;
+      const action = btn.dataset.act;
+      if (action === "revoke" && !confirm("Revoke this account?")) return;
+      btn.disabled = true;
       try {
-        await navigator.clipboard.writeText(b.dataset.code);
-        showToast("Copied " + b.dataset.code);
+        const r = await fetch("/.netlify/functions/review-account", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ id, action })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (r.status === 401) { login("Session expired."); return; }
+        if (!r.ok) { alert(d.error || "Failed"); btn.disabled = false; return; }
+        refresh();
       } catch {
-        showToast("Copy failed");
+        alert("Network error");
+        btn.disabled = false;
       }
     };
   });
 }
-
-function renderUsed(list) {
-  const box = document.getElementById("usedList");
-  if (!list.length) {
-    box.innerHTML = `<div class="empty">No used codes yet.</div>`;
-    return;
-  }
-  box.innerHTML = list.map(c => `
-    <div class="code">
-      <div>
-        ${c.name ? `<div class="name">${esc(c.name)}</div>` : `<div class="name" style="opacity:.5">Unnamed</div>`}
-        <strong>${esc(c.code)}</strong>
-        <small>
-          Used ${c.used_at ? new Date(c.used_at).toLocaleString() : "—"}
-          ${c.revoked ? ` · <span class="badge revoked">Revoked</span>` : ` · <span class="badge used">Active access</span>`}
-        </small>
-      </div>
-      <div class="code-actions">
-        ${c.revoked
-          ? `<button class="revoke" disabled>Revoked</button>`
-          : `<button class="revoke" data-id="${esc(c.id)}" data-label="${esc(c.name || c.code)}">Revoke</button>`}
-      </div>
-    </div>
-  `).join("");
-
-  box.querySelectorAll(".revoke:not(:disabled)").forEach(b => {
-    b.onclick = async () => {
-      if (!confirm(`Revoke access for "${b.dataset.label}"? They will need a new code.`)) return;
-      b.disabled = true;
-      const r = await fetch("/.netlify/functions/revoke-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: b.dataset.id })
-      });
-      const d = await r.json();
-      if (!r.ok) {
-        showToast(d.error || "Revoke failed");
-        b.disabled = false;
-        return;
-      }
-      showToast("Access revoked");
-      await load();
-    };
-  });
-}
-
-async function load() {
-  const data = await fetchLists();
-  if (!data) return;
-  document.getElementById("activeCount").textContent = data.active.length;
-  document.getElementById("usedCount").textContent = data.used.length;
-  renderActive(data.active);
-  renderUsed(data.used);
-}
-
-login();
+(async () => {
+  app.innerHTML = `<section class="card glass login"><p class="sub">Checking session…</p></section>`;
+  const result = await fetchAccounts();
+  if (result.authed) dashboard();
+  else login("");
+})();
 </script>
 </body>
 </html>
