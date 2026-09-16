@@ -1,9 +1,7 @@
-const { makeToken, cookie, json } = require("./_shared/auth");
+const { makeToken, cookie, json, ADMIN_SESSION_SECONDS } = require("./_shared/auth");
 
-// In-memory rate limit (per function instance). Best-effort on Netlify;
-// still blocks casual brute force and slows automated guessing.
 const attempts = new Map();
-const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const WINDOW_MS = 15 * 60 * 1000;
 const MAX_FAILS = 5;
 const FAIL_DELAY_MS = 600;
 
@@ -32,7 +30,6 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-/** Constant-time string compare (avoids timing leaks on password length/content). */
 function safeEqual(a, b) {
   const aa = String(a || "");
   const bb = String(b || "");
@@ -62,10 +59,26 @@ exports.handler = async (event) => {
   try {
     const { password } = JSON.parse(event.body || "{}");
     const supplied = String(password || "");
-    const expected = String(process.env.ADMIN_PASSWORD || "");
+    const expected = String(process.env.ADMIN_PASSWORD || "").trim();
+    const sessionSecret = String(process.env.SESSION_SECRET || "").trim();
 
-    // Always take a minimum amount of time on failure path
-    const ok = expected.length > 0 && safeEqual(supplied, expected);
+    if (!expected.length) {
+      await sleep(FAIL_DELAY_MS);
+      return json(500, {
+        ok: false,
+        error: "ADMIN_PASSWORD is not set on this Netlify site. Add it under Environment variables and redeploy."
+      });
+    }
+
+    if (!sessionSecret.length) {
+      await sleep(FAIL_DELAY_MS);
+      return json(500, {
+        ok: false,
+        error: "SESSION_SECRET is not set on this Netlify site. Add a random string and redeploy."
+      });
+    }
+
+    const ok = safeEqual(supplied, expected);
 
     if (!ok) {
       bucket.fails += 1;
@@ -74,7 +87,6 @@ exports.handler = async (event) => {
       return json(401, { ok: false, error: "Incorrect password." });
     }
 
-    // Success — reset failures for this IP
     attempts.delete(key);
 
     const token = await makeToken("admin");
@@ -82,11 +94,12 @@ exports.handler = async (event) => {
       200,
       { ok: true },
       {
-        "Set-Cookie": cookie("akkoflac_admin", token, 60 * 60 * 12),
+        "Set-Cookie": cookie("akkoflac_admin", token, ADMIN_SESSION_SECONDS),
         "Cache-Control": "no-store"
       }
     );
   } catch (error) {
+    console.error(error);
     await sleep(FAIL_DELAY_MS);
     return json(400, { ok: false, error: "Invalid request." });
   }
