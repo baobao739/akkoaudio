@@ -23,8 +23,8 @@ exports.handler = async (event) => {
     if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
       return json(400, { error: "Invalid account id." });
     }
-    if (!["approve", "deny", "revoke"].includes(action)) {
-      return json(400, { error: "action must be approve, deny, or revoke." });
+    if (!["approve", "deny", "revoke", "delete"].includes(action)) {
+      return json(400, { error: "action must be approve, deny, revoke, or delete." });
     }
 
     const supabase = db();
@@ -37,6 +37,12 @@ exports.handler = async (event) => {
 
     if (findError) throw findError;
     if (!existing) return json(404, { error: "Account not found." });
+
+    if (action === "delete") {
+      const { error } = await supabase.from("accounts").delete().eq("id", id);
+      if (error) throw error;
+      return json(200, { ok: true, deleted: true, id });
+    }
 
     if (action === "approve") {
       if (!["pending", "denied", "revoked"].includes(existing.status)) {

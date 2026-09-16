@@ -114,7 +114,8 @@ async function requireAdmin(event) {
   }
 }
 
-const PBKDF2_ITERS = 120000;
+// Faster than 120k — still strong. Old hashes keep their stored iteration count.
+const PBKDF2_ITERS = 60000;
 
 async function hashPassword(password) {
   const salt = crypto.getRandomValues(new Uint8Array(16));

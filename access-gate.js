@@ -3,7 +3,6 @@
 
   const SESSION_URL = "/.netlify/functions/verify-session";
   const LOGIN_URL = "/.netlify/functions/login";
-  const REGISTER_URL = "/.netlify/functions/register";
 
   const THEMES = {
     charcoal: { bottom: "#1b1c24" },
@@ -34,13 +33,13 @@
       display: flex; align-items: center; justify-content: center;
       background: #050505; color: var(--accent, #7b8cff);
       font-family: "SFMono-Regular", "Cascadia Code", "Roboto Mono", Consolas, monospace;
-      transition: opacity .45s ease, visibility .45s ease;
+      transition: opacity .2s ease, visibility .2s ease;
     }
     #akkoflac-verify-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
     #akkoflac-access-overlay {
       display: flex; align-items: center; justify-content: center;
       padding: 24px; background: var(--theme-bottom, var(--bg, #121212));
-      transition: opacity .45s ease, visibility .45s ease; overflow: auto;
+      transition: opacity .2s ease, visibility .2s ease; overflow: auto;
     }
     #akkoflac-access-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
     .akkoflac-access-box {
@@ -63,7 +62,6 @@
     }
     .akkoflac-access-button:disabled { opacity: .55; cursor: not-allowed; }
     .akkoflac-access-error { min-height: 20px; margin-top: 12px; color: #ff6b6b; font-size: 13px; font-weight: 700; }
-    .akkoflac-access-ok { min-height: 20px; margin-top: 12px; color: #66e39a; font-size: 13px; font-weight: 700; }
     .akkoflac-label { display: block; margin: 0 0 6px 2px; color: var(--text-soft, rgba(255,255,255,.62)); font-size: 12px; font-weight: 700; text-align: left; }
     body.akkoflac-gate-locked .sidebar,
     body.akkoflac-gate-locked .main,
@@ -128,10 +126,6 @@
     clearPreverify();
   }
 
-  function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
   async function checkSession() {
     try {
       const res = await fetch(SESSION_URL, {
@@ -157,20 +151,18 @@
       document.body.appendChild(overlay);
     }
     overlay.classList.remove("hidden");
-    overlay.innerHTML = `<div style="font-family:monospace;font-weight:700">${msg || "verifying..."}</div>`;
+    overlay.innerHTML = `<div style="font-family:monospace;font-weight:700">${msg || "..."}</div>`;
     return overlay;
   }
 
-  async function unlockWithAnimation() {
-    showVerifying("signing in...");
-    await sleep(450);
+  function unlockFast() {
     const overlay = document.getElementById("akkoflac-verify-overlay");
     if (overlay) {
       overlay.innerHTML = `<div style="color:#66e39a;font-family:monospace;font-weight:700">ACCESS GRANTED</div>`;
-      await sleep(350);
       overlay.classList.add("hidden");
-      setTimeout(() => overlay.remove(), 400);
+      setTimeout(() => overlay.remove(), 200);
     }
+    document.getElementById("akkoflac-access-overlay")?.remove();
     unlockUI();
   }
 
@@ -204,7 +196,10 @@
     const loginUser = overlay.querySelector("#akko-login-user");
     const loginPass = overlay.querySelector("#akko-login-pass");
 
+    let inFlight = false;
+
     async function doLogin() {
+      if (inFlight) return;
       loginErr.textContent = "";
       const username = loginUser.value.trim();
       const password = loginPass.value;
@@ -212,29 +207,38 @@
         loginErr.textContent = "Enter username and password.";
         return;
       }
+
+      inFlight = true;
       loginBtn.disabled = true;
+      loginBtn.textContent = "Signing in…";
+
       try {
         const res = await fetch(LOGIN_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
+          cache: "no-store",
           body: JSON.stringify({ username, password })
         });
         const data = await res.json().catch(() => ({}));
+
         if (data.ok && data.status === "approved") {
-          overlay.classList.add("hidden");
-          await unlockWithAnimation();
-          setTimeout(() => overlay.remove(), 400);
+          loginBtn.textContent = "Done";
+          unlockFast();
           return;
         }
+
         if (data.status === "pending") loginErr.textContent = data.message || "Pending approval.";
         else if (data.status === "denied") loginErr.textContent = data.message || "Denied.";
         else if (data.status === "revoked") loginErr.textContent = data.message || "Revoked.";
         else loginErr.textContent = data.error || "Login failed.";
       } catch {
-        loginErr.textContent = "Network error.";
+        loginErr.textContent = "Network error. Try again.";
       }
+
+      inFlight = false;
       loginBtn.disabled = false;
+      loginBtn.textContent = "Log in";
     }
 
     loginBtn.addEventListener("click", doLogin);
@@ -251,10 +255,10 @@
     applySavedColors();
     document.getElementById("akkoflac-access-overlay")?.remove();
     document.getElementById("akkoflac-verify-overlay")?.remove();
-    showVerifying("checking session...");
+    showVerifying("checking…");
     const session = await checkSession();
     if (session.valid) {
-      await unlockWithAnimation();
+      unlockFast();
       return;
     }
     document.getElementById("akkoflac-verify-overlay")?.remove();
@@ -295,7 +299,7 @@
         clearInterval(pollId);
         pollId = null;
       }
-    }, 400);
+    }, 300);
     afterOnboarding();
   }
 
