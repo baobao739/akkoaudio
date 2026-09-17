@@ -13,7 +13,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const raw = getCookie(event, "akkoflac_user");
+    const raw = getCookie(event, "akkomusic_user");
     const parsed = await parseToken(raw, "user");
     if (!parsed.ok || !parsed.extra) {
       return json(200, { valid: false, unlocked: false, reason: "missing" });
@@ -35,7 +35,7 @@ exports.handler = async (event) => {
       return json(
         200,
         { valid: false, unlocked: false, reason: "invalid" },
-        { "Set-Cookie": clearCookie("akkoflac_user") }
+        { "Set-Cookie": clearCookie("akkomusic_user") }
       );
     }
 
@@ -48,7 +48,7 @@ exports.handler = async (event) => {
           reason: data.status,
           status: data.status
         },
-        { "Set-Cookie": clearCookie("akkoflac_user") }
+        { "Set-Cookie": clearCookie("akkomusic_user") }
       );
     }
 

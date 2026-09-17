@@ -130,7 +130,7 @@ exports.handler = async (event) => {
     return json(
       200,
       { ok: true, status: "approved", username: account.username },
-      { "Set-Cookie": cookie("akkoflac_user", session, USER_SESSION_SECONDS) }
+      { "Set-Cookie": cookie("akkomusic_user", session, USER_SESSION_SECONDS) }
     );
   } catch (error) {
     console.error(error);
