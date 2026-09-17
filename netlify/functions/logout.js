@@ -7,6 +7,6 @@ exports.handler = async (event) => {
   return json(
     200,
     { ok: true },
-    { "Set-Cookie": clearCookie("akkoflac_user") }
+    { "Set-Cookie": clearCookie("akkomusic_user") }
   );
 };
