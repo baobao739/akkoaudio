@@ -54,10 +54,15 @@ function fmt(ts) {
   try { return new Date(ts).toLocaleString(); } catch { return ts; }
 }
 function escapeHtml(s) {
-  return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  return String(s || "").replace(/&/g,"&").replace(/</g,"<").replace(/>/g,">").replace(/"/g,""");
 }
 function isAuthedAccountsResponse(res, data) {
-  return res && res.ok && res.status === 200 && data && data.ok === true && Array.isArray(data.pending) && Array.isArray(data.approved);
+  if (!res || res.status !== 200 || !data || data.ok !== true) return false;
+  if (data.pending == null) data.pending = [];
+  if (data.approved == null) data.approved = [];
+  if (data.denied == null) data.denied = [];
+  if (data.revoked == null) data.revoked = [];
+  return Array.isArray(data.pending) && Array.isArray(data.approved);
 }
 function login(message) {
   app.innerHTML = `
@@ -94,6 +99,7 @@ function login(message) {
         btn.textContent = "Sign in";
         return;
       }
+      await new Promise((r) => setTimeout(r, 150));
       dashboard();
     } catch {
       err.textContent = "Network error.";
@@ -105,12 +111,29 @@ function login(message) {
 async function fetchAccounts() {
   try {
     const r = await fetch("/.netlify/functions/list-accounts", { cache: "no-store", credentials: "include" });
-    const data = await r.json().catch(() => null);
-    if (r.status === 401) return { authed: false, data: null };
-    if (!isAuthedAccountsResponse(r, data)) return { authed: false, data: null, broken: true };
+    const data = await r.json().catch(() => ({}));
+    if (r.status === 401) return { authed: false, data: null, reason: "expired" };
+    if (r.status >= 500) {
+      return {
+        authed: true,
+        data: { ok: true, pending: [], approved: [], denied: [], revoked: [] },
+        serverError: (data && data.error) || "Server error loading accounts."
+      };
+    }
+    if (!isAuthedAccountsResponse(r, data)) {
+      return {
+        authed: true,
+        data: { ok: true, pending: [], approved: [], denied: [], revoked: [] },
+        serverError: (data && data.error) || "Could not load accounts."
+      };
+    }
     return { authed: true, data };
   } catch {
-    return { authed: false, data: null, broken: true };
+    return {
+      authed: true,
+      data: { ok: true, pending: [], approved: [], denied: [], revoked: [] },
+      serverError: "Network error loading accounts."
+    };
   }
 }
 async function fetchReferrals() {
@@ -276,7 +299,7 @@ async function refresh() {
   content.innerHTML = `<p class="sub">Loading…</p>`;
   const result = await fetchAccounts();
   if (!result.authed) {
-    login(result.broken ? "Session invalid." : "Session expired.");
+    login(result.reason === "expired" ? "Session expired." : "Not signed in.");
     return;
   }
   const codes = await fetchReferrals();
@@ -286,8 +309,12 @@ async function refresh() {
   const denied = data.denied || [];
   const revoked = data.revoked || [];
   const all = [...approved, ...pending, ...denied, ...revoked];
+  const errBanner = result.serverError
+    ? `<div class="error" style="margin-bottom:12px">${escapeHtml(result.serverError)} (still signed in)</div>`
+    : "";
 
   content.innerHTML = `
+    ${errBanner}
     <div class="stats">
       <div class="stat"><b>${approved.length}</b><span>APPROVED</span></div>
       <div class="stat"><b>${pending.length}</b><span>PENDING</span></div>
