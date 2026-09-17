@@ -1,7 +1,8 @@
-# AkkoAudio — security headers + admin at /admin.html
+# AkkoMusic — landing on start, player at /app
 
 [build]
   publish = "."
+  command = "npm install"
 
 [[headers]]
   for = "/*"
@@ -10,7 +11,7 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 
 [[headers]]
   for = "/admin.html"
@@ -39,8 +40,16 @@
   status = 200
   force = true
 
+# Landing page on site start
 [[redirects]]
-  from = "/admin/"
-  to = "/admin.html"
+  from = "/"
+  to = "/landing.html"
+  status = 200
+  force = true
+
+# Player + login/signup gate
+[[redirects]]
+  from = "/app"
+  to = "/index.html"
   status = 200
   force = true
