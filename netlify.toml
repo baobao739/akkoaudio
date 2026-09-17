@@ -1,4 +1,4 @@
-# AkkoMusic — landing on start, player at /app
+# AkkoMusic routes
 
 [build]
   publish = "."
@@ -40,16 +40,33 @@
   status = 200
   force = true
 
-# Landing page on site start
 [[redirects]]
-  from = "/"
+  from = "/landing"
   to = "/landing.html"
   status = 200
   force = true
 
-# Player + login/signup gate
 [[redirects]]
-  from = "/app"
+  from = "/login"
   to = "/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/register"
+  to = "/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/home"
+  to = "/index.html"
+  status = 200
+  force = true
+
+# Homepage = landing
+[[redirects]]
+  from = "/"
+  to = "/landing.html"
   status = 200
   force = true
