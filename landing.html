@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AkkoMusic</title>
+<script>
+/* Returning users with a valid session skip landing → /home */
+(async function () {
+  try {
+    const res = await fetch("/.netlify/functions/verify-session", {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store"
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.valid && data.unlocked) {
+      location.replace("/home");
+      return;
+    }
+  } catch (_) {}
+})();
+</script>
 <style>
 :root {
   --bg-dark: #0a0a0b;
@@ -121,19 +138,12 @@ a:hover { color: var(--text-muted); }
 </head>
 <body>
 <div class="grid-overlay"></div>
-
 <nav class="navbar">
   <div class="logo">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="6" cy="6" r="2"></circle>
-      <circle cx="12" cy="6" r="2"></circle>
-      <circle cx="18" cy="6" r="2"></circle>
-      <circle cx="6" cy="12" r="2"></circle>
-      <circle cx="12" cy="12" r="2"></circle>
-      <circle cx="18" cy="12" r="2"></circle>
-      <circle cx="6" cy="18" r="2"></circle>
-      <circle cx="12" cy="18" r="2"></circle>
-      <circle cx="18" cy="18" r="2"></circle>
+      <circle cx="6" cy="6" r="2"></circle><circle cx="12" cy="6" r="2"></circle><circle cx="18" cy="6" r="2"></circle>
+      <circle cx="6" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="18" cy="12" r="2"></circle>
+      <circle cx="6" cy="18" r="2"></circle><circle cx="12" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle>
     </svg>
     DermExcel
   </div>
@@ -145,29 +155,22 @@ a:hover { color: var(--text-muted); }
   </div>
   <a href="/login" class="btn chunky-btn menu-btn">Menu <span>=</span></a>
 </nav>
-
 <header class="hero">
   <div class="badge chunky-badge">✦ The Best Style</div>
   <h1>Capturing Moments, Crafting Stories</h1>
   <p>Discover The Art Of Photography Through Unique Perspectives And Timeless Imagery.</p>
 </header>
-
 <section class="gallery-container">
   <div class="floating-text left-text">
     <h2 id="dynamic-title">Running Through Reflection</h2>
     <p id="dynamic-desc">One photo was taken on a rainy day at a running track. It is a tape of water covered the surface, and as the runner sped by, their silhouette reflected in the water. The image reflects an abstract, artistic quality, enhancing the sense of movement in the memory.</p>
   </div>
-
-  <div class="scene">
-    <div class="sphere" id="sphere"></div>
-  </div>
-
+  <div class="scene"><div class="sphere" id="sphere"></div></div>
   <svg class="network-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
     <path d="M0,50 Q25,30 50,50 T100,50" stroke="rgba(255,255,255,0.05)" stroke-width="0.2" fill="none" />
     <path d="M20,0 L80,100" stroke="rgba(255,255,255,0.03)" stroke-width="0.2" fill="none" />
   </svg>
 </section>
-
 <section class="journey-section">
   <div class="constellation" id="constellation"></div>
   <div class="journey-content">
@@ -176,14 +179,11 @@ a:hover { color: var(--text-muted); }
     <a href="/register" class="btn chunky-btn large-btn">Sign up</a>
   </div>
 </section>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 <script>
 gsap.registerPlugin(ScrollTrigger);
-
 const COVER_POOL = ["covers/20min.jfif","covers/4raws.jpg","covers/aintinla.JPG","covers/backhome.jpg","covers/bakeshop.jfif","covers/circles.JPG","covers/congrats.JPG","covers/crown.JPG","covers/darkknightdummo.JPG","covers/darkthoughts.JPG","covers/drowning.JPG","covers/familyties.JPG","covers/fhc.JPG","covers/happier.JPG","covers/here.jfif","covers/hftw.JPG","covers/hotgirlbummer.jfif","covers/howdemo.JPG","covers/idxt.jfif","covers/jane.jpg","covers/kills.JPG","covers/leaveamsg.jfif","covers/leavemealone.JPG","covers/loverboy.jfif","covers/lvsandals.jpg","covers/madebyakko.jpg","covers/magnolia.JPG","covers/meanttobe.jfif","covers/misery.JPG","covers/murderonmymind.JPG","covers/nothemoon.jfif","covers/nothing.JPG","covers/nsiyw.JPG","covers/nuts.JPG","covers/onnothing.JPG","covers/phantom.jpg","covers/showyoume.JPG","covers/steady.JPG","covers/summerbummer.jfif","covers/thecure.JPG","covers/vbsxbp.jfif","covers/waf.JPG","covers/whiteferrari.jpg","covers/wi.JPG","covers/worldwide.JPG","covers/xotourllif3.jfif","covers/yellow.jpg"];
-
 function shuffle(arr) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -192,41 +192,22 @@ function shuffle(arr) {
   }
   return a;
 }
-
 const images = shuffle(COVER_POOL);
 const galleryItems = [...images, ...images, ...images].slice(0, 24);
-
 const textContent = [
-  {
-    title: "Running Through Reflection",
-    desc: "One photo was taken on a rainy day at a running track. It is a tape of water covered the surface, and as the runner sped by, their silhouette reflected in the water. The image reflects an abstract, artistic quality, enhancing the sense of movement in the memory."
-  },
-  {
-    title: "Elegance in Boldness",
-    desc: "This photo was captured in a controlled studio environment, emphasizing strong features and deep contrast."
-  },
-  {
-    title: "Dynamic Moments",
-    desc: "Capturing the pure essence of speed and raw emotion in a split-second frame."
-  },
-  {
-    title: "Abstract Movement",
-    desc: "The flow of time expressed visually through long exposures and deliberate camera movement."
-  }
+  { title: "Running Through Reflection", desc: "One photo was taken on a rainy day at a running track. It is a tape of water covered the surface, and as the runner sped by, their silhouette reflected in the water. The image reflects an abstract, artistic quality, enhancing the sense of movement in the memory." },
+  { title: "Elegance in Boldness", desc: "This photo was captured in a controlled studio environment, emphasizing strong features and deep contrast." },
+  { title: "Dynamic Moments", desc: "Capturing the pure essence of speed and raw emotion in a split-second frame." },
+  { title: "Abstract Movement", desc: "The flow of time expressed visually through long exposures and deliberate camera movement." }
 ];
-
 const sphere = document.getElementById("sphere");
 const radius = window.innerWidth < 768 ? 200 : 380;
-
 galleryItems.forEach((src, i) => {
   const card = document.createElement("div");
   card.classList.add("clay-card");
   const img = document.createElement("img");
-  img.src = src;
-  img.alt = "";
-  img.loading = "lazy";
+  img.src = src; img.alt = ""; img.loading = "lazy";
   card.appendChild(img);
-
   const phi = Math.acos(1 - (2 * (i + 0.5)) / galleryItems.length);
   const theta = Math.PI * (1 + Math.sqrt(5)) * i;
   const x = radius * Math.cos(theta) * Math.sin(phi);
@@ -235,33 +216,20 @@ galleryItems.forEach((src, i) => {
   const rotY = Math.atan2(x, z) * (180 / Math.PI);
   const rotX = Math.asin(-y / radius) * (180 / Math.PI);
   card.style.transform = `translate3d(${x}px, ${y}px, ${z}px) rotateY(${rotY}deg) rotateX(${rotX}deg)`;
-  card.dataset.index = i;
   sphere.appendChild(card);
 });
-
 gsap.to(sphere, {
-  rotateY: 360 * 2,
-  rotateX: 45,
-  ease: "none",
-  scrollTrigger: {
-    trigger: ".gallery-container",
-    start: "top top",
-    end: "bottom bottom",
-    scrub: 1,
-    onUpdate: (self) => updateActiveCard(self.progress)
-  }
+  rotateY: 360 * 2, rotateX: 45, ease: "none",
+  scrollTrigger: { trigger: ".gallery-container", start: "top top", end: "bottom bottom", scrub: 1, onUpdate: (self) => updateActiveCard(self.progress) }
 });
-
 const titleEl = document.getElementById("dynamic-title");
 const descEl = document.getElementById("dynamic-desc");
 const allCards = document.querySelectorAll(".clay-card");
-
 function updateActiveCard(progress) {
   const textIndex = Math.floor(progress * textContent.length) % textContent.length;
   if (titleEl.innerText !== textContent[textIndex].title) {
     gsap.to([titleEl, descEl], {
-      opacity: 0,
-      duration: 0.2,
+      opacity: 0, duration: 0.2,
       onComplete: () => {
         titleEl.innerText = textContent[textIndex].title;
         descEl.innerText = textContent[textIndex].desc;
@@ -275,40 +243,20 @@ function updateActiveCard(progress) {
     else card.classList.remove("active-card");
   });
 }
-
 const constellation = document.getElementById("constellation");
-const scatterPositions = [
-  { top: "10%", left: "15%" },
-  { top: "20%", left: "80%" },
-  { top: "60%", left: "10%" },
-  { top: "75%", left: "85%" },
-  { top: "85%", left: "30%" },
-  { top: "15%", left: "50%" }
-];
-
-scatterPositions.forEach((pos, i) => {
+[{ top: "10%", left: "15%" }, { top: "20%", left: "80%" }, { top: "60%", left: "10%" }, { top: "75%", left: "85%" }, { top: "85%", left: "30%" }, { top: "15%", left: "50%" }].forEach((pos, i) => {
   const card = document.createElement("div");
   card.classList.add("clay-card", "constellation-card");
-  card.style.top = pos.top;
-  card.style.left = pos.left;
-  const rot = (Math.random() - 0.5) * 40;
-  card.style.transform = `rotate(${rot}deg) scale(0.8)`;
+  card.style.top = pos.top; card.style.left = pos.left;
+  card.style.transform = `rotate(${(Math.random() - 0.5) * 40}deg) scale(0.8)`;
   const img = document.createElement("img");
   img.src = images[i % images.length];
   card.appendChild(img);
   constellation.appendChild(card);
 });
-
 gsap.to(".constellation-card", {
-  y: -100,
-  ease: "none",
-  stagger: 0.1,
-  scrollTrigger: {
-    trigger: ".journey-section",
-    start: "top bottom",
-    end: "bottom top",
-    scrub: true
-  }
+  y: -100, ease: "none", stagger: 0.1,
+  scrollTrigger: { trigger: ".journey-section", start: "top bottom", end: "bottom top", scrub: true }
 });
 </script>
 </body>
