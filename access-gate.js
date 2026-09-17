@@ -47,45 +47,45 @@
     }
     #akkomusic-verify-overlay {
       display: flex; align-items: center; justify-content: center;
-      background: #050505; color: var(--accent, #7b8cff);
+      background: #050505; color: #f4f4f5;
       font-family: "SFMono-Regular", "Cascadia Code", "Roboto Mono", Consolas, monospace;
       transition: opacity .2s ease, visibility .2s ease;
     }
     #akkomusic-verify-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
     #akkomusic-access-overlay {
       display: flex; align-items: center; justify-content: center;
-      padding: 24px; background: var(--theme-bottom, var(--bg, #121212));
+      padding: 24px; background: #0a0a0b;
       transition: opacity .2s ease, visibility .2s ease; overflow: auto;
     }
     #akkomusic-access-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
     .akkomusic-access-box {
       position: relative; z-index: 1; width: min(440px, 100%); padding: 28px 30px; text-align: center;
-      border: 1px solid var(--glass-border-strong, rgba(255,255,255,.14)); border-radius: 28px;
+      border: 1px solid rgba(255,255,255,.14); border-radius: 28px;
       background: rgba(255,255,255,.055); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
-      box-shadow: 0 25px 80px rgba(0,0,0,.45), 0 0 45px var(--accent-glow, rgba(255,255,255,.08));
+      box-shadow: 0 25px 80px rgba(0,0,0,.45);
     }
-    .akkomusic-access-title { margin: 0 0 6px; color: var(--text, #fff); font-size: 26px; font-weight: 800; }
-    .akkomusic-access-subtitle { margin: 0 0 14px; color: var(--text-soft, rgba(255,255,255,.62)); font-size: 13px; line-height: 1.5; }
+    .akkomusic-access-title { margin: 0 0 6px; color: #f4f4f5; font-size: 26px; font-weight: 800; }
+    .akkomusic-access-subtitle { margin: 0 0 14px; color: rgba(255,255,255,.62); font-size: 13px; line-height: 1.5; }
     .akkomusic-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
     .akkomusic-tab {
       flex: 1; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12);
-      background: transparent; color: var(--text-soft, rgba(255,255,255,.6)); font-weight: 700; cursor: pointer; font-size: 13px;
+      background: transparent; color: rgba(255,255,255,.6); font-weight: 700; cursor: pointer; font-size: 13px;
     }
-    .akkomusic-tab.active { background: var(--accent, #fff); color: var(--bg, #121212); border-color: transparent; }
+    .akkomusic-tab.active { background: #f4f4f5; color: #0a0a0b; border-color: transparent; }
     .akkomusic-field {
       width: 100%; box-sizing: border-box; margin-bottom: 10px; padding: 13px 14px;
-      border: 1px solid var(--glass-border, rgba(255,255,255,.1)); border-radius: 14px; outline: none;
-      background: rgba(255,255,255,.06); color: var(--text, #fff); font-size: 15px;
+      border: 1px solid rgba(255,255,255,.1); border-radius: 14px; outline: none;
+      background: rgba(255,255,255,.06); color: #f4f4f5; font-size: 15px;
     }
-    .akkomusic-field:focus { border-color: var(--accent, #fff); box-shadow: 0 0 0 3px var(--accent-glow, rgba(255,255,255,.12)); }
+    .akkomusic-field:focus { border-color: #f4f4f5; box-shadow: 0 0 0 3px rgba(255,255,255,.12); }
     .akkomusic-access-button {
       width: 100%; margin-top: 4px; padding: 14px; border: 0; border-radius: 16px; cursor: pointer;
-      background: var(--accent, #fff); color: var(--bg, #121212); font-size: 15px; font-weight: 800;
+      background: #f4f4f5; color: #0a0a0b; font-size: 15px; font-weight: 800;
     }
     .akkomusic-access-button:disabled { opacity: .55; cursor: not-allowed; }
     .akkomusic-access-error { min-height: 18px; margin-top: 10px; color: #ff6b6b; font-size: 13px; font-weight: 700; }
     .akkomusic-access-ok { min-height: 18px; margin-top: 10px; color: #66e39a; font-size: 13px; font-weight: 700; }
-    .akkomusic-label { display: block; margin: 0 0 5px 2px; color: var(--text-soft, rgba(255,255,255,.62)); font-size: 12px; font-weight: 700; text-align: left; }
+    .akkomusic-label { display: block; margin: 0 0 5px 2px; color: rgba(255,255,255,.62); font-size: 12px; font-weight: 700; text-align: left; }
     .akkomusic-panel { display: none; text-align: left; }
     .akkomusic-panel.active { display: block; }
     body.akkomusic-gate-locked .sidebar,
@@ -127,7 +127,24 @@
     );
   }
 
+  function applyBwGateColors() {
+    const root = document.documentElement;
+    root.style.setProperty("--accent", "#f4f4f5");
+    root.style.setProperty("--accent-bright", "#ffffff");
+    root.style.setProperty("--accent-soft", "rgba(255,255,255,0.12)");
+    root.style.setProperty("--accent-glow", "rgba(255,255,255,0.18)");
+    root.style.setProperty("--theme-bottom", "#0a0a0b");
+    root.style.setProperty("--bg", "#0a0a0b");
+    root.style.setProperty("--bg-deep", "#0a0a0b");
+    root.style.setProperty("--text", "#f4f4f5");
+    root.style.setProperty("--text-soft", "rgba(255,255,255,0.62)");
+  }
+
   function applySavedColors() {
+    if (localStorage.getItem("akkomusic-onboarded") !== "1") {
+      applyBwGateColors();
+      return;
+    }
     const root = document.documentElement;
     const accent = localStorage.getItem("akkomusic-accent") || "#7b8cff";
     const { r, g, b } = hexToRgb(accent);
@@ -249,13 +266,22 @@
       });
     });
 
-    if (preferSignupTab()) {
+    const path = currentPath();
+    const tabsWrap = overlay.querySelector(".akkomusic-tabs");
+    if (path === "/register" || preferSignupTab()) {
+      if (tabsWrap) tabsWrap.style.display = "none";
       tabs.forEach((x) => x.classList.remove("active"));
       overlay.querySelectorAll(".akkomusic-panel").forEach((p) => p.classList.remove("active"));
       const su = overlay.querySelector('.akkomusic-tab[data-tab="signup"]');
       const panel = overlay.querySelector("#panel-signup");
       if (su) su.classList.add("active");
       if (panel) panel.classList.add("active");
+      const title = overlay.querySelector(".akkomusic-access-title");
+      if (title) title.textContent = "Sign up";
+    } else if (path === "/login") {
+      if (tabsWrap) tabsWrap.style.display = "none";
+      const title = overlay.querySelector(".akkomusic-access-title");
+      if (title) title.textContent = "Log in";
     }
 
     const refInput = overlay.querySelector("#akko-ref-code");
@@ -369,7 +395,7 @@
             unlockFast();
             return;
           }
-          regOk.textContent = "Account created. Switch to Log in.";
+          regOk.textContent = "Account created. Go to Log in.";
           regBtn.disabled = false;
           regBtn.textContent = "Create account";
           regBusy = false;
@@ -389,7 +415,7 @@
 
   async function runGate() {
     lockUI();
-    applySavedColors();
+    applyBwGateColors();
     document.getElementById("akkomusic-access-overlay")?.remove();
     document.getElementById("akkomusic-verify-overlay")?.remove();
     showVerifying("checking…");
