@@ -73,16 +73,36 @@ async function verifyToken(token, expectedType) {
 }
 
 function getCookie(event, name) {
-  const raw = event.headers?.cookie || event.headers?.Cookie || "";
-  const found = raw
-    .split(";")
-    .map((v) => v.trim())
-    .find((v) => v.startsWith(`${name}=`));
-  return found ? decodeURIComponent(found.slice(name.length + 1)) : null;
+  const headers = event.headers || {};
+  const raw =
+    headers.cookie ||
+    headers.Cookie ||
+    headers["cookie"] ||
+    headers["Cookie"] ||
+    "";
+  if (!raw) return null;
+  const parts = String(raw).split(";");
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq <= 0) continue;
+    const k = trimmed.slice(0, eq).trim();
+    if (k !== name) continue;
+    const v = trimmed.slice(eq + 1).trim();
+    try {
+      return decodeURIComponent(v);
+    } catch {
+      return v;
+    }
+  }
+  return null;
 }
 
 function cookie(name, value, maxAge) {
-  return `${name}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; HttpOnly; Secure; SameSite=Lax`;
+  return (
+    `${name}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; HttpOnly; Secure; SameSite=Lax`
+  );
 }
 
 function clearCookie(name) {
