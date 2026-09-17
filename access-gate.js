@@ -47,14 +47,14 @@
     }
     #akkomusic-verify-overlay {
       display: flex; align-items: center; justify-content: center;
-      background: #0a0a0b; color: #f4f4f5;
+      background: #050506; color: #f4f4f5;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       transition: opacity .2s ease, visibility .2s ease;
     }
     #akkomusic-verify-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
     #akkomusic-access-overlay {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 28px 20px; background: #0a0a0b;
+      padding: 3rem 1.5rem 2.5rem; background: #050506;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       transition: opacity .2s ease, visibility .2s ease; overflow: auto;
       min-height: 100vh; min-height: 100dvh;
@@ -63,70 +63,59 @@
     #akkomusic-access-overlay::before {
       content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
       background-image:
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-      background-size: 40px 40px;
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse at 50% 40%, black 15%, transparent 70%);
     }
     .akkomusic-access-shell {
-      position: relative; z-index: 1; width: min(420px, 100%);
-      display: flex; flex-direction: column; align-items: center;
+      position: relative; z-index: 1; width: min(380px, 100%);
+      display: flex; flex-direction: column; align-items: stretch;
     }
     .akkomusic-access-logo {
-      display: flex; align-items: center; gap: 10px;
-      font-size: 1.2rem; font-weight: 600; letter-spacing: -0.05em;
-      color: #f4f4f5; margin-bottom: 2.5rem;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      font-size: 1.05rem; font-weight: 600; letter-spacing: -0.04em;
+      color: #f4f4f5; margin-bottom: 3rem; opacity: 0.9;
     }
     .akkomusic-access-logo span { font-weight: 700; }
-    .akkomusic-access-box {
-      width: 100%; padding: 2rem 1.75rem 1.75rem; text-align: center;
-      border-radius: 24px;
-      background: rgba(24, 24, 27, 0.72);
-      border: 1px solid rgba(255,255,255,0.05);
-      box-shadow:
-        8px 8px 24px rgba(0,0,0,0.55),
-        inset 2px 2px 4px rgba(255,255,255,0.03),
-        inset -2px -2px 6px rgba(0,0,0,0.4);
-      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    }
     .akkomusic-access-title {
-      margin: 0 0 6px; color: #f4f4f5; font-size: clamp(1.75rem, 4vw, 2.4rem);
-      font-weight: 500; letter-spacing: -0.03em;
+      margin: 0 0 0.4rem; color: #f4f4f5;
+      font-size: clamp(2.2rem, 7vw, 3rem);
+      font-weight: 500; letter-spacing: -0.04em; text-align: center;
     }
     .akkomusic-access-subtitle {
-      margin: 0 0 1.5rem; color: #a1a1aa; font-size: 0.9rem; line-height: 1.5; font-weight: 400;
+      margin: 0 0 2.25rem; color: #8b8b96; font-size: 0.95rem;
+      line-height: 1.5; font-weight: 400; text-align: center;
     }
     .akkomusic-tabs { display: none !important; }
     .akkomusic-field {
-      width: 100%; box-sizing: border-box; margin-bottom: 10px; padding: 13px 14px;
-      border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; outline: none;
-      background: rgba(10,10,11,0.65); color: #f4f4f5; font-size: 15px;
-      font-family: inherit;
+      width: 100%; box-sizing: border-box; margin-bottom: 12px; padding: 14px 0;
+      border: 0; border-bottom: 1px solid rgba(255,255,255,0.12);
+      border-radius: 0; outline: none;
+      background: transparent; color: #f4f4f5; font-size: 1.05rem;
+      font-family: inherit; transition: border-color 0.2s;
     }
-    .akkomusic-field::placeholder { color: #71717a; }
-    .akkomusic-field:focus {
-      border-color: rgba(255,255,255,0.35);
-      box-shadow: 0 0 0 3px rgba(255,255,255,0.08);
-    }
+    .akkomusic-field::placeholder { color: #52525b; }
+    .akkomusic-field:focus { border-bottom-color: #f4f4f5; }
     .akkomusic-access-button {
-      width: 100%; margin-top: 8px; padding: 0.95rem 1.25rem; border: 0; border-radius: 40px;
+      width: 100%; margin-top: 1.5rem; padding: 1rem 1.5rem; border: 0; border-radius: 999px;
       cursor: pointer; background: #f4f4f5; color: #0a0a0b;
       font-size: 1.05rem; font-weight: 600; font-family: inherit;
-      box-shadow: 0px 4px 0px rgba(161,161,170,0.4), 0px 6px 10px rgba(0,0,0,0.4),
-        inset 0px -2px 5px rgba(0,0,0,0.1), inset 0px 2px 5px rgba(255,255,255,0.8);
-      transition: transform 0.15s ease;
+      box-shadow: 0 4px 0 #a1a1aa, 0 10px 28px rgba(0,0,0,0.35);
+      transition: transform 0.12s ease;
     }
-    .akkomusic-access-button:active:not(:disabled) { transform: translateY(3px); }
-    .akkomusic-access-button:disabled { opacity: .55; cursor: not-allowed; }
-    .akkomusic-access-error { min-height: 18px; margin-top: 12px; color: #ff6b6b; font-size: 13px; font-weight: 600; }
-    .akkomusic-access-ok { min-height: 18px; margin-top: 12px; color: #66e39a; font-size: 13px; font-weight: 600; }
+    .akkomusic-access-button:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #a1a1aa; }
+    .akkomusic-access-button:disabled { opacity: .5; cursor: not-allowed; }
+    .akkomusic-access-error { min-height: 20px; margin-top: 14px; color: #ff6b6b; font-size: 13px; font-weight: 600; text-align: center; }
+    .akkomusic-access-ok { min-height: 20px; margin-top: 14px; color: #66e39a; font-size: 13px; font-weight: 600; text-align: center; }
     .akkomusic-label {
-      display: block; margin: 0 0 6px 2px; color: #a1a1aa; font-size: 12px;
-      font-weight: 600; text-align: left; letter-spacing: 0.02em;
+      display: block; margin: 0 0 2px; color: #71717a; font-size: 0.7rem;
+      font-weight: 600; text-align: left; letter-spacing: 0.12em; text-transform: uppercase;
     }
-    .akkomusic-panel { display: none; text-align: left; width: 100%; }
+    .akkomusic-panel { display: none; width: 100%; }
     .akkomusic-panel.active { display: block; }
     .akkomusic-access-switch {
-      margin-top: 1.35rem; color: #a1a1aa; font-size: 0.85rem; text-align: center;
+      margin-top: 2rem; color: #8b8b96; font-size: 0.9rem; text-align: center;
     }
     .akkomusic-access-switch a {
       color: #f4f4f5; text-decoration: none; font-weight: 600;
@@ -134,8 +123,8 @@
     }
     .akkomusic-access-switch a:hover { border-bottom-color: #f4f4f5; }
     .akkomusic-access-back {
-      margin-top: 1.75rem; color: #71717a; font-size: 0.8rem; text-decoration: none;
-      letter-spacing: 0.04em;
+      margin-top: 2.5rem; color: #52525b; font-size: 0.8rem; text-decoration: none;
+      letter-spacing: 0.06em; text-align: center; display: block;
     }
     .akkomusic-access-back:hover { color: #a1a1aa; }
     body.akkomusic-gate-locked .sidebar,
@@ -150,29 +139,47 @@
     body.akkomusic-awaiting-access .queue-panel {
       pointer-events: none !important; user-select: none !important; visibility: hidden !important;
     }
-    /* Onboarding polish */
-    .onboarding { background: #0a0a0b !important; }
+    .onboarding {
+      background: #050506 !important;
+      backdrop-filter: none !important;
+    }
     .onboarding::before {
       content: "" !important; position: absolute; inset: 0; pointer-events: none;
       background-image:
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px) !important;
-      background-size: 40px 40px !important;
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px) !important;
+      background-size: 48px 48px !important;
+      mask-image: radial-gradient(ellipse at 50% 35%, black 10%, transparent 70%);
+      opacity: 1 !important;
     }
     .onboard-card {
-      border-radius: 28px !important;
-      border: 1px solid rgba(255,255,255,0.08) !important;
-      background: rgba(24,24,27,0.85) !important;
-      box-shadow: 0 28px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06) !important;
-      backdrop-filter: blur(24px) !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border-radius: 0 !important;
+      padding: 2rem 1.25rem !important;
+      max-width: 400px !important;
+      width: 100% !important;
     }
+    .onboard-card::before { display: none !important; }
     .onboard-btn {
-      border-radius: 999px !important; font-weight: 650 !important;
+      border-radius: 999px !important; font-weight: 600 !important;
       background: #f4f4f5 !important; color: #0a0a0b !important; border: 0 !important;
+      box-shadow: 0 4px 0 #a1a1aa, 0 8px 24px rgba(0,0,0,0.3) !important;
+      padding: 0.9rem 1.5rem !important;
     }
     .onboard-btn.onboard-back {
       background: transparent !important; color: #f4f4f5 !important;
-      border: 1px solid rgba(255,255,255,0.14) !important;
+      border: 1px solid rgba(255,255,255,0.16) !important;
+      box-shadow: none !important;
+    }
+    .onboard-title {
+      font-weight: 500 !important; letter-spacing: -0.03em !important;
+    }
+    .onboard-kicker {
+      letter-spacing: 0.16em !important; color: #8b8b96 !important;
     }
   `;
 
@@ -207,11 +214,11 @@
     root.style.setProperty("--accent-bright", "#ffffff");
     root.style.setProperty("--accent-soft", "rgba(255,255,255,0.12)");
     root.style.setProperty("--accent-glow", "rgba(255,255,255,0.18)");
-    root.style.setProperty("--theme-bottom", "#0a0a0b");
-    root.style.setProperty("--bg", "#0a0a0b");
-    root.style.setProperty("--bg-deep", "#0a0a0b");
+    root.style.setProperty("--theme-bottom", "#050506");
+    root.style.setProperty("--bg", "#050506");
+    root.style.setProperty("--bg-deep", "#050506");
     root.style.setProperty("--text", "#f4f4f5");
-    root.style.setProperty("--text-soft", "rgba(255,255,255,0.62)");
+    root.style.setProperty("--text-soft", "rgba(255,255,255,0.55)");
   }
 
   function applySavedColors() {
@@ -245,9 +252,7 @@
   async function checkSession() {
     try {
       const res = await fetch(SESSION_URL, {
-        method: "GET",
-        credentials: "include",
-        cache: "no-store"
+        method: "GET", credentials: "include", cache: "no-store"
       });
       const data = await res.json().catch(() => ({}));
       return {
@@ -267,7 +272,7 @@
       document.body.appendChild(overlay);
     }
     overlay.classList.remove("hidden");
-    overlay.innerHTML = `<div style="font-family:monospace;font-weight:700">${msg || "..."}</div>`;
+    overlay.innerHTML = `<div style="font-weight:500;letter-spacing:0.06em;opacity:0.7">${msg || "…"}</div>`;
     return overlay;
   }
 
@@ -275,7 +280,6 @@
     goHomeUrl();
     const overlay = document.getElementById("akkomusic-verify-overlay");
     if (overlay) {
-      overlay.innerHTML = `<div style="color:#66e39a;font-family:monospace;font-weight:700">ACCESS GRANTED</div>`;
       overlay.classList.add("hidden");
       setTimeout(() => overlay.remove(), 200);
     }
@@ -289,7 +293,7 @@
 
     const pathForGate = currentPath();
     const isRegister = pathForGate === "/register" || preferSignupTab();
-    const pageTitle = isRegister ? "Create your account" : "Welcome back";
+    const pageTitle = isRegister ? "Sign up" : "Log in";
     const pageSub =
       statusHint === "pending"
         ? "Your account is still pending approval."
@@ -308,43 +312,41 @@
     overlay.innerHTML = `
       <div class="akkomusic-access-shell">
         <div class="akkomusic-access-logo">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="6" cy="6" r="2"></circle><circle cx="12" cy="6" r="2"></circle><circle cx="18" cy="6" r="2"></circle>
             <circle cx="6" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="18" cy="12" r="2"></circle>
             <circle cx="6" cy="18" r="2"></circle><circle cx="12" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle>
           </svg>
           Akko<span>Music</span>
         </div>
-        <div class="akkomusic-access-box">
-          <h1 class="akkomusic-access-title">${pageTitle}</h1>
-          <p class="akkomusic-access-subtitle">${pageSub}</p>
+        <h1 class="akkomusic-access-title">${pageTitle}</h1>
+        <p class="akkomusic-access-subtitle">${pageSub}</p>
 
-          <div class="akkomusic-panel ${isRegister ? "" : "active"}" id="panel-login">
-            <label class="akkomusic-label" for="akko-login-user">Username</label>
-            <input class="akkomusic-field" id="akko-login-user" maxlength="32" autocomplete="username" spellcheck="false" placeholder="username">
-            <label class="akkomusic-label" for="akko-login-pass">Password</label>
-            <input class="akkomusic-field" id="akko-login-pass" type="password" maxlength="128" autocomplete="current-password" placeholder="••••••••">
-            <button type="button" class="akkomusic-access-button" id="akko-login-submit">Log in</button>
-            <div class="akkomusic-access-error" id="akko-login-error"></div>
-            <p class="akkomusic-access-switch">Don't have an account? <a href="/register">Sign up</a></p>
-          </div>
-
-          <div class="akkomusic-panel ${isRegister ? "active" : ""}" id="panel-signup">
-            <label class="akkomusic-label" for="akko-ref-code">Referral code</label>
-            <input class="akkomusic-field" id="akko-ref-code" maxlength="16" spellcheck="false" value="${savedCode.replace(/"/g, "")}" placeholder="Code from admin">
-            <label class="akkomusic-label" for="akko-reg-name">Your name</label>
-            <input class="akkomusic-field" id="akko-reg-name" maxlength="64" autocomplete="name" placeholder="Display name">
-            <label class="akkomusic-label" for="akko-reg-user">Username</label>
-            <input class="akkomusic-field" id="akko-reg-user" maxlength="32" autocomplete="username" spellcheck="false" placeholder="username">
-            <label class="akkomusic-label" for="akko-reg-pass">Password</label>
-            <input class="akkomusic-field" id="akko-reg-pass" type="password" maxlength="128" autocomplete="new-password" placeholder="••••••••">
-            <button type="button" class="akkomusic-access-button" id="akko-reg-submit">Create account</button>
-            <div class="akkomusic-access-error" id="akko-reg-error"></div>
-            <div class="akkomusic-access-ok" id="akko-reg-ok"></div>
-            <p class="akkomusic-access-switch">Already have an account? <a href="/login">Log in</a></p>
-          </div>
+        <div class="akkomusic-panel ${isRegister ? "" : "active"}" id="panel-login">
+          <label class="akkomusic-label" for="akko-login-user">Username</label>
+          <input class="akkomusic-field" id="akko-login-user" maxlength="32" autocomplete="username" spellcheck="false" placeholder=" ">
+          <label class="akkomusic-label" for="akko-login-pass">Password</label>
+          <input class="akkomusic-field" id="akko-login-pass" type="password" maxlength="128" autocomplete="current-password" placeholder=" ">
+          <button type="button" class="akkomusic-access-button" id="akko-login-submit">Log in</button>
+          <div class="akkomusic-access-error" id="akko-login-error"></div>
+          <p class="akkomusic-access-switch">New here? <a href="/register">Sign up</a></p>
         </div>
-        <a class="akkomusic-access-back" href="/landing">← Back to landing</a>
+
+        <div class="akkomusic-panel ${isRegister ? "active" : ""}" id="panel-signup">
+          <label class="akkomusic-label" for="akko-ref-code">Referral code</label>
+          <input class="akkomusic-field" id="akko-ref-code" maxlength="16" spellcheck="false" value="${savedCode.replace(/"/g, "")}" placeholder=" ">
+          <label class="akkomusic-label" for="akko-reg-name">Your name</label>
+          <input class="akkomusic-field" id="akko-reg-name" maxlength="64" autocomplete="name" placeholder=" ">
+          <label class="akkomusic-label" for="akko-reg-user">Username</label>
+          <input class="akkomusic-field" id="akko-reg-user" maxlength="32" autocomplete="username" spellcheck="false" placeholder=" ">
+          <label class="akkomusic-label" for="akko-reg-pass">Password</label>
+          <input class="akkomusic-field" id="akko-reg-pass" type="password" maxlength="128" autocomplete="new-password" placeholder=" ">
+          <button type="button" class="akkomusic-access-button" id="akko-reg-submit">Create account</button>
+          <div class="akkomusic-access-error" id="akko-reg-error"></div>
+          <div class="akkomusic-access-ok" id="akko-reg-ok"></div>
+          <p class="akkomusic-access-switch">Already have access? <a href="/login">Log in</a></p>
+        </div>
+        <a class="akkomusic-access-back" href="/landing">← Back</a>
       </div>`;
     document.body.appendChild(overlay);
 
@@ -404,12 +406,8 @@
     }
 
     loginBtn.addEventListener("click", doLogin);
-    loginPass.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") doLogin();
-    });
-    loginUser.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") loginPass.focus();
-    });
+    loginPass.addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+    loginUser.addEventListener("keydown", (e) => { if (e.key === "Enter") loginPass.focus(); });
 
     const regBtn = overlay.querySelector("#akko-reg-submit");
     const regErr = overlay.querySelector("#akko-reg-error");
@@ -424,18 +422,14 @@
       const name = overlay.querySelector("#akko-reg-name").value.trim();
       const username = overlay.querySelector("#akko-reg-user").value.trim();
       const password = overlay.querySelector("#akko-reg-pass").value;
-
       if (referralCode) localStorage.setItem(REF_KEY, referralCode);
-
       if (!referralCode || !name || !username || !password) {
         regErr.textContent = "Fill in code, name, username, and password.";
         return;
       }
-
       regBusy = true;
       regBtn.disabled = true;
       regBtn.textContent = "Creating…";
-
       try {
         const res = await fetch(REGISTER_URL, {
           method: "POST",
@@ -482,7 +476,7 @@
     applyBwGateColors();
     document.getElementById("akkomusic-access-overlay")?.remove();
     document.getElementById("akkomusic-verify-overlay")?.remove();
-    showVerifying("checking…");
+    showVerifying("…");
     const session = await checkSession();
     if (session.valid) {
       unlockFast();
