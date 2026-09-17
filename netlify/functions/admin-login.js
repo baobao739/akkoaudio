@@ -94,7 +94,7 @@ exports.handler = async (event) => {
       200,
       { ok: true },
       {
-        "Set-Cookie": cookie("akkoflac_admin", token, ADMIN_SESSION_SECONDS),
+        "Set-Cookie": cookie("akkomusic_admin", token, ADMIN_SESSION_SECONDS),
         "Cache-Control": "no-store"
       }
     );
