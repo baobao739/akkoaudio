@@ -4,6 +4,24 @@
   const SESSION_URL = "/.netlify/functions/verify-session";
   const LOGIN_URL = "/.netlify/functions/login";
   const REGISTER_URL = "/.netlify/functions/register";
+
+  function currentPath() {
+    return (location.pathname || "/").replace(/\/+$/, "") || "/";
+  }
+
+  function preferSignupTab() {
+    const p = currentPath();
+    const q = new URLSearchParams(location.search);
+    return p === "/register" || q.get("tab") === "signup" || q.get("tab") === "register";
+  }
+
+  function goHomeUrl() {
+    const p = currentPath();
+    if (p === "/login" || p === "/register" || p === "/app") {
+      try { history.replaceState(null, "", "/home"); } catch (_) {}
+    }
+  }
+
   const REF_KEY = "akkomusic-referral-code";
 
   const THEMES = {
@@ -163,6 +181,7 @@
   }
 
   function unlockFast() {
+    goHomeUrl();
     const overlay = document.getElementById("akkomusic-verify-overlay");
     if (overlay) {
       overlay.innerHTML = `<div style="color:#66e39a;font-family:monospace;font-weight:700">ACCESS GRANTED</div>`;
@@ -229,6 +248,15 @@
         overlay.querySelector("#panel-" + tab.dataset.tab)?.classList.add("active");
       });
     });
+
+    if (preferSignupTab()) {
+      tabs.forEach((x) => x.classList.remove("active"));
+      overlay.querySelectorAll(".akkomusic-panel").forEach((p) => p.classList.remove("active"));
+      const su = overlay.querySelector('.akkomusic-tab[data-tab="signup"]');
+      const panel = overlay.querySelector("#panel-signup");
+      if (su) su.classList.add("active");
+      if (panel) panel.classList.add("active");
+    }
 
     const refInput = overlay.querySelector("#akko-ref-code");
     refInput.addEventListener("change", () => {
