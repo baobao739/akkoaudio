@@ -1,1 +1,395 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin · AkkoMusic</title>
+<style>
+:root{--bg:#030304;--text:#fafafa;--muted:#a1a1aa;--dim:#71717a;--line:rgba(255,255,255,.08);--soft:rgba(255,255,255,.03);--soft2:rgba(255,255,255,.05)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{min-height:100vh;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5}
+.grid{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 80% 45% at 50% -5%,rgba(255,255,255,.05),transparent 50%),linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);background-size:auto,56px 56px,56px 56px}
+.shell{position:relative;z-index:1;width:min(960px,100%);margin:0 auto;padding:2.75rem 1.25rem 4.5rem}
+.logo{display:flex;align-items:center;justify-content:center;gap:10px;font-size:.95rem;font-weight:600;letter-spacing:-.03em;margin-bottom:2.5rem;opacity:.88}
+.logo b{font-weight:700}
+.eyebrow{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);font-weight:650;margin-bottom:.75rem}
+.h{font-size:clamp(2rem,5vw,2.85rem);font-weight:500;letter-spacing:-.045em;margin-bottom:.45rem;line-height:1.08}
+.sub{color:var(--muted);font-size:.95rem;margin-bottom:1.75rem;max-width:36rem;line-height:1.55}
+.login-wrap{min-height:82vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;animation:in .45s cubic-bezier(.22,1,.36,1) both}
+@keyframes in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.login-form{width:min(380px,100%);text-align:left;margin-top:.35rem}
+.label{display:block;margin:0 0 .4rem;color:var(--dim);font-size:.68rem;font-weight:650;letter-spacing:.14em;text-transform:uppercase}
+.field{width:100%;margin-bottom:1rem;padding:.95rem 1rem;border:1px solid var(--line);border-radius:14px;outline:none;background:var(--soft);color:var(--text);font-size:1rem;font-family:inherit;transition:border-color .2s,background .2s,box-shadow .2s}
+.field:focus{border-color:rgba(255,255,255,.28);background:var(--soft2);box-shadow:0 0 0 3px rgba(255,255,255,.06)}
+.field::placeholder{color:#52525b}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 1.25rem;border:0;border-radius:999px;cursor:pointer;font-size:.9rem;font-weight:650;font-family:inherit;transition:transform .12s ease,opacity .2s,box-shadow .2s}
+.btn:active:not(:disabled){transform:scale(.985)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:#fafafa;color:#0a0a0b;box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 8px 24px rgba(0,0,0,.35)}
+.btn-primary:hover:not(:disabled){box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 12px 28px rgba(0,0,0,.4)}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn-ghost:hover:not(:disabled){border-color:rgba(255,255,255,.2);background:var(--soft)}
+.btn-danger{background:transparent;color:#fb7185;border:1px solid rgba(251,113,133,.28)}
+.btn-danger:hover:not(:disabled){background:rgba(251,113,133,.08)}
+.btn-success{background:transparent;color:#4ade80;border:1px solid rgba(74,222,128,.28)}
+.btn-success:hover:not(:disabled){background:rgba(74,222,128,.08)}
+.btn-block{width:100%;margin-top:.65rem;height:50px;font-size:1.02rem}
+.error{color:#fb7185;font-size:.85rem;font-weight:600;margin-top:.85rem;min-height:18px;text-align:center}
+.ok{color:#4ade80;font-size:.85rem;font-weight:600;margin-top:.85rem;min-height:18px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:1.5rem}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.note{margin:0 0 1.75rem;padding:1rem 1.15rem;border-radius:16px;background:var(--soft);border:1px solid var(--line);color:var(--muted);font-size:.88rem;line-height:1.6}
+.section{margin:2.25rem 0 0;padding-top:1.75rem;border-top:1px solid var(--line)}
+.section-title{font-size:.68rem;font-weight:650;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:0 0 1rem}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 1rem}
+.stat{padding:1.15rem 1rem;border-radius:16px;background:var(--soft);border:1px solid var(--line)}
+.stat b{display:block;font-size:1.65rem;font-weight:500;letter-spacing:-.03em}
+.stat span{font-size:.62rem;letter-spacing:.14em;color:var(--dim);font-weight:650;text-transform:uppercase}
+.create-row{display:grid;grid-template-columns:1fr 72px 72px auto;gap:10px;align-items:end;margin-bottom:8px}
+.create-row-2{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:8px}
+.create-row .field,.create-row-2 .field{margin-bottom:0}
+.list{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding:1.15rem 1.15rem;border-radius:16px;background:var(--soft);border:1px solid var(--line);flex-wrap:wrap}
+.row .name{font-weight:600;font-size:.95rem;margin-bottom:4px}
+.row .detail{color:var(--muted);font-size:.8rem;line-height:1.5;word-break:break-word}
+.row .creds{margin-top:10px;padding:.65rem .75rem;border-radius:10px;background:rgba(0,0,0,.35);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;color:#e4e4e7}
+.row .btns{display:flex;gap:6px;flex-wrap:wrap}
+.row .btns .btn{height:34px;padding:0 12px;font-size:.78rem}
+.badge{display:inline-block;padding:.15rem .5rem;border-radius:999px;font-size:.68rem;font-weight:650;letter-spacing:.04em;text-transform:uppercase;margin-left:.35rem;vertical-align:middle}
+.badge-pending{background:rgba(250,204,21,.12);color:#facc15}
+.badge-approved{background:rgba(74,222,128,.12);color:#4ade80}
+.badge-denied{background:rgba(251,113,133,.12);color:#fb7185}
+.badge-revoked{background:rgba(161,161,170,.12);color:#a1a1aa}
+.empty{color:var(--muted);font-size:.9rem;padding:.75rem 0 1rem}
+@media(max-width:720px){.stats{grid-template-columns:1fr 1fr}.create-row,.create-row-2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="grid"></div>
+<div class="shell" id="app">
+  <div class="login-wrap">
+    <div class="logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="6" cy="6" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="18" cy="6" r="2"/>
+        <circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/>
+        <circle cx="6" cy="18" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>
+      </svg>
+      Akko<b>Music</b>
+    </div>
+    <div class="eyebrow">Admin</div>
+    <h1 class="h">Sign in</h1>
+    <p class="sub" style="text-align:center">Loading…</p>
+  </div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var app = document.getElementById("app");
+
+  function esc(s) {
+    var d = document.createElement("div");
+    d.textContent = String(s == null ? "" : s);
+    return d.innerHTML;
+  }
+
+  function fmt(ts) {
+    if (!ts) return "-";
+    try { return new Date(ts).toLocaleString(); } catch (e) { return String(ts); }
+  }
+
+  function logoHtml() {
+    return '<div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+      '<circle cx="6" cy="6" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="18" cy="6" r="2"/>' +
+      '<circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/>' +
+      '<circle cx="6" cy="18" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>' +
+      '</svg> Akko<b>Music</b></div>';
+  }
+
+  function isAuthed(res, data) {
+    if (!res || res.status !== 200 || !data || data.ok !== true) return false;
+    if (!data.pending) data.pending = [];
+    if (!data.approved) data.approved = [];
+    if (!data.denied) data.denied = [];
+    if (!data.revoked) data.revoked = [];
+    return true;
+  }
+
+  function login(message) {
+    app.innerHTML =
+      '<div class="login-wrap">' + logoHtml() +
+      '<div class="eyebrow">Admin</div>' +
+      '<h1 class="h">Sign in</h1>' +
+      '<p class="sub" style="text-align:center">Use ADMIN_PASSWORD from Netlify env.</p>' +
+      '<form class="login-form" id="loginForm" autocomplete="off">' +
+      '<label class="label" for="password">Password</label>' +
+      '<input class="field" id="password" type="password" placeholder=" " autofocus>' +
+      '<button class="btn btn-primary btn-block" type="submit">Sign in</button>' +
+      '<div class="error" id="error">' + (message ? esc(message) : "") + '</div>' +
+      '</form></div>';
+
+    document.getElementById("loginForm").onsubmit = function (e) {
+      e.preventDefault();
+      var err = document.getElementById("error");
+      err.textContent = "";
+      var password = document.getElementById("password").value;
+      document.getElementById("password").value = "";
+      var btn = e.target.querySelector("button");
+      btn.disabled = true;
+      btn.textContent = "Signing in…";
+      fetch("/.netlify/functions/admin-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ password: password })
+      })
+        .then(function (r) { return r.json().then(function (d) { return { r: r, d: d }; }).catch(function () { return { r: r, d: {} }; }); })
+        .then(function (x) {
+          if (!x.r.ok || !x.d.ok) {
+            err.textContent = x.d.error || "Login failed.";
+            btn.disabled = false;
+            btn.textContent = "Sign in";
+            return;
+          }
+          setTimeout(dashboard, 150);
+        })
+        .catch(function () {
+          err.textContent = "Network error.";
+          btn.disabled = false;
+          btn.textContent = "Sign in";
+        });
+    };
+  }
+
+  function fetchAccounts() {
+    return fetch("/.netlify/functions/list-accounts", { cache: "no-store", credentials: "include" })
+      .then(function (r) {
+        return r.json().then(function (data) { return { r: r, data: data }; }).catch(function () { return { r: r, data: {} }; });
+      })
+      .then(function (x) {
+        if (x.r.status === 401) return { authed: false, reason: "expired" };
+        if (x.r.status >= 500) {
+          return { authed: true, data: { ok: true, pending: [], approved: [], denied: [], revoked: [] }, serverError: (x.data && x.data.error) || "Server error loading accounts." };
+        }
+        if (!isAuthed(x.r, x.data)) {
+          return { authed: true, data: { ok: true, pending: [], approved: [], denied: [], revoked: [] }, serverError: (x.data && x.data.error) || "Could not load accounts." };
+        }
+        return { authed: true, data: x.data };
+      })
+      .catch(function () {
+        return { authed: true, data: { ok: true, pending: [], approved: [], denied: [], revoked: [] }, serverError: "Network error loading accounts." };
+      });
+  }
+
+  function fetchReferrals() {
+    return fetch("/.netlify/functions/list-referrals", { cache: "no-store", credentials: "include" })
+      .then(function (r) {
+        if (r.status === 401) return null;
+        return r.json().then(function (d) { return d.codes || []; }).catch(function () { return []; });
+      })
+      .catch(function () { return []; });
+  }
+
+  function renderRow(row) {
+    var buttons = "";
+    if (row.status === "pending") {
+      buttons = '<button class="btn btn-success" data-act="approve">Approve</button><button class="btn btn-danger" data-act="deny">Deny</button>';
+    } else if (row.status === "approved") {
+      buttons = '<button class="btn btn-danger" data-act="revoke">Revoke</button>';
+    } else {
+      buttons = '<button class="btn btn-success" data-act="approve">Re-approve</button>';
+    }
+    buttons += '<button class="btn btn-danger" data-act="delete">Delete</button>';
+    var pass = row.password_plain ? esc(row.password_plain) : "(not stored)";
+    return '<div class="row" data-id="' + esc(row.id) + '">' +
+      '<div style="flex:1;min-width:0">' +
+      '<div class="name">' + esc(row.display_name || "-") + ' <span class="badge badge-' + esc(row.status) + '">' + esc(row.status) + '</span></div>' +
+      '<div class="detail">Code: ' + esc(row.referral_code || "-") + ' · Created ' + fmt(row.created_at) +
+      (row.last_login_at ? " · Last login " + fmt(row.last_login_at) : "") + '</div>' +
+      '<div class="creds">user: <b>' + esc(row.username) + '</b> &nbsp; pass: <b>' + pass + '</b></div>' +
+      '</div><div class="btns">' + buttons + '</div></div>';
+  }
+
+  function renderCode(c) {
+    var left = Math.max(0, (c.max_uses || 1) - (c.use_count || 0));
+    var used = left === 0;
+    return '<div class="row"><div>' +
+      '<div class="name" style="font-family:ui-monospace,monospace;letter-spacing:.12em">' + esc(c.code) + '</div>' +
+      '<div class="detail">' + esc(c.label || "No label") + ' · uses ' + c.use_count + '/' + c.max_uses + ' · ' +
+      (used ? "USED UP" : left + " left") + ' · ' + fmt(c.created_at) + '</div></div>' +
+      '<div class="btns"><button class="btn btn-ghost" data-copy="' + esc(c.code) + '">Copy</button></div></div>';
+  }
+
+  function logout() {
+    fetch("/.netlify/functions/admin-logout", { method: "POST", credentials: "include" }).catch(function () {});
+    login("Signed out.");
+  }
+
+  function dashboard() {
+    app.innerHTML =
+      logoHtml() +
+      '<div class="top"><div>' +
+      '<div class="eyebrow">Admin</div>' +
+      '<h1 class="h">Whitelist + referrals</h1>' +
+      '<p class="sub">Generate codes → users sign up → you see name, username, password.</p>' +
+      '</div><div class="actions">' +
+      '<button class="btn btn-ghost" id="refresh" type="button">Refresh</button>' +
+      '<button class="btn btn-ghost" id="logout" type="button">Log out</button>' +
+      '</div></div>' +
+      '<p class="note">1. Create referral codes. 2. Give one code per person. 3. They sign up with code + name + username + password. 4. Refresh to see their info.</p>' +
+      '<div class="section-title">Generate referral codes</div>' +
+      '<div class="create-row">' +
+      '<div><label class="label" for="refLabel">Label</label><input class="field" id="refLabel" placeholder="e.g. Room 12"></div>' +
+      '<div><label class="label" for="refCount">Count</label><input class="field" id="refCount" type="number" min="1" max="50" value="1"></div>' +
+      '<div><label class="label" for="refMax">Uses</label><input class="field" id="refMax" type="number" min="1" max="500" value="1"></div>' +
+      '<button class="btn btn-primary" id="genRef" type="button">Generate</button></div>' +
+      '<div class="error" id="refErr" style="text-align:left"></div><div class="ok" id="refOk"></div>' +
+      '<div class="section-title" style="margin-top:2rem">Or create account yourself</div>' +
+      '<div class="create-row-2">' +
+      '<div><label class="label" for="newUser">Username</label><input class="field" id="newUser" maxlength="32" placeholder=" "></div>' +
+      '<div><label class="label" for="newPass">Password</label><input class="field" id="newPass" type="password" maxlength="128" placeholder=" "></div>' +
+      '<button class="btn btn-primary" id="createBtn" type="button">Create</button></div>' +
+      '<div class="error" id="createErr" style="text-align:left"></div><div class="ok" id="createOk"></div>' +
+      '<div id="content" style="margin-top:1rem"><p class="empty">Loading…</p></div>';
+
+    document.getElementById("refresh").onclick = function () { refresh(); };
+    document.getElementById("logout").onclick = function () { logout(); };
+
+    document.getElementById("genRef").onclick = function () {
+      var err = document.getElementById("refErr");
+      var ok = document.getElementById("refOk");
+      err.textContent = "";
+      ok.textContent = "";
+      var label = document.getElementById("refLabel").value.trim();
+      var count = Number(document.getElementById("refCount").value || 1);
+      var max_uses = Number(document.getElementById("refMax").value || 1);
+      var btn = document.getElementById("genRef");
+      btn.disabled = true;
+      fetch("/.netlify/functions/admin-create-referral", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ label: label, count: count, max_uses: max_uses })
+      })
+        .then(function (r) { return r.json().then(function (d) { return { r: r, d: d }; }).catch(function () { return { r: r, d: {} }; }); })
+        .then(function (x) {
+          if (x.r.status === 401) { login("Session expired."); return; }
+          if (!x.r.ok) { err.textContent = x.d.error || "Failed"; btn.disabled = false; return; }
+          var codes = (x.d.codes || []).map(function (c) { return c.code; }).join(", ");
+          ok.textContent = "Created: " + codes;
+          btn.disabled = false;
+          refresh();
+        })
+        .catch(function () { err.textContent = "Network error"; btn.disabled = false; });
+    };
+
+    document.getElementById("createBtn").onclick = function () {
+      var err = document.getElementById("createErr");
+      var ok = document.getElementById("createOk");
+      err.textContent = "";
+      ok.textContent = "";
+      var username = document.getElementById("newUser").value.trim();
+      var password = document.getElementById("newPass").value;
+      var btn = document.getElementById("createBtn");
+      btn.disabled = true;
+      fetch("/.netlify/functions/admin-create-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username: username, password: password, status: "approved" })
+      })
+        .then(function (r) { return r.json().then(function (d) { return { r: r, d: d }; }).catch(function () { return { r: r, d: {} }; }); })
+        .then(function (x) {
+          if (x.r.status === 401) { login("Session expired."); return; }
+          if (!x.r.ok) { err.textContent = x.d.error || "Failed"; btn.disabled = false; return; }
+          ok.textContent = "Created " + (x.d.account && x.d.account.username);
+          document.getElementById("newUser").value = "";
+          document.getElementById("newPass").value = "";
+          btn.disabled = false;
+          refresh();
+        })
+        .catch(function () { err.textContent = "Network error"; btn.disabled = false; });
+    };
+
+    refresh();
+  }
+
+  function refresh() {
+    var content = document.getElementById("content");
+    if (!content) return;
+    content.innerHTML = '<p class="empty">Loading…</p>';
+    fetchAccounts().then(function (result) {
+      if (!result.authed) {
+        login(result.reason === "expired" ? "Session expired." : "Not signed in.");
+        return;
+      }
+      return fetchReferrals().then(function (codes) {
+        var data = result.data;
+        var pending = data.pending || [];
+        var approved = data.approved || [];
+        var denied = data.denied || [];
+        var revoked = data.revoked || [];
+        var all = approved.concat(pending, denied, revoked);
+        var errBanner = result.serverError
+          ? '<div class="error" style="text-align:left;margin-bottom:12px">' + esc(result.serverError) + ' (still signed in)</div>'
+          : "";
+        var openCodes = (codes || []).filter(function (c) { return c.use_count < c.max_uses; }).length;
+        content.innerHTML =
+          errBanner +
+          '<div class="stats">' +
+          '<div class="stat"><b>' + approved.length + '</b><span>Approved</span></div>' +
+          '<div class="stat"><b>' + pending.length + '</b><span>Pending</span></div>' +
+          '<div class="stat"><b>' + openCodes + '</b><span>Open codes</span></div>' +
+          '<div class="stat"><b>' + (codes || []).length + '</b><span>All codes</span></div>' +
+          '</div>' +
+          '<div class="section"><div class="section-title">Referral codes</div><div class="list">' +
+          ((codes || []).length ? codes.map(renderCode).join("") : '<p class="empty">None yet — generate above.</p>') +
+          '</div></div>' +
+          '<div class="section"><div class="section-title">Users</div><div class="list">' +
+          (all.length ? all.map(renderRow).join("") : '<p class="empty">No users yet.</p>') +
+          '</div></div>';
+
+        Array.prototype.forEach.call(content.querySelectorAll("[data-copy]"), function (btn) {
+          btn.onclick = function () {
+            navigator.clipboard.writeText(btn.getAttribute("data-copy")).then(function () {
+              btn.textContent = "Copied";
+              setTimeout(function () { btn.textContent = "Copy"; }, 1000);
+            }).catch(function () {});
+          };
+        });
+
+        Array.prototype.forEach.call(content.querySelectorAll("[data-act]"), function (btn) {
+          btn.onclick = function () {
+            var id = btn.closest(".row").getAttribute("data-id");
+            var action = btn.getAttribute("data-act");
+            if (action === "revoke" && !confirm("Revoke this account?")) return;
+            if (action === "delete" && !confirm("Permanently delete? Removed from list.")) return;
+            btn.disabled = true;
+            fetch("/.netlify/functions/review-account", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ id: id, action: action })
+            })
+              .then(function (r) { return r.json().then(function (d) { return { r: r, d: d }; }).catch(function () { return { r: r, d: {} }; }); })
+              .then(function (x) {
+                if (x.r.status === 401) { login("Session expired."); return; }
+                if (!x.r.ok) { alert(x.d.error || "Failed"); btn.disabled = false; return; }
+                refresh();
+              })
+              .catch(function () { alert("Network error"); btn.disabled = false; });
+          };
+        });
+      });
+    });
+  }
+
+  fetchAccounts().then(function (result) {
+    if (result.authed) dashboard();
+    else login("");
+  });
+})();
+</script>
+</body>
+</html>
