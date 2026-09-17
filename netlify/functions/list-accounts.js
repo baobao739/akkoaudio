@@ -16,15 +16,37 @@ exports.handler = async (event) => {
 
   try {
     const supabase = db();
-    const { data, error } = await supabase
+    let data = null;
+    let error = null;
+
+    ({ data, error } = await supabase
       .from("accounts")
       .select(
         "id, username, display_name, password_plain, referral_code, status, created_at, reviewed_at, review_note, last_login_at"
       )
       .order("created_at", { ascending: false })
-      .limit(500);
+      .limit(500));
 
-    if (error) throw error;
+    if (error) {
+      console.error("list-accounts full select failed:", error.message || error);
+      ({ data, error } = await supabase
+        .from("accounts")
+        .select("id, username, status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(500));
+    }
+
+    if (error) {
+      console.error("list-accounts fallback failed:", error.message || error);
+      return json(200, {
+        ok: true,
+        pending: [],
+        approved: [],
+        denied: [],
+        revoked: [],
+        warning: error.message || "Could not read accounts table. Check Supabase schema."
+      });
+    }
 
     const pending = [];
     const approved = [];
@@ -40,6 +62,13 @@ exports.handler = async (event) => {
     return json(200, { ok: true, pending, approved, denied, revoked });
   } catch (error) {
     console.error(error);
-    return json(500, { error: "Server error." });
+    return json(200, {
+      ok: true,
+      pending: [],
+      approved: [],
+      denied: [],
+      revoked: [],
+      warning: String(error.message || error)
+    });
   }
 };
