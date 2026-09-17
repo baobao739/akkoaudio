@@ -8,9 +8,7 @@
 (async function () {
   try {
     const res = await fetch("/.netlify/functions/verify-session", {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store"
+      method: "GET", credentials: "include", cache: "no-store"
     });
     const data = await res.json().catch(() => ({}));
     if (res.ok && data.valid && data.unlocked) {
@@ -22,179 +20,170 @@
 </script>
 <style>
 :root {
-  --bg-dark: #0a0a0b;
-  --text-main: #f4f4f5;
-  --text-muted: #a1a1aa;
-  --clay-base: #18181b;
-  --clay-shadow: rgba(0, 0, 0, 0.9);
-  --clay-inset-light: rgba(255, 255, 255, 0.04);
-  --clay-inset-dark: rgba(0, 0, 0, 0.6);
+  --bg: #050506;
+  --text: #f4f4f5;
+  --muted: #8b8b96;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
-  background-color: var(--bg-dark);
-  color: var(--text-main);
+  background: var(--bg);
+  color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   overflow-x: hidden;
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
-.grid-overlay {
-  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+.grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
-    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-  background-size: 40px 40px;
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
 }
-h1, h2 { font-weight: 500; letter-spacing: -0.03em; }
-a { color: var(--text-main); text-decoration: none; transition: color 0.3s ease; }
-a:hover { color: var(--text-muted); }
-.navbar {
-  display: flex; justify-content: center; align-items: center;
-  padding: 1.5rem 3rem; position: fixed; top: 0; width: 100%; z-index: 100;
-  background: linear-gradient(to bottom, rgba(10,10,11,0.9), transparent);
-  backdrop-filter: blur(10px); pointer-events: none;
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  display: flex; justify-content: center; padding: 1.75rem 1.5rem;
+  pointer-events: none;
 }
 .logo {
   display: flex; align-items: center; gap: 10px;
-  font-size: 1.25rem; font-weight: 600; letter-spacing: -0.05em;
+  font-size: 1.05rem; font-weight: 600; letter-spacing: -0.04em;
+  color: var(--text); opacity: 0.9;
 }
 .logo span { font-weight: 700; }
 .hero {
-  padding: 12rem 2rem 4rem; text-align: center;
-  display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
+  position: relative; z-index: 2;
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 6rem 1.5rem 4rem;
 }
-.chunky-badge {
-  background: var(--clay-base); padding: 0.5rem 1rem; border-radius: 20px;
-  font-size: 0.8rem; color: var(--text-muted);
-  border: 1px solid rgba(255,255,255,0.05);
-  box-shadow: 4px 4px 8px var(--clay-shadow),
-    inset 2px 2px 4px var(--clay-inset-light),
-    inset -2px -2px 4px var(--clay-inset-dark);
+.eyebrow {
+  font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 1.25rem; font-weight: 600;
 }
-.hero h1 { font-size: clamp(2.5rem, 5vw, 4.5rem); max-width: 800px; }
-.hero p { color: var(--text-muted); max-width: 520px; }
+.hero h1 {
+  font-size: clamp(2.75rem, 9vw, 5.5rem);
+  font-weight: 500; letter-spacing: -0.045em; line-height: 1.05;
+  max-width: 14ch;
+}
+.hero p {
+  margin-top: 1.25rem; color: var(--muted); font-size: clamp(1rem, 2.5vw, 1.15rem);
+  max-width: 28rem; font-weight: 400;
+}
 .scroll-hint {
-  margin-top: 0.5rem; color: var(--text-muted); font-size: 0.75rem;
-  letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.7;
-  animation: bob 2.2s ease-in-out infinite;
+  margin-top: 3rem; color: var(--muted); font-size: 0.7rem;
+  letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.65;
+  animation: bob 2.4s ease-in-out infinite;
 }
 @keyframes bob {
-  0%, 100% { transform: translateY(0); opacity: 0.5; }
-  50% { transform: translateY(6px); opacity: 0.95; }
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(8px); opacity: 0.9; }
 }
-.gallery-container { position: relative; height: 300vh; width: 100%; }
+.gallery-container { position: relative; height: 280vh; width: 100%; z-index: 1; }
 .scene {
   position: sticky; top: 0; height: 100vh; width: 100%;
   display: flex; justify-content: center; align-items: center;
-  perspective: 1200px; overflow: hidden;
+  perspective: 1200px;
 }
-.sphere { position: relative; width: 0; height: 0; transform-style: preserve-3d; }
-.clay-card {
-  position: absolute; width: 160px; height: 220px; left: -80px; top: -110px;
-  background: var(--clay-base); border-radius: 16px; padding: 8px;
-  transform-style: preserve-3d; border: 1px solid rgba(255,255,255,0.03);
-  box-shadow: 8px 8px 16px var(--clay-shadow), -4px -4px 10px rgba(255,255,255,0.02),
-    inset 3px 3px 6px var(--clay-inset-light), inset -3px -3px 6px var(--clay-inset-dark);
-  transition: filter 0.35s ease;
+.sphere {
+  width: min(70vw, 420px); height: min(70vw, 420px);
+  position: relative; transform-style: preserve-3d;
 }
-.clay-card img {
-  width: 100%; height: 100%; object-fit: cover; border-radius: 10px;
-  filter: none; transition: transform 0.35s ease, box-shadow 0.35s ease;
-}
-.clay-card.active-card {
-  filter: drop-shadow(0 12px 28px rgba(0,0,0,0.55));
-  z-index: 2;
-}
-.clay-card.active-card img {
-  filter: none;
-  transform: scale(1.03);
+.sphere img {
+  position: absolute; width: 64px; height: 64px; object-fit: cover;
+  border-radius: 12px; left: 50%; top: 50%;
+  margin: -32px 0 0 -32px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+  opacity: 0.92;
 }
 .floating-text {
-  position: absolute; top: 50%; transform: translateY(-50%); width: 300px;
-  z-index: 10; position: sticky; margin-left: 10%;
+  position: absolute; z-index: 3; max-width: 280px; pointer-events: none;
+  opacity: 0;
 }
-.floating-text h2 { font-size: 2rem; margin-bottom: 1rem; text-shadow: 0 4px 10px rgba(0,0,0,0.8); }
-.floating-text p { color: var(--text-muted); font-size: 0.9rem; }
-.network-lines { position: absolute; inset: 0; pointer-events: none; z-index: -1; }
-.journey-section {
-  position: relative; min-height: 100vh; display: flex; justify-content: center; align-items: center;
-  overflow: hidden; background: radial-gradient(circle at center, #111113 0%, var(--bg-dark) 70%);
+.floating-text.left-text { left: 8%; top: 28%; }
+.floating-text h2 {
+  font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 500; letter-spacing: -0.03em;
+  margin-bottom: 0.5rem;
 }
-.journey-content {
-  text-align: center; z-index: 2; background: rgba(10,10,11,0.6); padding: 3rem 2.5rem;
-  border-radius: 24px; backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-  max-width: 440px; width: calc(100% - 2rem);
+.floating-text p { color: var(--muted); font-size: 0.9rem; }
+.network-lines {
+  position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;
 }
-.journey-content h2 { font-size: 2.6rem; margin-bottom: 0.5rem; }
-.journey-content p { color: var(--text-muted); margin-bottom: 1.75rem; }
-.cta-row { display: flex; flex-direction: column; gap: 0.85rem; width: 100%; }
-.btn {
+.enter {
+  position: relative; z-index: 2;
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 4rem 1.5rem 5rem;
+  background: radial-gradient(ellipse at 50% 40%, #121214 0%, var(--bg) 65%);
+}
+.enter h2 {
+  font-size: clamp(2.5rem, 8vw, 4.5rem); font-weight: 500; letter-spacing: -0.04em;
+  margin-bottom: 1rem;
+}
+.enter p {
+  color: var(--muted); max-width: 22rem; margin-bottom: 2.5rem; font-size: 1rem;
+}
+.cta {
+  display: flex; flex-wrap: wrap; gap: 0.85rem; justify-content: center;
+}
+.cta a {
   display: inline-flex; align-items: center; justify-content: center;
-  padding: 0.95rem 1.5rem; border-radius: 40px; font-weight: 600; font-size: 1.05rem;
-  cursor: pointer; border: none; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  width: 100%; box-sizing: border-box;
+  min-width: 148px; padding: 0.95rem 1.75rem;
+  border-radius: 999px; font-size: 1rem; font-weight: 600;
+  text-decoration: none; transition: transform 0.15s ease, opacity 0.2s;
 }
-.btn-primary {
-  color: #0a0a0b; background: #f4f4f5;
-  box-shadow: 0px 4px 0px rgba(161,161,170,0.4), 0px 6px 10px rgba(0,0,0,0.4),
-    inset 0px -2px 5px rgba(0,0,0,0.1), inset 0px 2px 5px rgba(255,255,255,0.8);
+.cta a:active { transform: translateY(2px); }
+.cta .primary {
+  background: #f4f4f5; color: #0a0a0b;
+  box-shadow: 0 4px 0 #a1a1aa, 0 8px 24px rgba(0,0,0,0.4);
 }
-.btn-primary:active { transform: translateY(4px); }
-.btn-secondary {
-  color: #f4f4f5; background: transparent;
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: inset 1px 1px 2px rgba(255,255,255,0.04);
+.cta .ghost {
+  background: transparent; color: #f4f4f5;
+  border: 1px solid rgba(255,255,255,0.18);
 }
-.btn-secondary:hover { background: rgba(255,255,255,0.06); }
-.constellation { position: absolute; inset: 0; pointer-events: none; }
-.constellation-card { position: absolute; width: 100px; height: 140px; opacity: 0.85; }
-@media (max-width: 768px) {
-  .hero h1 { font-size: 2.5rem; }
-  .floating-text { position: absolute; top: 80%; margin-left: 5%; width: 90%; text-align: center; }
-  .clay-card { width: 120px; height: 160px; left: -60px; top: -80px; }
-  .journey-content h2 { font-size: 2.1rem; }
+.cta .ghost:hover { border-color: rgba(255,255,255,0.4); }
+@media (max-width: 700px) {
+  .floating-text.left-text { left: 5%; right: 5%; max-width: none; top: 12%; text-align: center; }
+  .sphere img { width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 10px; }
 }
 </style>
 </head>
 <body>
-<div class="grid-overlay"></div>
-<nav class="navbar">
+<div class="grid"></div>
+<nav class="nav">
   <div class="logo">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="6" cy="6" r="2"></circle><circle cx="12" cy="6" r="2"></circle><circle cx="18" cy="6" r="2"></circle>
-      <circle cx="6" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="18" cy="12" r="2"></circle>
-      <circle cx="6" cy="18" r="2"></circle><circle cx="12" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="6" cy="6" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="18" cy="6" r="2"/>
+      <circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/>
+      <circle cx="6" cy="18" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="18" r="2"/>
     </svg>
     Akko<span>Music</span>
   </div>
 </nav>
 <header class="hero">
-  <div class="chunky-badge">✦ Private listening</div>
+  <div class="eyebrow">Private · Invite only</div>
   <h1>Your music. Your space.</h1>
-  <p>Synced lyrics, covers, and a player built for late nights — invite only.</p>
-  <div class="scroll-hint">Scroll to explore</div>
+  <p>Synced lyrics, covers, and a player built for late nights.</p>
+  <div class="scroll-hint">Scroll</div>
 </header>
 <section class="gallery-container">
   <div class="floating-text left-text">
     <h2 id="dynamic-title">Late-night sessions</h2>
-    <p id="dynamic-desc">A library that stays with you — focus mode, lyrics, and the tracks that matter.</p>
+    <p id="dynamic-desc">Focus mode, lyrics, and the tracks that matter.</p>
   </div>
   <div class="scene"><div class="sphere" id="sphere"></div></div>
   <svg class="network-lines" viewBox="0 0 100 100" preserveAspectRatio="none">
-    <path d="M0,50 Q25,30 50,50 T100,50" stroke="rgba(255,255,255,0.05)" stroke-width="0.2" fill="none" />
-    <path d="M20,0 L80,100" stroke="rgba(255,255,255,0.03)" stroke-width="0.2" fill="none" />
+    <path d="M0,50 Q25,30 50,50 T100,50" stroke="rgba(255,255,255,0.04)" stroke-width="0.15" fill="none"/>
   </svg>
 </section>
-<section class="journey-section">
-  <div class="constellation" id="constellation"></div>
-  <div class="journey-content">
-    <h2>Enter</h2>
-    <p>Scroll brought you here. Sign up with a referral code, or log in if you already have access.</p>
-    <div class="cta-row">
-      <a href="/register" class="btn btn-primary">Sign up</a>
-      <a href="/login" class="btn btn-secondary">Log in</a>
-    </div>
+<section class="enter">
+  <h2>Enter</h2>
+  <p>Sign up with a referral code, or log in if you already have access.</p>
+  <div class="cta">
+    <a class="primary" href="/register">Sign up</a>
+    <a class="ghost" href="/login">Log in</a>
   </div>
 </section>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -202,85 +191,51 @@ a:hover { color: var(--text-muted); }
 <script>
 gsap.registerPlugin(ScrollTrigger);
 const COVER_POOL = ["covers/20min.jfif","covers/4raws.jpg","covers/aintinla.JPG","covers/backhome.jpg","covers/bakeshop.jfif","covers/circles.JPG","covers/congrats.JPG","covers/crown.JPG","covers/darkknightdummo.JPG","covers/darkthoughts.JPG","covers/drowning.JPG","covers/familyties.JPG","covers/fhc.JPG","covers/happier.JPG","covers/here.jfif","covers/hftw.JPG","covers/hotgirlbummer.jfif","covers/howdemo.JPG","covers/idxt.jfif","covers/jane.jpg","covers/kills.JPG","covers/leaveamsg.jfif","covers/leavemealone.JPG","covers/loverboy.jfif","covers/lvsandals.jpg","covers/madebyakko.jpg","covers/magnolia.JPG","covers/meanttobe.jfif","covers/misery.JPG","covers/murderonmymind.JPG","covers/nothemoon.jfif","covers/nothing.JPG","covers/nsiyw.JPG","covers/nuts.JPG","covers/onnothing.JPG","covers/phantom.jpg","covers/showyoume.JPG","covers/steady.JPG","covers/summerbummer.jfif","covers/thecure.JPG","covers/vbsxbp.jfif","covers/waf.JPG","covers/whiteferrari.jpg","covers/wi.JPG","covers/worldwide.JPG","covers/xotourllif3.jfif","covers/yellow.jpg"];
-function shuffle(arr) {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-const images = shuffle(COVER_POOL);
-const galleryItems = [...images, ...images, ...images].slice(0, 24);
-const textContent = [
-  { title: "Late-night sessions", desc: "A library that stays with you — focus mode, lyrics, and the tracks that matter." },
-  { title: "Lyrics in sync", desc: "Follow every line as it lands. Built for headphones and full-screen focus." },
-  { title: "Invite only", desc: "Whitelist access keeps the room small. Referral codes, your people." },
-  { title: "Your sound, always", desc: "Themes, covers, and a player that feels like home — not another stream farm." }
-];
+function shuffle(a){const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x;}
 const sphere = document.getElementById("sphere");
-const radius = window.innerWidth < 768 ? 200 : 380;
-galleryItems.forEach((src, i) => {
-  const card = document.createElement("div");
-  card.classList.add("clay-card");
+const picks = shuffle(COVER_POOL).slice(0, 28);
+picks.forEach((src, i) => {
   const img = document.createElement("img");
-  img.src = src; img.alt = ""; img.loading = "lazy";
-  card.appendChild(img);
-  const phi = Math.acos(1 - (2 * (i + 0.5)) / galleryItems.length);
-  const theta = Math.PI * (1 + Math.sqrt(5)) * i;
-  const x = radius * Math.cos(theta) * Math.sin(phi);
-  const y = radius * Math.sin(theta) * Math.sin(phi);
-  const z = radius * Math.cos(phi);
-  const rotY = Math.atan2(x, z) * (180 / Math.PI);
-  const rotX = Math.asin(-y / radius) * (180 / Math.PI);
-  card.style.transform = `translate3d(${x}px, ${y}px, ${z}px) rotateY(${rotY}deg) rotateX(${rotX}deg)`;
-  sphere.appendChild(card);
+  img.src = "/" + src;
+  img.alt = "";
+  img.loading = "lazy";
+  const phi = Math.acos(-1 + (2 * i) / picks.length);
+  const theta = Math.sqrt(picks.length * Math.PI) * phi;
+  const r = 160;
+  const x = r * Math.cos(theta) * Math.sin(phi);
+  const y = r * Math.sin(theta) * Math.sin(phi);
+  const z = r * Math.cos(phi);
+  img.style.transform = `translate3d(${x}px, ${y}px, ${z}px)`;
+  sphere.appendChild(img);
 });
 gsap.to(sphere, {
-  rotateY: 360 * 2, rotateX: 45, ease: "none",
-  scrollTrigger: {
-    trigger: ".gallery-container", start: "top top", end: "bottom bottom", scrub: 1,
-    onUpdate: (self) => updateActiveCard(self.progress)
-  }
+  rotationY: 360, rotationX: 40, ease: "none",
+  scrollTrigger: { trigger: ".gallery-container", start: "top top", end: "bottom bottom", scrub: 1.2 }
 });
-const titleEl = document.getElementById("dynamic-title");
-const descEl = document.getElementById("dynamic-desc");
-const allCards = document.querySelectorAll(".clay-card");
-function updateActiveCard(progress) {
-  const textIndex = Math.floor(progress * textContent.length) % textContent.length;
-  if (titleEl.innerText !== textContent[textIndex].title) {
-    gsap.to([titleEl, descEl], {
-      opacity: 0, duration: 0.2,
-      onComplete: () => {
-        titleEl.innerText = textContent[textIndex].title;
-        descEl.innerText = textContent[textIndex].desc;
-        gsap.to([titleEl, descEl], { opacity: 1, duration: 0.2 });
-      }
-    });
-  }
-  const focusIndex = Math.floor(progress * galleryItems.length);
-  allCards.forEach((card, idx) => {
-    if (Math.abs(idx - focusIndex) < 2) card.classList.add("active-card");
-    else card.classList.remove("active-card");
-  });
-}
-const constellation = document.getElementById("constellation");
-[
-  { top: "10%", left: "15%" }, { top: "20%", left: "80%" }, { top: "60%", left: "10%" },
-  { top: "75%", left: "85%" }, { top: "85%", left: "30%" }, { top: "15%", left: "50%" }
-].forEach((pos, i) => {
-  const card = document.createElement("div");
-  card.classList.add("clay-card", "constellation-card");
-  card.style.top = pos.top; card.style.left = pos.left;
-  card.style.transform = `rotate(${(Math.random() - 0.5) * 40}deg) scale(0.8)`;
-  const img = document.createElement("img");
-  img.src = images[i % images.length];
-  card.appendChild(img);
-  constellation.appendChild(card);
+gsap.fromTo(".floating-text", { opacity: 0, y: 30 }, {
+  opacity: 1, y: 0,
+  scrollTrigger: { trigger: ".gallery-container", start: "15% top", end: "40% top", scrub: true }
 });
-gsap.to(".constellation-card", {
-  y: -100, ease: "none", stagger: 0.1,
-  scrollTrigger: { trigger: ".journey-section", start: "top bottom", end: "bottom top", scrub: true }
+gsap.fromTo(".floating-text", { opacity: 1 }, {
+  opacity: 0,
+  scrollTrigger: { trigger: ".gallery-container", start: "55% top", end: "75% top", scrub: true }
+});
+const titles = [
+  ["Late-night sessions", "Focus mode, lyrics, and the tracks that matter."],
+  ["Your covers. Spinning.", "Every album art from the library — live on the sphere."],
+  ["Invite only", "Referral code in. Then it's yours."]
+];
+let ti = 0;
+ScrollTrigger.create({
+  trigger: ".gallery-container", start: "top top", end: "bottom bottom", scrub: true,
+  onUpdate(self) {
+    const n = Math.min(titles.length - 1, Math.floor(self.progress * titles.length));
+    if (n !== ti) {
+      ti = n;
+      document.getElementById("dynamic-title").textContent = titles[n][0];
+      document.getElementById("dynamic-desc").textContent = titles[n][1];
+    }
+  }
 });
 </script>
 </body>
