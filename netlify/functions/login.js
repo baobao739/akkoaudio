@@ -1,4 +1,3 @@
-const { createClient } = require("@supabase/supabase-js");
 const {
   json,
   cookie,
@@ -9,6 +8,7 @@ const {
   isValidPassword,
   USER_SESSION_SECONDS
 } = require("./_shared/auth");
+const { db } = require("./_shared/supabase");
 
 const hits = new Map();
 const WINDOW_MS = 15 * 60 * 1000;
@@ -40,12 +40,6 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-function db() {
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false }
-  });
-}
-
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed" });
 
@@ -68,11 +62,23 @@ exports.handler = async (event) => {
     }
 
     const supabase = db();
-    const { data: account, error } = await supabase
+    let account = null;
+    let error = null;
+
+    ({ data: account, error } = await supabase
       .from("accounts")
-      .select("id, username, password_hash, status")
+      .select("id, username, password_hash, status, is_premium")
       .eq("username", username)
-      .maybeSingle();
+      .maybeSingle());
+
+    if (error) {
+      // column might not exist yet
+      ({ data: account, error } = await supabase
+        .from("accounts")
+        .select("id, username, password_hash, status")
+        .eq("username", username)
+        .maybeSingle());
+    }
 
     if (error) {
       console.error(error);
@@ -126,10 +132,16 @@ exports.handler = async (event) => {
       .then(() => {})
       .catch(() => {});
 
+    const isPremium = account.is_premium === true;
     const session = await makeToken("user", account.id);
     return json(
       200,
-      { ok: true, status: "approved", username: account.username },
+      {
+        ok: true,
+        status: "approved",
+        username: account.username,
+        is_premium: isPremium
+      },
       { "Set-Cookie": cookie("akkomusic_user", session, USER_SESSION_SECONDS) }
     );
   } catch (error) {
