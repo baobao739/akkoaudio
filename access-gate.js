@@ -86,9 +86,7 @@
       color: rgba(250,250,250,0.9); margin-bottom: 2.5rem;
     }
     .akkomusic-access-logo span { font-weight: 700; }
-    .akkomusic-access-logo svg {
-      filter: drop-shadow(0 0 12px rgba(255,255,255,0.15));
-    }
+    .akkomusic-access-logo svg { filter: drop-shadow(0 0 12px rgba(255,255,255,0.15)); }
     .akkomusic-access-eyebrow {
       text-align: center; font-size: 0.65rem; font-weight: 700;
       letter-spacing: 0.22em; text-transform: uppercase;
@@ -126,38 +124,23 @@
       width: 100%; margin-top: 0.65rem; padding: 1.05rem 1.5rem; border: 0; border-radius: 999px;
       cursor: pointer; background: linear-gradient(180deg, #ffffff 0%, #e8e8ec 100%);
       color: #0a0a0b; font-size: 1.02rem; font-weight: 650; font-family: inherit;
-      box-shadow:
-        0 1px 0 rgba(255,255,255,1) inset,
-        0 1px 2px rgba(0,0,0,0.08),
-        0 10px 28px rgba(0,0,0,0.35);
+      box-shadow: 0 1px 0 rgba(255,255,255,1) inset, 0 1px 2px rgba(0,0,0,0.08), 0 10px 28px rgba(0,0,0,0.35);
       transition: transform 0.15s ease, opacity 0.2s, box-shadow 0.2s, filter 0.2s;
     }
     .akkomusic-access-button:hover:not(:disabled) {
       filter: brightness(1.03);
-      box-shadow:
-        0 1px 0 rgba(255,255,255,1) inset,
-        0 1px 2px rgba(0,0,0,0.08),
-        0 14px 36px rgba(0,0,0,0.4);
+      box-shadow: 0 1px 0 rgba(255,255,255,1) inset, 0 1px 2px rgba(0,0,0,0.08), 0 14px 36px rgba(0,0,0,0.4);
     }
     .akkomusic-access-button:active:not(:disabled) { transform: scale(0.98); }
     .akkomusic-access-button:disabled { opacity: .4; cursor: not-allowed; filter: none; }
-    .akkomusic-access-error {
-      min-height: 20px; margin-top: 1.1rem; color: #fb7185; font-size: 0.85rem;
-      font-weight: 600; text-align: center;
-    }
-    .akkomusic-access-ok {
-      min-height: 20px; margin-top: 1.1rem; color: #4ade80; font-size: 0.85rem;
-      font-weight: 600; text-align: center;
-    }
+    .akkomusic-access-error { min-height: 20px; margin-top: 1.1rem; color: #fb7185; font-size: 0.85rem; font-weight: 600; text-align: center; }
+    .akkomusic-access-ok { min-height: 20px; margin-top: 1.1rem; color: #4ade80; font-size: 0.85rem; font-weight: 600; text-align: center; }
     .akkomusic-panel { display: none; width: 100%; }
     .akkomusic-panel.active { display: block; }
-    .akkomusic-access-switch {
-      margin-top: 2.25rem; color: #71717a; font-size: 0.9rem; text-align: center;
-    }
+    .akkomusic-access-switch { margin-top: 2.25rem; color: #71717a; font-size: 0.9rem; text-align: center; }
     .akkomusic-access-switch a {
       color: #fafafa; text-decoration: none; font-weight: 600;
-      border-bottom: 1px solid rgba(250,250,250,0.25);
-      transition: border-color 0.2s, color 0.2s;
+      border-bottom: 1px solid rgba(250,250,250,0.25); transition: border-color 0.2s;
     }
     .akkomusic-access-switch a:hover { border-bottom-color: #fafafa; }
     .akkomusic-access-back {
@@ -196,8 +179,7 @@
     .onboard-btn {
       border-radius: 999px !important; font-weight: 650 !important;
       background: linear-gradient(180deg, #fff 0%, #e8e8ec 100%) !important;
-      color: #0a0a0b !important; border: 0 !important;
-      padding: 0.95rem 1.5rem !important;
+      color: #0a0a0b !important; border: 0 !important; padding: 0.95rem 1.5rem !important;
     }
     .onboard-btn.onboard-back {
       background: transparent !important; color: #fafafa !important;
@@ -222,12 +204,7 @@
 
   function lightenHex(hex, amount) {
     const { r, g, b } = hexToRgb(hex);
-    return (
-      "#" +
-      [r, g, b]
-        .map((v) => Math.min(255, Math.round(v + (255 - v) * amount)).toString(16).padStart(2, "0"))
-        .join("")
-    );
+    return "#" + [r, g, b].map((v) => Math.min(255, Math.round(v + (255 - v) * amount)).toString(16).padStart(2, "0")).join("");
   }
 
   function applyBwGateColors() {
@@ -269,18 +246,14 @@
   function unlockUI() {
     document.body.classList.remove("akkomusic-gate-locked", "akkomusic-awaiting-access");
     clearPreverify();
+    try { document.body.style.overflow = ""; } catch (_) {}
   }
 
   async function checkSession() {
     try {
-      const res = await fetch(SESSION_URL, {
-        method: "GET", credentials: "include", cache: "no-store"
-      });
+      const res = await fetch(SESSION_URL, { method: "GET", credentials: "include", cache: "no-store" });
       const data = await res.json().catch(() => ({}));
-      return {
-        valid: !!(res.ok && data.valid && data.unlocked),
-        reason: data.reason || data.status || null
-      };
+      return { valid: !!(res.ok && data.valid && data.unlocked), reason: data.reason || data.status || null };
     } catch {
       return { valid: false, reason: "network" };
     }
@@ -317,15 +290,11 @@
     const isRegister = pathForGate === "/register" || preferSignupTab();
     const pageTitle = isRegister ? "Sign up" : "Log in";
     const pageSub =
-      statusHint === "pending"
-        ? "Your account is still pending approval."
-        : statusHint === "denied"
-        ? "This account was denied."
-        : statusHint === "revoked"
-        ? "Your access was revoked by the admin."
-        : isRegister
-        ? "Referral code required. Create your account to get in."
-        : "Welcome back. Enter your username and password.";
+      statusHint === "pending" ? "Your account is still pending approval."
+      : statusHint === "denied" ? "This account was denied."
+      : statusHint === "revoked" ? "Your access was revoked by the admin."
+      : isRegister ? "Referral code required. Create your account to get in."
+      : "Welcome back. Enter your username and password.";
 
     const savedCode = localStorage.getItem(REF_KEY) || "";
 
@@ -344,7 +313,6 @@
         <div class="akkomusic-access-eyebrow">${isRegister ? "Join" : "Welcome back"}</div>
         <h1 class="akkomusic-access-title">${pageTitle}</h1>
         <p class="akkomusic-access-subtitle">${pageSub}</p>
-
         <div class="akkomusic-panel ${isRegister ? "" : "active"}" id="panel-login">
           <div class="akkomusic-field-wrap">
             <label class="akkomusic-label" for="akko-login-user">Username</label>
@@ -358,7 +326,6 @@
           <div class="akkomusic-access-error" id="akko-login-error"></div>
           <p class="akkomusic-access-switch">New here? <a href="/register">Create an account</a></p>
         </div>
-
         <div class="akkomusic-panel ${isRegister ? "active" : ""}" id="panel-signup">
           <div class="akkomusic-field-wrap">
             <label class="akkomusic-label" for="akko-ref-code">Referral code</label>
@@ -524,8 +491,7 @@
     document.getElementById("akkomusic-verify-overlay")?.remove();
     const hint =
       session.reason === "pending" || session.reason === "denied" || session.reason === "revoked"
-        ? session.reason
-        : null;
+        ? session.reason : null;
     createGate(hint);
   }
 
@@ -534,7 +500,8 @@
   }
 
   function start() {
-    document.body.classList.add("akkomusic-awaiting-access");
+    document.documentElement.classList.add("akkomusic-preverify");
+    document.body.classList.add("akkomusic-awaiting-access", "akkomusic-gate-locked");
     if (isOnboardingDone()) {
       runGate();
       return;
