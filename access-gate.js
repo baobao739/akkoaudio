@@ -87,7 +87,6 @@
       color: rgba(250,250,250,0.9); margin-bottom: 2.5rem;
     }
     .akkomusic-access-logo span { font-weight: 700; }
-    .akkomusic-access-logo svg { filter: drop-shadow(0 0 12px rgba(255,255,255,0.15)); }
     .akkomusic-access-eyebrow {
       text-align: center; font-size: 0.65rem; font-weight: 700;
       letter-spacing: 0.22em; text-transform: uppercase;
@@ -128,11 +127,7 @@
       box-shadow: 0 1px 0 rgba(255,255,255,1) inset, 0 1px 2px rgba(0,0,0,0.08), 0 10px 28px rgba(0,0,0,0.35);
       transition: transform 0.15s ease, opacity 0.2s, box-shadow 0.2s, filter 0.2s;
     }
-    .akkomusic-access-button:hover:not(:disabled) {
-      filter: brightness(1.03);
-      box-shadow: 0 1px 0 rgba(255,255,255,1) inset, 0 1px 2px rgba(0,0,0,0.08), 0 14px 36px rgba(0,0,0,0.4);
-    }
-    .akkomusic-access-button:active:not(:disabled) { transform: scale(0.98); }
+    .akkomusic-access-button:hover:not(:disabled) { filter: brightness(1.03); }
     .akkomusic-access-button:disabled { opacity: .4; cursor: not-allowed; filter: none; }
     .akkomusic-access-error { min-height: 20px; margin-top: 1.1rem; color: #fb7185; font-size: 0.85rem; font-weight: 600; text-align: center; }
     .akkomusic-access-ok { min-height: 20px; margin-top: 1.1rem; color: #4ade80; font-size: 0.85rem; font-weight: 600; text-align: center; }
@@ -141,14 +136,12 @@
     .akkomusic-access-switch { margin-top: 2.25rem; color: #71717a; font-size: 0.9rem; text-align: center; }
     .akkomusic-access-switch a {
       color: #fafafa; text-decoration: none; font-weight: 600;
-      border-bottom: 1px solid rgba(250,250,250,0.25); transition: border-color 0.2s;
+      border-bottom: 1px solid rgba(250,250,250,0.25);
     }
-    .akkomusic-access-switch a:hover { border-bottom-color: #fafafa; }
     .akkomusic-access-back {
       margin-top: 2.5rem; color: #52525b; font-size: 0.8rem; text-decoration: none;
-      letter-spacing: 0.03em; text-align: center; display: block; transition: color 0.2s;
+      text-align: center; display: block;
     }
-    .akkomusic-access-back:hover { color: #a1a1aa; }
     body.akkomusic-gate-locked .sidebar,
     body.akkomusic-gate-locked .main,
     body.akkomusic-gate-locked .bottom-player,
@@ -162,29 +155,15 @@
       pointer-events: none !important; user-select: none !important; visibility: hidden !important;
     }
     .onboarding { background: #050507 !important; backdrop-filter: none !important; }
-    .onboarding::before {
-      content: "" !important; position: absolute; inset: 0; pointer-events: none;
-      background:
-        radial-gradient(ellipse 90% 55% at 50% -20%, rgba(255,255,255,0.06), transparent 55%),
-        linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px) !important;
-      background-size: auto, 64px 64px, 64px 64px !important;
-      opacity: 1 !important;
-    }
     .onboard-card {
       background: transparent !important; border: none !important; box-shadow: none !important;
       backdrop-filter: none !important; border-radius: 0 !important;
       padding: 2rem 1.25rem !important; max-width: 420px !important; width: 100% !important;
     }
-    .onboard-card::before { display: none !important; }
     .onboard-btn {
       border-radius: 999px !important; font-weight: 650 !important;
       background: linear-gradient(180deg, #fff 0%, #e8e8ec 100%) !important;
       color: #0a0a0b !important; border: 0 !important; padding: 0.95rem 1.5rem !important;
-    }
-    .onboard-btn.onboard-back {
-      background: transparent !important; color: #fafafa !important;
-      border: 1px solid rgba(255,255,255,0.12) !important; box-shadow: none !important;
     }
   `;
 
@@ -272,15 +251,43 @@
     return overlay;
   }
 
-  function unlockFast() {
+  function unlockFast(opts) {
+    opts = opts || {};
+    try {
+      document.documentElement.classList.remove("akkomusic-preverify");
+      document.body.classList.remove("akkomusic-gate-locked", "akkomusic-awaiting-access");
+      document.body.style.overflow = "";
+      document.body.style.visibility = "";
+    } catch (_) {}
+
+    const v = document.getElementById("akkomusic-verify-overlay");
+    if (v) v.remove();
+    const a = document.getElementById("akkomusic-access-overlay");
+    if (a) a.remove();
+
+    try {
+      document.querySelectorAll(".sidebar, .main, .main-content, .bottom-player, .full-player, .queue-panel").forEach(function (el) {
+        el.style.visibility = "";
+        el.style.opacity = "";
+        el.style.pointerEvents = "";
+      });
+    } catch (_) {}
+
+    try { applySavedColors(); } catch (_) {}
+    try { if (typeof window.akkoRefreshPremium === "function") window.akkoRefreshPremium(); } catch (_) {}
+
     goHomeUrl();
-    const overlay = document.getElementById("akkomusic-verify-overlay");
-    if (overlay) {
-      overlay.classList.add("hidden");
-      setTimeout(() => overlay.remove(), 200);
+
+    const p = currentPath();
+    if (opts.navigate !== false && (p === "/login" || p === "/register" || p === "/app" || location.pathname.indexOf("login") >= 0)) {
+      try {
+        location.replace("/home");
+        return;
+      } catch (_) {
+        location.href = "/home";
+        return;
+      }
     }
-    document.getElementById("akkomusic-access-overlay")?.remove();
-    unlockUI();
   }
 
   function createGate(statusHint) {
@@ -303,14 +310,7 @@
     overlay.id = "akkomusic-access-overlay";
     overlay.innerHTML = `
       <div class="akkomusic-access-shell">
-        <div class="akkomusic-access-logo">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="6" cy="6" r="2"></circle><circle cx="12" cy="6" r="2"></circle><circle cx="18" cy="6" r="2"></circle>
-            <circle cx="6" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="18" cy="12" r="2"></circle>
-            <circle cx="6" cy="18" r="2"></circle><circle cx="12" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle>
-          </svg>
-          Akko<span>Music</span>
-        </div>
+        <div class="akkomusic-access-logo">Akko<span>Music</span></div>
         <div class="akkomusic-access-eyebrow">${isRegister ? "Join" : "Welcome back"}</div>
         <h1 class="akkomusic-access-title">${pageTitle}</h1>
         <p class="akkomusic-access-subtitle">${pageSub}</p>
@@ -393,9 +393,9 @@
           body: JSON.stringify({ username, password })
         });
         const data = await res.json().catch(() => ({}));
-        if (data.ok && data.status === "approved") {
+        if (data.ok && (data.status === "approved" || data.unlocked === true)) {
           loginBtn.textContent = "Done";
-          unlockFast();
+          unlockFast({ navigate: true });
           return;
         }
         if (data.status === "pending") loginErr.textContent = data.message || "Pending approval.";
@@ -456,8 +456,8 @@
             body: JSON.stringify({ username, password })
           });
           const ld = await lr.json().catch(() => ({}));
-          if (ld.ok && ld.status === "approved") {
-            unlockFast();
+          if (ld.ok && (ld.status === "approved" || ld.unlocked === true)) {
+            unlockFast({ navigate: true });
             return;
           }
           regOk.textContent = "Account created. Go to Log in.";
@@ -486,7 +486,7 @@
     showVerifying("…");
     const session = await checkSession();
     if (session.valid) {
-      unlockFast();
+      unlockFast({ navigate: false });
       return;
     }
     document.getElementById("akkomusic-verify-overlay")?.remove();
