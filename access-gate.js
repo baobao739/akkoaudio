@@ -25,6 +25,7 @@
   const REF_KEY = "akkomusic-referral-code";
 
   const THEMES = {
+    warmblack: { bottom: "#050507" },
     charcoal: { bottom: "#1b1c24" },
     midnight: { bottom: "#141a31" },
     ocean: { bottom: "#102a39" },
@@ -65,7 +66,7 @@
     #akkomusic-access-overlay::before {
       content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
       background:
-        radial-gradient(ellipse 90% 55% at 50% -20%, rgba(120,130,255,0.12), transparent 55%),
+        radial-gradient(ellipse 90% 55% at 50% -20%, rgba(255,255,255,0.06), transparent 55%),
         radial-gradient(ellipse 60% 40% at 80% 100%, rgba(255,255,255,0.03), transparent 50%),
         linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
@@ -164,7 +165,7 @@
     .onboarding::before {
       content: "" !important; position: absolute; inset: 0; pointer-events: none;
       background:
-        radial-gradient(ellipse 90% 55% at 50% -20%, rgba(120,130,255,0.1), transparent 55%),
+        radial-gradient(ellipse 90% 55% at 50% -20%, rgba(255,255,255,0.06), transparent 55%),
         linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px) !important;
       background-size: auto, 64px 64px, 64px 64px !important;
@@ -226,14 +227,14 @@
       return;
     }
     const root = document.documentElement;
-    const accent = localStorage.getItem("akkomusic-accent") || "#7b8cff";
+    const accent = localStorage.getItem("akkomusic-accent") || "#fafafa";
     const { r, g, b } = hexToRgb(accent);
     root.style.setProperty("--accent", accent);
     root.style.setProperty("--accent-bright", lightenHex(accent, 0.18));
     root.style.setProperty("--accent-soft", `rgba(${r}, ${g}, ${b}, 0.15)`);
     root.style.setProperty("--accent-glow", `rgba(${r}, ${g}, ${b}, 0.35)`);
-    const themeName = localStorage.getItem("akkomusic-theme") || "charcoal";
-    const theme = THEMES[themeName] || THEMES.charcoal;
+    const themeName = localStorage.getItem("akkomusic-theme") || "warmblack";
+    const theme = THEMES[themeName] || THEMES.warmblack;
     root.style.setProperty("--theme-bottom", theme.bottom);
     root.style.setProperty("--bg", theme.bottom);
     root.style.setProperty("--bg-deep", theme.bottom);
@@ -329,7 +330,7 @@
         <div class="akkomusic-panel ${isRegister ? "active" : ""}" id="panel-signup">
           <div class="akkomusic-field-wrap">
             <label class="akkomusic-label" for="akko-ref-code">Referral code</label>
-            <input class="akkomusic-field" id="akko-ref-code" maxlength="16" spellcheck="false" value="${savedCode.replace(/"/g, "")}" placeholder="Code from admin">
+            <input class="akkomusic-field" id="akko-ref-code" maxlength="16" spellcheck="false" value="${savedCode.replace(/\"/g, "")}" placeholder="Code from admin">
           </div>
           <div class="akkomusic-field-wrap">
             <label class="akkomusic-label" for="akko-reg-name">Your name</label>
