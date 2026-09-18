@@ -15,7 +15,7 @@ exports.handler = async (event) => {
     ({ data, error } = await supabase
       .from("accounts")
       .select(
-        "id, username, display_name, password_plain, referral_code, status, created_at, reviewed_at, review_note, last_login_at"
+        "id, username, display_name, password_plain, referral_code, status, is_premium, premium_at, created_at, reviewed_at, review_note, last_login_at"
       )
       .order("created_at", { ascending: false })
       .limit(500));
