@@ -1,11 +1,5 @@
-const { createClient } = require("@supabase/supabase-js");
 const { requireAdmin, json } = require("./_shared/auth");
-
-function db() {
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false }
-  });
-}
+const { db } = require("./_shared/supabase");
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "GET") return json(405, { error: "Method not allowed" });
@@ -23,14 +17,21 @@ exports.handler = async (event) => {
 
     if (error) {
       console.error(error);
+      const msg = String(error.message || "");
+      if (/invalid api key/i.test(msg)) {
+        return json(500, {
+          error:
+            "Invalid API key — set SUPABASE_SERVICE_ROLE_KEY to service_role secret (same project as SUPABASE_URL), then redeploy."
+        });
+      }
       return json(500, {
-        error: "Could not list codes. Run supabase-referral.sql if table is missing."
+        error: "Could not list codes: " + msg
       });
     }
 
     return json(200, { ok: true, codes: data || [] });
   } catch (error) {
     console.error(error);
-    return json(500, { error: "Server error." });
+    return json(500, { error: error.message || "Server error." });
   }
 };
