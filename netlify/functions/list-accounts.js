@@ -1,12 +1,5 @@
-const { createClient } = require("@supabase/supabase-js");
 const { requireAdmin, json } = require("./_shared/auth");
-
-function db() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("Supabase not configured");
-  return createClient(url, key, { auth: { persistSession: false } });
-}
+const { db } = require("./_shared/supabase");
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "GET") return json(405, { error: "Method not allowed" });
@@ -44,7 +37,7 @@ exports.handler = async (event) => {
         approved: [],
         denied: [],
         revoked: [],
-        warning: error.message || "Could not read accounts table. Check Supabase schema."
+        warning: error.message || "Could not read accounts table."
       });
     }
 
