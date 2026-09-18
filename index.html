@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13758,6 +13759,16 @@ html.akko-premium #akkoPremiumStatus::before { content: "Premium active — "; c
   function applyPremium() {
     document.documentElement.classList.remove("akko-free");
     document.documentElement.classList.add("akko-premium");
+    try { localStorage.setItem("akkomusic-is-premium", "1"); } catch (_) {}
+    document.querySelectorAll('[data-premium-only="1"], .akko-premium-locked').forEach(function (el) {
+      el.classList.remove("akko-premium-locked");
+      el.style.display = "";
+    });
+    document.querySelectorAll(".theme-option, .accent-swatch, [data-focus-bg]").forEach(function (el) {
+      el.style.display = "";
+    });
+    var redeem = document.getElementById("akkoPremiumRedeem");
+    if (redeem) redeem.style.display = "none";
     var st = document.getElementById("akkoPremiumStatus");
     if (st) st.textContent = "All themes, accents, and focus backgrounds unlocked.";
   }
@@ -13801,8 +13812,24 @@ html.akko-premium #akkoPremiumStatus::before { content: "Premium active — "; c
           if (msg) { msg.textContent = d.error || "Could not redeem."; msg.style.color = "#fb7185"; }
         } else {
           isPremium = true;
+          try { localStorage.setItem("akkomusic-is-premium", "1"); } catch (_) {}
           applyPremium();
+          // Instant unlock — no refresh needed
+          document.documentElement.classList.remove("akko-free");
+          document.documentElement.classList.add("akko-premium");
+          document.querySelectorAll('[data-premium-only="1"], .akko-premium-locked').forEach(function (el) {
+            el.classList.remove("akko-premium-locked");
+            el.style.display = "";
+            el.style.visibility = "";
+            el.style.pointerEvents = "";
+          });
+          document.querySelectorAll(".theme-option, .accent-swatch, [data-focus-bg]").forEach(function (el) {
+            el.style.display = "";
+          });
+          var redeem = document.getElementById("akkoPremiumRedeem");
+          if (redeem) redeem.style.display = "none";
           if (msg) { msg.textContent = d.message || "Premium unlocked!"; msg.style.color = "#4ade80"; }
+          try { if (window.akkoRefreshPremium) window.akkoRefreshPremium(); } catch (_) {}
         }
       } catch (_) {
         if (msg) { msg.textContent = "Network error."; msg.style.color = "#fb7185"; }
