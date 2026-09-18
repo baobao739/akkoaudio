@@ -1,11 +1,5 @@
-const { createClient } = require("@supabase/supabase-js");
 const { json, getCookie, parseToken, clearCookie } = require("./_shared/auth");
-
-function db() {
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false }
-  });
-}
+const { db } = require("./_shared/supabase");
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "GET" && event.httpMethod !== "POST") {
@@ -16,25 +10,36 @@ exports.handler = async (event) => {
     const raw = getCookie(event, "akkomusic_user");
     const parsed = await parseToken(raw, "user");
     if (!parsed.ok || !parsed.extra) {
-      return json(200, { valid: false, unlocked: false, reason: "missing" });
+      return json(200, { valid: false, unlocked: false, reason: "missing", is_premium: false });
     }
 
     const supabase = db();
-    const { data, error } = await supabase
+    let data = null;
+    let error = null;
+
+    ({ data, error } = await supabase
       .from("accounts")
-      .select("id, username, status")
+      .select("id, username, status, is_premium")
       .eq("id", parsed.extra)
-      .maybeSingle();
+      .maybeSingle());
+
+    if (error) {
+      ({ data, error } = await supabase
+        .from("accounts")
+        .select("id, username, status")
+        .eq("id", parsed.extra)
+        .maybeSingle());
+    }
 
     if (error) {
       console.error(error);
-      return json(200, { valid: false, unlocked: false, reason: "error" });
+      return json(200, { valid: false, unlocked: false, reason: "error", is_premium: false });
     }
 
     if (!data) {
       return json(
         200,
-        { valid: false, unlocked: false, reason: "invalid" },
+        { valid: false, unlocked: false, reason: "invalid", is_premium: false },
         { "Set-Cookie": clearCookie("akkomusic_user") }
       );
     }
@@ -46,7 +51,8 @@ exports.handler = async (event) => {
           valid: false,
           unlocked: false,
           reason: data.status,
-          status: data.status
+          status: data.status,
+          is_premium: false
         },
         { "Set-Cookie": clearCookie("akkomusic_user") }
       );
@@ -56,10 +62,11 @@ exports.handler = async (event) => {
       valid: true,
       unlocked: true,
       username: data.username,
-      status: "approved"
+      status: "approved",
+      is_premium: data.is_premium === true
     });
   } catch (error) {
     console.error(error);
-    return json(200, { valid: false, unlocked: false, reason: "error" });
+    return json(200, { valid: false, unlocked: false, reason: "error", is_premium: false });
   }
 };
