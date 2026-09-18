@@ -1,12 +1,5 @@
-const { createClient } = require("@supabase/supabase-js");
 const { requireAdmin, json } = require("./_shared/auth");
-
-function db() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("Supabase not configured");
-  return createClient(url, key, { auth: { persistSession: false } });
-}
+const { db } = require("./_shared/supabase");
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed" });
@@ -23,20 +16,32 @@ exports.handler = async (event) => {
     if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
       return json(400, { error: "Invalid account id." });
     }
-    if (!["approve", "deny", "revoke", "delete"].includes(action)) {
-      return json(400, { error: "action must be approve, deny, revoke, or delete." });
+    if (!["approve", "deny", "revoke", "delete", "grant_premium", "remove_premium"].includes(action)) {
+      return json(400, {
+        error: "action must be approve, deny, revoke, delete, grant_premium, or remove_premium."
+      });
     }
 
     const supabase = db();
 
-    const { data: existing, error: findError } = await supabase
+    let row = null;
+    let findError = null;
+    ({ data: row, error: findError } = await supabase
       .from("accounts")
-      .select("id, username, status")
+      .select("id, username, status, is_premium")
       .eq("id", id)
-      .maybeSingle();
+      .maybeSingle());
 
-    if (findError) throw findError;
-    if (!existing) return json(404, { error: "Account not found." });
+    if (findError) {
+      const fb = await supabase.from("accounts").select("id, username, status").eq("id", id).maybeSingle();
+      if (fb.error) throw fb.error;
+      row = fb.data;
+      if (action === "grant_premium" || action === "remove_premium") {
+        return json(500, { error: "Run supabase-premium.sql first (is_premium column missing)." });
+      }
+    }
+
+    if (!row) return json(404, { error: "Account not found." });
 
     if (action === "delete") {
       const { error } = await supabase.from("accounts").delete().eq("id", id);
@@ -44,36 +49,53 @@ exports.handler = async (event) => {
       return json(200, { ok: true, deleted: true, id });
     }
 
-    if (action === "approve") {
-      if (!["pending", "denied", "revoked"].includes(existing.status)) {
-        return json(400, { error: `Cannot approve account that is ${existing.status}.` });
-      }
+    if (action === "grant_premium") {
       const { data, error } = await supabase
         .from("accounts")
         .update({
-          status: "approved",
-          reviewed_at: new Date().toISOString(),
-          review_note: note
+          is_premium: true,
+          premium_at: new Date().toISOString(),
+          premium_code: note || "ADMIN"
         })
+        .eq("id", id)
+        .select("id, username, is_premium, premium_at")
+        .maybeSingle();
+      if (error) throw error;
+      return json(200, { ok: true, account: data });
+    }
+
+    if (action === "remove_premium") {
+      const { data, error } = await supabase
+        .from("accounts")
+        .update({ is_premium: false, premium_at: null, premium_code: null })
+        .eq("id", id)
+        .select("id, username, is_premium")
+        .maybeSingle();
+      if (error) throw error;
+      return json(200, { ok: true, account: data });
+    }
+
+    if (action === "approve") {
+      if (!["pending", "denied", "revoked"].includes(row.status)) {
+        return json(400, { error: "Cannot approve account that is " + row.status + "." });
+      }
+      const { data, error } = await supabase
+        .from("accounts")
+        .update({ status: "approved", reviewed_at: new Date().toISOString(), review_note: note })
         .eq("id", id)
         .select("id, username, status, reviewed_at")
         .maybeSingle();
       if (error) throw error;
-      if (!data) return json(409, { error: "Could not update account." });
       return json(200, { ok: true, account: data });
     }
 
     if (action === "deny") {
-      if (existing.status !== "pending") {
-        return json(400, { error: `Only pending accounts can be denied (current: ${existing.status}).` });
+      if (row.status !== "pending") {
+        return json(400, { error: "Only pending accounts can be denied." });
       }
       const { data, error } = await supabase
         .from("accounts")
-        .update({
-          status: "denied",
-          reviewed_at: new Date().toISOString(),
-          review_note: note
-        })
+        .update({ status: "denied", reviewed_at: new Date().toISOString(), review_note: note })
         .eq("id", id)
         .eq("status", "pending")
         .select("id, username, status, reviewed_at")
@@ -83,8 +105,8 @@ exports.handler = async (event) => {
       return json(200, { ok: true, account: data });
     }
 
-    if (existing.status !== "approved") {
-      return json(400, { error: `Only approved accounts can be revoked (current: ${existing.status}).` });
+    if (row.status !== "approved") {
+      return json(400, { error: "Only approved accounts can be revoked." });
     }
 
     const { data, error } = await supabase
@@ -104,6 +126,6 @@ exports.handler = async (event) => {
     return json(200, { ok: true, account: data });
   } catch (error) {
     console.error(error);
-    return json(500, { error: "Server error." });
+    return json(500, { error: error.message || "Server error." });
   }
 };
