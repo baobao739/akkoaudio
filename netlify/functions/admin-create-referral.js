@@ -1,17 +1,25 @@
+const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 const { requireAdmin, json } = require("./_shared/auth");
 
 function db() {
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false }
+  const url = String(process.env.SUPABASE_URL || "").trim();
+  const key = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+  if (!url || !key) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  }
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false }
   });
 }
 
-function randomCode(len = 8) {
+function randomCode(len) {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const bytes = crypto.getRandomValues(new Uint8Array(len));
+  const bytes = crypto.randomBytes(len || 8);
   let out = "";
-  for (let i = 0; i < len; i++) out += alphabet[bytes[i] % alphabet.length];
+  for (let i = 0; i < bytes.length; i++) {
+    out += alphabet[bytes[i] % alphabet.length];
+  }
   return out;
 }
 
@@ -19,7 +27,7 @@ exports.handler = async (event) => {
   if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed" });
 
   const auth = await requireAdmin(event);
-  if (!auth.ok) return json(401, { error: "Unauthorized" });
+  if (!auth.ok) return json(401, { error: "Unauthorized — log in to admin again" });
 
   try {
     const body = JSON.parse(event.body || "{}");
@@ -32,42 +40,68 @@ exports.handler = async (event) => {
     if (!Number.isFinite(count) || count < 1) count = 1;
     if (count > 50) count = 50;
 
-    const supabase = db();
+    let supabase;
+    try {
+      supabase = db();
+    } catch (e) {
+      console.error(e);
+      return json(500, { error: "Server missing Supabase env vars" });
+    }
+
     const created = [];
 
     for (let i = 0; i < count; i++) {
-      let code = randomCode(8);
-      for (let attempt = 0; attempt < 5; attempt++) {
+      let inserted = false;
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const code = randomCode(8);
+        const row = {
+          code,
+          label: label ? (count > 1 ? label + " #" + (i + 1) : label) : null,
+          max_uses,
+          use_count: 0
+        };
+
         const { data, error } = await supabase
           .from("referral_codes")
-          .insert({
-            code,
-            label: label ? (count > 1 ? `${label} #${i + 1}` : label) : null,
-            max_uses
-          })
+          .insert(row)
           .select("id, code, label, max_uses, use_count, created_at")
           .single();
 
         if (!error && data) {
           created.push(data);
+          inserted = true;
           break;
         }
-        if (error && error.code === "23505") {
-          code = randomCode(8);
+
+        // unique collision — retry new code
+        if (error && (error.code === "23505" || /duplicate/i.test(String(error.message || "")))) {
           continue;
         }
-        if (error) {
-          console.error(error);
+
+        console.error("referral insert error", error);
+        const msg = error && error.message ? String(error.message) : "unknown";
+        // common cases
+        if (/relation .* does not exist/i.test(msg) || error.code === "42P01") {
           return json(500, {
-            error: "Could not create code. Run supabase-referral.sql in Supabase first."
+            error: "Table referral_codes missing. Re-run the SQL in Supabase."
           });
         }
+        if (/permission denied|rls/i.test(msg)) {
+          return json(500, {
+            error: "Permission denied. Use SUPABASE_SERVICE_ROLE_KEY (not anon key) in Netlify."
+          });
+        }
+        return json(500, { error: "Could not create code: " + msg });
+      }
+
+      if (!inserted) {
+        return json(500, { error: "Could not create unique code after retries." });
       }
     }
 
     return json(200, { ok: true, codes: created });
   } catch (error) {
     console.error(error);
-    return json(400, { error: "Invalid request." });
+    return json(400, { error: "Invalid request: " + (error && error.message ? error.message : "") });
   }
 };
