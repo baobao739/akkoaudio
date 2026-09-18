@@ -3,9 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5">
-<meta name="theme-color" content="#0a0a12">
+<meta name="theme-color" content="#050507">
 <title>AkkoMusic</title>
 <script src="/gate-boot.js"></script>
+
+<script id="akko-early-theme">
+(function(){
+  try {
+    var prem = localStorage.getItem("akkomusic-is-premium") === "1";
+    var accent = prem ? (localStorage.getItem("akkomusic-accent") || "#fafafa") : "#fafafa";
+    var theme = prem ? (localStorage.getItem("akkomusic-theme") || "warmblack") : "warmblack";
+    if (!prem) {
+      try {
+        localStorage.setItem("akkomusic-accent", "#fafafa");
+        localStorage.setItem("akkomusic-theme", "warmblack");
+        localStorage.setItem("akkomusic-focus-bg", "dynamic");
+      } catch (e) {}
+    }
+    var r = document.documentElement;
+    r.style.setProperty("--accent", accent);
+    r.style.setProperty("--accent-bright", accent === "#fafafa" || accent === "#ffffff" ? "#ffffff" : accent);
+    r.style.setProperty("--accent-soft", "rgba(250,250,250,0.14)");
+    r.style.setProperty("--accent-glow", "rgba(250,250,250,0.28)");
+    if (theme === "warmblack" || !prem) {
+      r.style.setProperty("--theme-top", "#121214");
+      r.style.setProperty("--theme-mid", "#0a0a0c");
+      r.style.setProperty("--theme-bottom", "#050507");
+      r.style.setProperty("--bg", "#050507");
+      r.style.setProperty("--bg-deep", "#050507");
+    }
+  } catch (e) {}
+})();
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,38 +49,38 @@
 @property --accent {
     syntax: "<color>";
     inherits: true;
-    initial-value: #7b8cff;
+    initial-value: #fafafa;
 }
 
 @property --accent-bright {
     syntax: "<color>";
     inherits: true;
-    initial-value: #a8b4ff;
+    initial-value: #ffffff;
 }
 
 @property --accent-soft {
     syntax: "<color>";
     inherits: true;
-    initial-value: rgba(123, 140, 255, 0.28);
+    initial-value: rgba(250, 250, 250, 0.14);
 }
 
 @property --accent-glow {
     syntax: "<color>";
     inherits: true;
-    initial-value: rgba(123, 140, 255, 0.55);
+    initial-value: rgba(250, 250, 250, 0.28);
 }
 
 :root {
-    --bg: #0e0f18;
-    --bg-deep: #08090f;
+    --bg: #050507;
+    --bg-deep: #050507;
     --surface: color-mix(in srgb, var(--accent) 14%, rgba(255, 255, 255, 0.08));
     --surface-2: color-mix(in srgb, var(--accent) 18%, rgba(255, 255, 255, 0.11));
     --surface-3: color-mix(in srgb, var(--accent) 24%, rgba(255, 255, 255, 0.16));
 
-    --accent: #7b8cff;
-    --accent-bright: #a8b4ff;
-    --accent-soft: rgba(123, 140, 255, 0.28);
-    --accent-glow: rgba(123, 140, 255, 0.55);
+    --accent: #fafafa;
+    --accent-bright: #ffffff;
+    --accent-soft: rgba(250, 250, 250, 0.14);
+    --accent-glow: rgba(250, 250, 250, 0.28);
 
     --text: #f7f7fb;
     --text-soft: #d4d4e4;
@@ -85,16 +115,16 @@
     --ease: cubic-bezier(0.22, 0.8, 0.24, 1);
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
-    --theme-top: #2e3040;
-    --theme-mid: #1e2030;
-    --theme-bottom: #12141e;
-    --theme-bloom: rgba(123, 140, 255, 0.22);
-    --theme-side-top: rgba(72, 74, 92, 0.88);
-    --theme-side-bottom: rgba(42, 44, 58, 0.86);
-    --theme-panel: rgba(58, 60, 76, 0.92);
-    --theme-queue: rgba(62, 64, 80, 0.95);
-    --theme-focus: #1a1c28;
-    --theme-topbar: color-mix(in srgb, var(--accent) 16%, rgba(40, 42, 56, 0.72));
+    --theme-top: #121214;
+    --theme-mid: #0a0a0c;
+    --theme-bottom: #050507;
+    --theme-bloom: rgba(255, 255, 255, 0.06);
+    --theme-side-top: rgba(30, 30, 34, 0.90);
+    --theme-side-bottom: rgba(18, 18, 20, 0.88);
+    --theme-panel: rgba(28, 28, 32, 0.94);
+    --theme-queue: rgba(32, 32, 36, 0.95);
+    --theme-focus: #0c0c0e;
+    --theme-topbar: color-mix(in srgb, var(--accent) 10%, rgba(18, 18, 20, 0.78));
 
     color-scheme: dark;
 
@@ -5258,16 +5288,17 @@ body::after {
     <div class="onboard-card">
 
         <div class="onboard-step active" id="onboardStepWelcome">
-            <div class="onboard-progress" aria-hidden="true"><span class="on"></span><span class=""></span><span class=""></span></div>
+            <div class="onboard-progress" aria-hidden="true"><span class="on"></span></div>
             <div class="onboard-kicker">Welcome</div>
             <h2 class="onboard-title">Welcome to Akko<span>Music</span></h2>
             <p class="onboard-text">
                 Your personal music player. High quality tracks, synced lyrics, and a clean focus mode built for listening.
             </p>
-            <button class="onboard-btn" id="onboardContinue" type="button">Continue</button>
+            <p class="onboard-text" style="margin-top:8px;opacity:.75;font-size:13px">Free plan includes Warm Black + white accent. Unlock more in Settings → Premium.</p>
+            <button class="onboard-btn" id="onboardContinue" type="button">Get started</button>
         </div>
 
-        <div class="onboard-step" id="onboardStepTheme">
+        <div class="onboard-step" id="onboardStepTheme" style="display:none !important" aria-hidden="true">
             <div class="onboard-progress" aria-hidden="true"><span class=""></span><span class="on"></span><span class=""></span></div>
             <div class="onboard-kicker">Personalize</div>
             <h2 class="onboard-title" style="font-size: clamp(24px, 4.5vw, 30px);">Choose your theme</h2>
@@ -5279,19 +5310,19 @@ body::after {
             </div>
         </div>
 
-        <div class="onboard-step" id="onboardStepAccent">
+        <div class="onboard-step" id="onboardStepAccent" style="display:none !important" aria-hidden="true">
             <div class="onboard-progress" aria-hidden="true"><span class=""></span><span class=""></span><span class="on"></span></div>
             <div class="onboard-kicker">Personalize</div>
             <h2 class="onboard-title" style="font-size: clamp(24px, 4.5vw, 30px);">Choose your accent</h2>
             <p class="onboard-text">Choose any of the available accent colors.</p>
             <div class="onboard-swatches" id="onboardSwatches">
-                <button class="accent-swatch" data-accent="#7b8cff" style="background:#7b8cff" title="Blue" type="button"></button>
-                <button class="accent-swatch" data-accent="#86E3CE" style="background:#86E3CE" title="Mint" type="button"></button>
-                <button class="accent-swatch" data-accent="#D0E6A5" style="background:#D0E6A5" title="Lime" type="button"></button>
-                <button class="accent-swatch" data-accent="#FFDD94" style="background:#FFDD94" title="Butter" type="button"></button>
-                <button class="accent-swatch" data-accent="#FA897B" style="background:#FA897B" title="Coral" type="button"></button>
-                <button class="accent-swatch" data-accent="#CCABD8" style="background:#CCABD8" title="Lilac" type="button"></button>
-                <button class="accent-swatch" data-accent="#ffffff" style="background:#ffffff; border: 1px solid rgba(255,255,255,.35);" title="White" type="button"></button>
+                <button class="accent-swatch" data-accent="#7b8cff" data-premium-only="1" style="background:#7b8cff" title="Blue" type="button"></button>
+                <button class="accent-swatch" data-accent="#86E3CE" data-premium-only="1" style="background:#86E3CE" title="Mint" type="button"></button>
+                <button class="accent-swatch" data-accent="#D0E6A5" data-premium-only="1" style="background:#D0E6A5" title="Lime" type="button"></button>
+                <button class="accent-swatch" data-accent="#FFDD94" data-premium-only="1" style="background:#FFDD94" title="Butter" type="button"></button>
+                <button class="accent-swatch" data-accent="#FA897B" data-premium-only="1" style="background:#FA897B" title="Coral" type="button"></button>
+                <button class="accent-swatch" data-accent="#CCABD8" data-premium-only="1" style="background:#CCABD8" title="Lilac" type="button"></button>
+                <button class="accent-swatch active" data-accent="#fafafa" style="background:#fafafa; border: 1px solid rgba(255,255,255,.35);" title="White" type="button"></button>
                 <button class="accent-swatch" data-accent="#FF7AA2" style="background:#FF7AA2" title="Rose" type="button"></button>
                 <button class="accent-swatch" data-accent="#A78BFA" style="background:#A78BFA" title="Violet" type="button"></button>
                 <button class="accent-swatch" data-accent="#6DD6FF" style="background:#6DD6FF" title="Sky" type="button"></button>
@@ -5479,43 +5510,53 @@ body::after {
 
             <h2>Settings</h2>
 
+            <div class="settings-tabs" id="settingsTabs" role="tablist">
+                <button type="button" class="settings-tab active" data-settings-tab="appearance" role="tab" aria-selected="true">Appearance</button>
+                <button type="button" class="settings-tab" data-settings-tab="premium" role="tab" aria-selected="false">Premium</button>
+            </div>
 
-            <div class="settings-group">
+            <div class="settings-panel active" id="settingsPanelAppearance" data-settings-panel="appearance">
+
+            <div class="settings-group" id="settingsThemeGroup">
                 <div class="settings-label">Theme</div>
                 <div class="theme-row" id="themeRow" data-theme-picker>
-                    <button class="theme-option active" data-theme="charcoal" type="button">
+                    <button class="theme-option active" data-theme="warmblack" type="button">
+                        <span class="theme-preview" style="background:linear-gradient(160deg,#121214,#050507)"></span>
+                        <span>Warm Black</span>
+                    </button>
+                    <button class="theme-option" data-theme="charcoal" data-premium-only="1" type="button">
                         <span class="theme-preview charcoal"></span>
                         <span>Charcoal</span>
                     </button>
-                    <button class="theme-option" data-theme="midnight" type="button">
+                    <button class="theme-option" data-theme="midnight" data-premium-only="1" type="button">
                         <span class="theme-preview midnight"></span>
                         <span>Midnight</span>
                     </button>
-                    <button class="theme-option" data-theme="ocean" type="button">
+                    <button class="theme-option" data-theme="ocean" data-premium-only="1" type="button">
                         <span class="theme-preview ocean"></span>
                         <span>Ocean</span>
                     </button>
-                    <button class="theme-option" data-theme="plum" type="button">
+                    <button class="theme-option" data-theme="plum" data-premium-only="1" type="button">
                         <span class="theme-preview plum"></span>
                         <span>Plum</span>
                     </button>
-                    <button class="theme-option" data-theme="dawn" type="button">
+                    <button class="theme-option" data-theme="dawn" data-premium-only="1" type="button">
                         <span class="theme-preview dawn"></span>
                         <span>Dawn</span>
                     </button>
                 </div>
             </div>
 
-            <div class="settings-group">
+            <div class="settings-group" id="settingsAccentGroup">
                 <div class="settings-label">Accent Color</div>
                 <div class="accent-row" id="accentRow">
-                    <button class="accent-swatch active" data-accent="#7b8cff" style="background:#7b8cff" title="Blue"></button>
-                    <button class="accent-swatch" data-accent="#86E3CE" style="background:#86E3CE" title="Mint"></button>
-                    <button class="accent-swatch" data-accent="#D0E6A5" style="background:#D0E6A5" title="Lime"></button>
-                    <button class="accent-swatch" data-accent="#FFDD94" style="background:#FFDD94" title="Butter"></button>
-                    <button class="accent-swatch" data-accent="#FA897B" style="background:#FA897B" title="Coral"></button>
-                    <button class="accent-swatch" data-accent="#CCABD8" style="background:#CCABD8" title="Lilac"></button>
-                    <button class="accent-swatch" data-accent="#ffffff" style="background:#ffffff; border: 1px solid rgba(255,255,255,.35);" title="White"></button>
+                    <button class="accent-swatch" data-accent="#7b8cff" data-premium-only="1" style="background:#7b8cff" title="Blue"></button>
+                    <button class="accent-swatch" data-accent="#86E3CE" data-premium-only="1" style="background:#86E3CE" title="Mint"></button>
+                    <button class="accent-swatch" data-accent="#D0E6A5" data-premium-only="1" style="background:#D0E6A5" title="Lime"></button>
+                    <button class="accent-swatch" data-accent="#FFDD94" data-premium-only="1" style="background:#FFDD94" title="Butter"></button>
+                    <button class="accent-swatch" data-accent="#FA897B" data-premium-only="1" style="background:#FA897B" title="Coral"></button>
+                    <button class="accent-swatch" data-accent="#CCABD8" data-premium-only="1" style="background:#CCABD8" title="Lilac"></button>
+                    <button class="accent-swatch" data-accent="#fafafa" style="background:#ffffff; border: 1px solid rgba(255,255,255,.35);" title="White"></button>
 
                     <button class="accent-swatch" data-accent="#FF7AA2" style="background:#FF7AA2" title="Rose"></button>
                     <button class="accent-swatch" data-accent="#A78BFA" style="background:#A78BFA" title="Violet"></button>
@@ -5540,27 +5581,27 @@ body::after {
 
             <div class="settings-group">
                 <div class="settings-label">Focus Background</div>
-                <div class="focus-bg-row" id="focusBgRow">
+                <div class="focus-bg-row" id="focusBgRow" data-premium-focus-row>
                     <button class="focus-bg-option active" data-focus-bg="dynamic" type="button" aria-pressed="true">
                         <span class="focus-bg-preview dynamic" aria-hidden="true"></span>
                         <span class="focus-bg-name">Dynamic</span>
                         <span class="focus-bg-badge" aria-hidden="true">Selected</span>
                     </button>
-                    <button class="focus-bg-option" data-focus-bg="trees" type="button" aria-pressed="false">
+                    <button class="focus-bg-option" data-focus-bg="trees" data-premium-only="1" type="button" aria-pressed="false">
                         <span class="focus-bg-preview trees" aria-hidden="true">
                             <video muted playsinline preload="auto" src="covers/trees.mp4"></video>
                         </span>
                         <span class="focus-bg-name">Trees</span>
                         <span class="focus-bg-badge" aria-hidden="true">Selected</span>
                     </button>
-                    <button class="focus-bg-option" data-focus-bg="flowers" type="button" aria-pressed="false">
+                    <button class="focus-bg-option" data-focus-bg="flowers" data-premium-only="1" type="button" aria-pressed="false">
                         <span class="focus-bg-preview flowers" aria-hidden="true">
                             <video muted playsinline preload="auto" src="covers/flowers.mp4"></video>
                         </span>
                         <span class="focus-bg-name">Flowers</span>
                         <span class="focus-bg-badge" aria-hidden="true">Selected</span>
                     </button>
-                    <button class="focus-bg-option" data-focus-bg="akko" type="button" aria-pressed="false">
+                    <button class="focus-bg-option" data-focus-bg="akko" data-premium-only="1" type="button" aria-pressed="false">
                         <span class="focus-bg-preview akko" aria-hidden="true">
                             <video muted playsinline preload="auto" src="covers/akko.mp4"></video>
                         </span>
@@ -5576,6 +5617,32 @@ body::after {
                     Previews show the first frame of each video.
                 </p>
             </div>
+
+
+            </div><!-- end appearance panel -->
+
+            <div class="settings-panel" id="settingsPanelPremium" data-settings-panel="premium" hidden>
+
+            <div class="settings-group" id="akkoPremiumSettings">
+                <div class="settings-label">AkkoMusic Premium</div>
+                <div class="akko-premium-box" id="akkoPremiumBox">
+                    <h3 style="margin:0 0 8px;font-size:22px;font-weight:750;letter-spacing:-0.4px">Upgrade your look</h3>
+                    <p class="settings-hint" id="akkoPremiumStatus" style="margin-bottom:16px">Free plan: Warm Black theme, white accent, dynamic focus only. Premium unlocks every theme, accent color, and focus background (Trees, Flowers, Akko).</p>
+                    <ul class="settings-hint" style="margin:0 0 18px;padding-left:18px;line-height:1.7">
+                        <li>All color themes</li>
+                        <li>All accent colors</li>
+                        <li>Trees / Flowers / Akko focus videos</li>
+                    </ul>
+                    <div id="akkoPremiumRedeem" class="akko-premium-redeem">
+                        <div class="settings-label">Redeem code</div>
+                        <input id="akkoPremiumCode" type="text" maxlength="16" placeholder="Premium code" spellcheck="false" autocomplete="off" style="width:100%;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--glass-border);background:rgba(0,0,0,.25);color:var(--text);margin-bottom:10px;outline:0">
+                        <button type="button" id="akkoPremiumBtn" class="shuffle-btn" style="width:100%;justify-content:center">Unlock Premium</button>
+                        <p class="settings-hint" id="akkoPremiumMsg" style="margin-top:10px;min-height:1.2em"></p>
+                    </div>
+                </div>
+            </div>
+
+            </div><!-- end premium panel -->
 
             <p style="margin-top:28px; margin-bottom:0; font-size:13px; color:var(--muted);">
                 Theme, accent, and focus background are saved automatically.
@@ -5713,7 +5780,6 @@ body::after {
     <video
         id="focusVideo"
         class="focus-video"
-        src="covers/trees.mp4"
         muted
         defaultMuted
         loop
@@ -8632,6 +8698,12 @@ function applyAccent(hex) {
 
 /* THEME AND ACCENT SYSTEM */
 const appThemes = {
+    warmblack: {
+        top: "#121214", mid: "#0a0a0c", bottom: "#050507",
+        bloom: "rgba(255,255,255,.06)",
+        sideTop: "rgba(30,30,34,.90)", sideBottom: "rgba(18,18,20,.88)",
+        panel: "rgba(28,28,32,.94)", queue: "rgba(32,32,36,.95)", focus: "#0c0c0e"
+    },
     charcoal: {
         top: "#32333e", mid: "#242530", bottom: "#1b1c24",
         bloom: "rgba(112,133,196,.28)",
@@ -8665,7 +8737,7 @@ const appThemes = {
 };
 
 function applyTheme(name) {
-    const selectedName = appThemes[name] ? name : "charcoal";
+    const selectedName = appThemes[name] ? name : "warmblack";
     const theme = appThemes[selectedName];
     const root = document.documentElement;
 
@@ -8742,6 +8814,7 @@ Object.assign(appThemes, {
 });
 
 const appThemeLabels = {
+    warmblack: "Warm Black",
     charcoal: "Charcoal",
     midnight: "Midnight",
     ocean: "Ocean",
@@ -8758,7 +8831,7 @@ const appThemeLabels = {
 
 function renderThemePickers() {
     const rainbowThemeOrder = [
-        "ember", "dawn", "cocoa", "forest",
+        "warmblack", "ember", "dawn", "cocoa", "forest",
         "aurora", "ocean", "glacier", "midnight",
         "lavender", "plum", "rosewood", "charcoal"
     ];
@@ -8782,8 +8855,8 @@ function renderThemePickers() {
 
 function loadSettings() {
     renderThemePickers();
-    const savedAccent = localStorage.getItem("akkomusic-accent") || "#7b8cff";
-    const savedTheme = localStorage.getItem("akkomusic-theme") || "charcoal";
+    const savedAccent = localStorage.getItem("akkomusic-accent") || "#fafafa";
+    const savedTheme = localStorage.getItem("akkomusic-theme") || "warmblack";
     const savedFocusBg = localStorage.getItem("akkomusic-focus-bg") || "dynamic";
     applyTheme(savedTheme);
     applyAccent(savedAccent);
@@ -9032,8 +9105,17 @@ function startFocusVideo(mode) {
     const video = document.getElementById("focusVideo");
     if (!video) return;
 
-    const selected = normalizeFocusBg(mode || localStorage.getItem("akkomusic-focus-bg") || "trees");
-    const src = FOCUS_VIDEO_SRC[selected] || FOCUS_VIDEO_SRC.trees;
+    const selected = normalizeFocusBg(mode || localStorage.getItem("akkomusic-focus-bg") || "dynamic");
+    // Dynamic = album art motion — NEVER load trees/flowers/akko video
+    if (!isFocusVideoMode(selected)) {
+        stopFocusVideo();
+        return;
+    }
+    const src = FOCUS_VIDEO_SRC[selected];
+    if (!src) {
+        stopFocusVideo();
+        return;
+    }
     const token = ++focusVideoCtl.token;
 
     focusVideoCtl.wantPlay = true;
@@ -9206,6 +9288,17 @@ function isOnboardingDone() {
 }
 
 function completeOnboarding() {
+    try {
+      if (localStorage.getItem("akkomusic-is-premium") !== "1") {
+        localStorage.setItem("akkomusic-theme", "warmblack");
+        localStorage.setItem("akkomusic-accent", "#fafafa");
+        localStorage.setItem("akkomusic-focus-bg", "dynamic");
+        if (typeof applyTheme === "function") applyTheme("warmblack");
+        if (typeof applyAccent === "function") applyAccent("#fafafa");
+        if (typeof applyFocusBackground === "function") applyFocusBackground("dynamic");
+      }
+    } catch (_) {}
+
     localStorage.setItem("akkomusic-onboarded", "1");
     const el = document.getElementById("onboarding");
     if (!el) return;
@@ -9227,45 +9320,51 @@ function showOnboarding() {
     accent?.classList.remove("active");
 
     // Sync both personalization pickers to saved choices.
-    const currentTheme = localStorage.getItem("akkomusic-theme") || "charcoal";
-    const currentAccent = localStorage.getItem("akkomusic-accent") || "#7b8cff";
+    const currentTheme = localStorage.getItem("akkomusic-theme") || "warmblack";
+    const currentAccent = localStorage.getItem("akkomusic-accent") || "#fafafa";
     applyTheme(currentTheme);
     applyAccent(currentAccent);
 }
 
 function setupOnboarding() {
+    // Free users: no theme/accent onboarding — locked to Warm Black + white
+    function forceFreeLook() {
+        try {
+            if (localStorage.getItem("akkomusic-is-premium") === "1") return;
+            localStorage.setItem("akkomusic-theme", "warmblack");
+            localStorage.setItem("akkomusic-accent", "#fafafa");
+            localStorage.setItem("akkomusic-focus-bg", "dynamic");
+        } catch (_) {}
+        try { applyTheme("warmblack"); } catch (_) {}
+        try { applyAccent("#fafafa"); } catch (_) {}
+        try { applyFocusBackground("dynamic"); } catch (_) {}
+    }
+
     document.getElementById("onboardContinue")?.addEventListener("click", () => {
-        document.getElementById("onboardStepWelcome")?.classList.remove("active");
-        document.getElementById("onboardStepTheme")?.classList.add("active");
-    });
-
-    document.getElementById("onboardThemeBack")?.addEventListener("click", () => {
-        document.getElementById("onboardStepTheme")?.classList.remove("active");
-        document.getElementById("onboardStepWelcome")?.classList.add("active");
-    });
-
-    document.getElementById("onboardThemeContinue")?.addEventListener("click", () => {
-        document.getElementById("onboardStepTheme")?.classList.remove("active");
-        document.getElementById("onboardStepAccent")?.classList.add("active");
-    });
-
-    document.getElementById("onboardAccentBack")?.addEventListener("click", () => {
-        document.getElementById("onboardStepAccent")?.classList.remove("active");
-        document.getElementById("onboardStepTheme")?.classList.add("active");
-    });
-
-    document.getElementById("onboardSwatches")?.addEventListener("click", (e) => {
-        const btn = e.target.closest(".accent-swatch");
-        if (!btn) return;
-        applyAccent(btn.dataset.accent);
-    });
-
-    document.getElementById("onboardFinish")?.addEventListener("click", () => {
+        forceFreeLook();
         completeOnboarding();
     });
 
+    document.getElementById("onboardFinish")?.addEventListener("click", () => {
+        forceFreeLook();
+        completeOnboarding();
+    });
+
+    // Block any leftover theme/accent clicks during onboarding for free users
+    document.getElementById("onboarding")?.addEventListener("click", (e) => {
+        if (localStorage.getItem("akkomusic-is-premium") === "1") return;
+        if (e.target.closest("[data-premium-only=\"1\"]") || e.target.closest(".theme-option") || e.target.closest(".accent-swatch")) {
+            e.preventDefault();
+            e.stopPropagation();
+            forceFreeLook();
+        }
+    }, true);
+
     if (!isOnboardingDone()) {
+        forceFreeLook();
         showOnboarding();
+    } else {
+        forceFreeLook();
     }
 }
 
@@ -13535,13 +13634,20 @@ button {
 </style>
 
 <style id="akko-focus-video-pc-stable">
+/* ONLY show focus video in video modes — never in Dynamic */
+#focusVideo.focus-video,
+.full-player .focus-video {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  display: none !important;
+  pointer-events: none !important;
+}
 .full-player.focus-video-mode .focus-video,
-#focusVideo {
+.full-player.focus-video-mode #focusVideo {
   opacity: 1 !important;
   visibility: visible !important;
   display: block !important;
   pointer-events: none !important;
-  /* Own layer — helps desktop Chrome keep decoding under heavy CSS */
   transform: translateZ(0) !important;
   backface-visibility: hidden !important;
   -webkit-backface-visibility: hidden !important;
@@ -13551,6 +13657,194 @@ button {
   height: 100% !important;
 }
 </style>
+
+
+<style id="akko-settings-tabs">
+.settings-tabs{
+  display:flex;gap:8px;margin:0 0 22px;padding:4px;
+  border-radius:14px;background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+}
+.settings-tab{
+  flex:1;height:40px;border:0;border-radius:11px;cursor:pointer;
+  background:transparent;color:var(--muted);font-size:13px;font-weight:650;
+  font-family:inherit;transition:.2s ease;
+}
+.settings-tab:hover{color:var(--text);background:rgba(255,255,255,.05)}
+.settings-tab.active{
+  color:#0a0a0b;background:linear-gradient(180deg,#fff,#e8e8ec);
+  box-shadow:0 4px 16px rgba(0,0,0,.25);
+}
+.settings-panel[hidden]{display:none !important}
+.settings-panel{animation:fadeUp .35s var(--ease) both}
+#onboardStepTheme,#onboardStepAccent{display:none !important}
+html.akko-free #onboarding .theme-option:not([data-theme="warmblack"]),
+html.akko-free #onboarding .accent-swatch:not([data-accent="#fafafa"]):not([data-accent="#ffffff"]){
+  display:none !important;pointer-events:none !important;
+}
+</style>
+<style id="akko-premium-lock-css">
+html.akko-free [data-premium-only="1"] { display: none !important; }
+html.akko-free #settingsThemeGroup .theme-option[data-theme="warmblack"] { display: flex !important; }
+html.akko-free #settingsThemeGroup .theme-option[data-theme="charcoal"] { display: none !important; }
+html.akko-free #settingsAccentGroup .accent-swatch[data-accent="#fafafa"],
+html.akko-free #settingsAccentGroup .accent-swatch[data-accent="#ffffff"],
+html.akko-free #settingsAccentGroup .accent-swatch[title="White"] { display: inline-flex !important; }
+html.akko-free .focus-bg-option[data-focus-bg="dynamic"] { display: flex !important; }
+html.akko-free .settings-hint code { display: none; }
+.akko-premium-box { padding: 14px 0 4px; }
+html.akko-premium #akkoPremiumRedeem { display: none !important; }
+html.akko-premium #akkoPremiumStatus::before { content: "Premium active — "; color: #facc15; font-weight: 700; }
+</style>
+
+<script id="akko-settings-tabs-js">
+(function(){
+  function wire(){
+    var tabs = document.getElementById("settingsTabs");
+    if (!tabs || tabs._wired) return;
+    tabs._wired = true;
+    tabs.addEventListener("click", function(e){
+      var btn = e.target.closest("[data-settings-tab]");
+      if (!btn) return;
+      var name = btn.getAttribute("data-settings-tab");
+      tabs.querySelectorAll("[data-settings-tab]").forEach(function(b){
+        var on = b === btn;
+        b.classList.toggle("active", on);
+        b.setAttribute("aria-selected", on ? "true" : "false");
+      });
+      document.querySelectorAll("[data-settings-panel]").forEach(function(p){
+        var on = p.getAttribute("data-settings-panel") === name;
+        p.classList.toggle("active", on);
+        if (on) p.removeAttribute("hidden");
+        else p.setAttribute("hidden", "");
+      });
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire);
+  else wire();
+  setInterval(wire, 2000);
+})();
+</script>
 <script src="access-gate.js"></script>
+
+<script id="akko-premium-lock">
+(function () {
+  "use strict";
+  var FREE_THEME = "warmblack";
+  var FREE_ACCENT = "#fafafa";
+  var FREE_FOCUS = "dynamic";
+  var isPremium = false;
+
+  function applyFree() {
+    document.documentElement.classList.add("akko-free");
+    document.documentElement.classList.remove("akko-premium");
+    try {
+      localStorage.setItem("akkomusic-theme", FREE_THEME);
+      localStorage.setItem("akkomusic-accent", FREE_ACCENT);
+      localStorage.setItem("akkomusic-focus-bg", FREE_FOCUS);
+    } catch (_) {}
+    if (typeof applyTheme === "function") try { applyTheme(FREE_THEME); } catch (_) {}
+    if (typeof applyAccent === "function") try { applyAccent(FREE_ACCENT); } catch (_) {}
+    else {
+      var root = document.documentElement;
+      root.style.setProperty("--accent", FREE_ACCENT);
+      root.style.setProperty("--accent-bright", "#ffffff");
+    }
+    if (typeof applyFocusBackground === "function") try { applyFocusBackground(FREE_FOCUS); } catch (_) {}
+    var st = document.getElementById("akkoPremiumStatus");
+    if (st) st.textContent = "Free plan: warm black theme, white accent, dynamic focus only.";
+  }
+
+  function applyPremium() {
+    document.documentElement.classList.remove("akko-free");
+    document.documentElement.classList.add("akko-premium");
+    var st = document.getElementById("akkoPremiumStatus");
+    if (st) st.textContent = "All themes, accents, and focus backgrounds unlocked.";
+  }
+
+  async function check() {
+    try {
+      var r = await fetch("/.netlify/functions/verify-session", { credentials: "include", cache: "no-store" });
+      var d = await r.json().catch(function () { return {}; });
+      isPremium = !!(d.valid && d.is_premium);
+    } catch (_) {
+      isPremium = false;
+    }
+    if (isPremium) applyPremium();
+    else applyFree();
+  }
+
+  function wireRedeem() {
+    var btn = document.getElementById("akkoPremiumBtn");
+    var input = document.getElementById("akkoPremiumCode");
+    var msg = document.getElementById("akkoPremiumMsg");
+    if (!btn || btn._wired) return;
+    btn._wired = true;
+    btn.addEventListener("click", async function () {
+      if (msg) { msg.textContent = ""; msg.style.color = ""; }
+      var code = (input && input.value || "").trim().toUpperCase();
+      if (!code) {
+        if (msg) { msg.textContent = "Enter a code."; msg.style.color = "#fb7185"; }
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = "Checking…";
+      try {
+        var r = await fetch("/.netlify/functions/redeem-premium", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: code })
+        });
+        var d = await r.json().catch(function () { return {}; });
+        if (!r.ok || !d.ok) {
+          if (msg) { msg.textContent = d.error || "Could not redeem."; msg.style.color = "#fb7185"; }
+        } else {
+          isPremium = true;
+          applyPremium();
+          if (msg) { msg.textContent = d.message || "Premium unlocked!"; msg.style.color = "#4ade80"; }
+        }
+      } catch (_) {
+        if (msg) { msg.textContent = "Network error."; msg.style.color = "#fb7185"; }
+      }
+      btn.disabled = false;
+      btn.textContent = "Unlock Premium";
+    });
+  }
+
+  // Block clicks on premium options while free
+  document.addEventListener("click", function (e) {
+    if (isPremium) return;
+    var t = e.target.closest("[data-premium-only=\"1\"]");
+    if (t) {
+      e.preventDefault();
+      e.stopPropagation();
+      var st = document.getElementById("akkoPremiumStatus");
+      if (st) st.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, true);
+
+  function start() {
+    wireRedeem();
+    check();
+    setInterval(function () {
+      wireRedeem();
+      if (!isPremium) {
+        // keep free defaults sticky if user somehow changes them
+        try {
+          if (localStorage.getItem("akkomusic-focus-bg") !== FREE_FOCUS) {
+            localStorage.setItem("akkomusic-focus-bg", FREE_FOCUS);
+            if (typeof applyFocusBackground === "function") applyFocusBackground(FREE_FOCUS);
+          }
+        } catch (_) {}
+      }
+    }, 2500);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+  else start();
+})();
+</script>
+
+<script src="/premium-lock.js"></script>
 </body>
 </html>
