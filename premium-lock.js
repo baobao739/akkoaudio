@@ -6,6 +6,7 @@
   const FREE_FOCUS = "dynamic";
 
   let isPremium = false;
+  let checkedOnce = false;
 
   function applyFreeDefaults() {
     try {
@@ -16,6 +17,8 @@
     } catch (_) {}
 
     const root = document.documentElement;
+    root.classList.add("akko-free");
+    root.classList.remove("akko-premium");
     root.style.setProperty("--accent", FREE_ACCENT);
     root.style.setProperty("--accent-bright", "#ffffff");
     root.style.setProperty("--accent-soft", "rgba(250,250,250,0.14)");
@@ -25,6 +28,12 @@
     root.style.setProperty("--theme-bottom", "#050507");
     root.style.setProperty("--bg", "#050507");
     root.style.setProperty("--bg-deep", "#050507");
+
+    try {
+      if (typeof applyTheme === "function") applyTheme(FREE_THEME);
+      if (typeof applyAccent === "function") applyAccent(FREE_ACCENT);
+      if (typeof applyFocusBackground === "function") applyFocusBackground(FREE_FOCUS);
+    } catch (_) {}
 
     document.querySelectorAll(".theme-option").forEach((el) => {
       const name = (el.dataset.theme || el.getAttribute("data-theme") || "").toLowerCase();
@@ -54,16 +63,30 @@
       if (v && v !== FREE_FOCUS) {
         el.classList.add("akko-premium-locked");
         el.style.display = "none";
+      } else {
+        el.style.display = "";
       }
     });
+
+    const st = document.getElementById("akkoPremiumStatus");
+    if (st) st.textContent = "Free plan: Warm Black, white accent, dynamic focus. Premium is tied to your account on every device.";
   }
 
   function unlockPremiumUI() {
+    document.documentElement.classList.remove("akko-free");
+    document.documentElement.classList.add("akko-premium");
     document.querySelectorAll(".akko-premium-locked").forEach((el) => {
       el.classList.remove("akko-premium-locked");
       el.style.display = "";
     });
+    document.querySelectorAll(".theme-option, .accent-swatch, [data-focus-bg]").forEach((el) => {
+      el.style.display = "";
+    });
     try { localStorage.setItem("akkomusic-is-premium", "1"); } catch (_) {}
+    const st = document.getElementById("akkoPremiumStatus");
+    if (st) st.textContent = "Premium active on this account — works on all your devices when logged in.";
+    const redeem = document.getElementById("akkoPremiumRedeem");
+    if (redeem) redeem.style.display = "none";
   }
 
   async function checkPremium() {
@@ -73,20 +96,33 @@
         cache: "no-store"
       });
       const d = await r.json().catch(() => ({}));
-      isPremium = !!(d.valid && d.is_premium);
+      // Server is source of truth (cross-device)
+      isPremium = !!(d.valid && d.is_premium === true);
+      checkedOnce = true;
     } catch {
-      isPremium = false;
+      // network blip: keep previous state, do not force free
+      if (!checkedOnce) isPremium = false;
     }
-    if (!isPremium) applyFreeDefaults();
-    else unlockPremiumUI();
+
+    if (isPremium) unlockPremiumUI();
+    else applyFreeDefaults();
+
+    return isPremium;
   }
 
   function start() {
     checkPremium();
+    // Re-check server every 20s so other-device redeem shows up
+    setInterval(checkPremium, 20000);
+    // Soft UI re-apply without flipping server truth
     setInterval(() => {
-      if (!isPremium) applyFreeDefaults();
-    }, 2500);
+      if (!checkedOnce) return;
+      if (isPremium) unlockPremiumUI();
+      else applyFreeDefaults();
+    }, 3000);
   }
+
+  window.akkoRefreshPremium = checkPremium;
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
   else start();
