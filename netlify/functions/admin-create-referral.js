@@ -1,17 +1,6 @@
 const crypto = require("crypto");
-const { createClient } = require("@supabase/supabase-js");
 const { requireAdmin, json } = require("./_shared/auth");
-
-function db() {
-  const url = String(process.env.SUPABASE_URL || "").trim();
-  const key = String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
-  if (!url || !key) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-  }
-  return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
+const { db, diagnose } = require("./_shared/supabase");
 
 function randomCode(len) {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -45,7 +34,10 @@ exports.handler = async (event) => {
       supabase = db();
     } catch (e) {
       console.error(e);
-      return json(500, { error: "Server missing Supabase env vars" });
+      return json(500, {
+        error: e.message || "Supabase not configured",
+        hint: diagnose().issues
+      });
     }
 
     const created = [];
@@ -73,22 +65,27 @@ exports.handler = async (event) => {
           break;
         }
 
-        // unique collision — retry new code
         if (error && (error.code === "23505" || /duplicate/i.test(String(error.message || "")))) {
           continue;
         }
 
         console.error("referral insert error", error);
         const msg = error && error.message ? String(error.message) : "unknown";
-        // common cases
+
+        if (/invalid api key|invalidjwt|jwt/i.test(msg)) {
+          return json(500, {
+            error:
+              "Invalid API key — in Netlify use SUPABASE_SERVICE_ROLE_KEY = Supabase service_role secret (starts with eyJ). Must match the same project as SUPABASE_URL. Delete the var, re-paste, redeploy."
+          });
+        }
         if (/relation .* does not exist/i.test(msg) || error.code === "42P01") {
           return json(500, {
-            error: "Table referral_codes missing. Re-run the SQL in Supabase."
+            error: "Table referral_codes missing. Run the SQL in Supabase SQL Editor."
           });
         }
         if (/permission denied|rls/i.test(msg)) {
           return json(500, {
-            error: "Permission denied. Use SUPABASE_SERVICE_ROLE_KEY (not anon key) in Netlify."
+            error: "Permission denied — use service_role key, not anon."
           });
         }
         return json(500, { error: "Could not create code: " + msg });
@@ -102,6 +99,8 @@ exports.handler = async (event) => {
     return json(200, { ok: true, codes: created });
   } catch (error) {
     console.error(error);
-    return json(400, { error: "Invalid request: " + (error && error.message ? error.message : "") });
+    return json(400, {
+      error: "Invalid request: " + (error && error.message ? error.message : "")
+    });
   }
 };
